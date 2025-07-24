@@ -14,7 +14,151 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      goals: {
+        Row: {
+          created_at: string | null
+          goal_description: string
+          goal_type: string
+          id: string
+          target_date: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          goal_description: string
+          goal_type: string
+          id?: string
+          target_date?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          goal_description?: string
+          goal_type?: string
+          id?: string
+          target_date?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plans: {
+        Row: {
+          content: Json
+          created_at: string | null
+          end_date: string
+          id: string
+          is_active: boolean | null
+          plan_type: string
+          start_date: string
+          user_id: string
+        }
+        Insert: {
+          content: Json
+          created_at?: string | null
+          end_date: string
+          id?: string
+          is_active?: boolean | null
+          plan_type: string
+          start_date?: string
+          user_id: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          is_active?: boolean | null
+          plan_type?: string
+          start_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plans_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          age: number | null
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          age?: number | null
+          created_at?: string | null
+          id: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          age?: number | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      progress_tracking: {
+        Row: {
+          completed_tasks: Json | null
+          completion_rate: number | null
+          id: string
+          plan_id: string
+          progress_notes: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_tasks?: Json | null
+          completion_rate?: number | null
+          id?: string
+          plan_id: string
+          progress_notes?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_tasks?: Json | null
+          completion_rate?: number | null
+          id?: string
+          plan_id?: string
+          progress_notes?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "progress_tracking_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "progress_tracking_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
