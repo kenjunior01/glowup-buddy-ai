@@ -21,10 +21,10 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get OpenAI API key from environment
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openaiApiKey) {
-      throw new Error('OpenAI API key not configured');
+    // Get Groq API key from environment
+    const groqApiKey = Deno.env.get('GROQ_API_KEY');
+    if (!groqApiKey) {
+      throw new Error('Groq API key not configured');
     }
 
     // Prepare data for AI prompt
@@ -37,8 +37,8 @@ Nome: ${profile?.name || 'Usuário'}
 Idade: ${profile?.age || 'Não informado'}
 `;
 
-    // Generate plans using OpenAI
-    const plans = await generatePlansWithAI(openaiApiKey, userProfile, goalsText);
+    // Generate plans using Groq AI
+    const plans = await generatePlansWithAI(groqApiKey, userProfile, goalsText);
 
     // Save plans to database
     const planPromises = plans.map(async (plan: any) => {
@@ -117,14 +117,14 @@ FORMATO DE RESPOSTA (JSON):
 Responda APENAS com o JSON, sem comentários adicionais.
 `;
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: 'llama-3.1-70b-versatile',
       messages: [
         {
           role: 'system',
@@ -141,7 +141,7 @@ Responda APENAS com o JSON, sem comentários adicionais.
   });
 
   if (!response.ok) {
-    throw new Error(`OpenAI API error: ${response.statusText}`);
+    throw new Error(`Groq API error: ${response.statusText}`);
   }
 
   const data = await response.json();
