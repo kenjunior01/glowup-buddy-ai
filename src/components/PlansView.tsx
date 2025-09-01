@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
 import { Calendar, Sparkles, RefreshCw } from "lucide-react";
+import EmptyState from "./EmptyState";
 
 interface Plan {
   id: string;
@@ -13,7 +14,7 @@ interface Plan {
   content: any;
   start_date: string;
   end_date: string;
-  is_active: boolean;
+  active: boolean;
 }
 
 interface PlansViewProps {
@@ -35,7 +36,7 @@ const PlansView = ({ userId }: PlansViewProps) => {
       .from("plans")
       .select("*")
       .eq("user_id", userId)
-      .eq("is_active", true)
+      .eq("active", true)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -221,13 +222,13 @@ const PlansView = ({ userId }: PlansViewProps) => {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
         </div>
       ) : plans.length === 0 ? (
-        <Card>
-          <CardContent className="pt-6 text-center text-muted-foreground">
-            <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p className="mb-2">Nenhum plano ativo encontrado.</p>
-            <p>Clique em "Gerar Novos Planos" para começar!</p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={<Calendar className="h-16 w-16" />}
+          title="Nenhum plano ativo encontrado"
+          description="Clique em 'Gerar Novos Planos' para que nossa IA crie planos personalizados baseados nos seus objetivos!"
+          actionLabel="Gerar Primeiros Planos"
+          onAction={generatePlans}
+        />
       ) : (
         <div className="grid gap-6">
           {plans.map((plan) => (

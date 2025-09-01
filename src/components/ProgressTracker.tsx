@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { TrendingUp, Plus, Calendar } from "lucide-react";
+import EmptyState from "./EmptyState";
 
 interface ProgressEntry {
   id: string;
@@ -41,7 +42,7 @@ const ProgressTracker = ({ userId }: ProgressTrackerProps) => {
   const fetchProgress = async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from("progress_tracking")
+      .from("progress")
       .select(`
         *,
         plans (
@@ -67,7 +68,7 @@ const ProgressTracker = ({ userId }: ProgressTrackerProps) => {
 
   const updateProgress = async (planId: string, notes: string, completionRate: number) => {
     const { data: existingProgress } = await supabase
-      .from("progress_tracking")
+      .from("progress")
       .select("*")
       .eq("user_id", userId)
       .eq("plan_id", planId)
@@ -84,13 +85,13 @@ const ProgressTracker = ({ userId }: ProgressTrackerProps) => {
     let error;
     if (existingProgress) {
       const { error: updateError } = await supabase
-        .from("progress_tracking")
+        .from("progress")
         .update(progressData)
         .eq("id", existingProgress.id);
       error = updateError;
     } else {
       const { error: insertError } = await supabase
-        .from("progress_tracking")
+        .from("progress")
         .insert(progressData);
       error = insertError;
     }
@@ -204,13 +205,11 @@ const ProgressTracker = ({ userId }: ProgressTrackerProps) => {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
           </div>
         ) : progressEntries.length === 0 ? (
-          <Card>
-            <CardContent className="pt-6 text-center text-muted-foreground">
-              <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Nenhum progresso registrado ainda.</p>
-              <p>Complete alguns planos para ver seu desenvolvimento!</p>
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={<TrendingUp className="h-16 w-16" />}
+            title="Nenhum progresso registrado"
+            description="Complete alguns planos na aba 'Meus Planos' para ver seu desenvolvimento aqui!"
+          />
         ) : (
           <div className="grid gap-4">
             {progressEntries.map((entry) => (

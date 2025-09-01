@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Trash2, Target } from "lucide-react";
+import OnboardingHelper from "./OnboardingHelper";
 
 interface Goal {
   id: string;
@@ -187,13 +188,7 @@ const GoalsForm = ({ userId }: GoalsFormProps) => {
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Seus Objetivos</h3>
         {goals.length === 0 ? (
-          <Card>
-            <CardContent className="pt-6 text-center text-muted-foreground">
-              <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Nenhum objetivo definido ainda.</p>
-              <p>Adicione seus primeiros objetivos para começar!</p>
-            </CardContent>
-          </Card>
+          <OnboardingHelper userId={userId} onComplete={fetchGoals} />
         ) : (
           <div className="grid gap-4">
             {goals.map((goal) => (
