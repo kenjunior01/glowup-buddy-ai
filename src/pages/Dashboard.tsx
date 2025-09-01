@@ -12,6 +12,7 @@ import { Sparkles, Target, Calendar, TrendingUp, LogOut } from "lucide-react";
 import GoalsForm from "@/components/GoalsForm";
 import PlansView from "@/components/PlansView";
 import ProgressTracker from "@/components/ProgressTracker";
+import WelcomeGuide from "@/components/WelcomeGuide";
 
 interface Profile {
   id: string;
@@ -24,6 +25,11 @@ const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("plans");
+  const [hasGoals, setHasGoals] = useState(false);
+  const [hasPlans, setHasPlans] = useState(false);
+  const [hasProgress, setHasProgress] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
     checkUser();
@@ -64,6 +70,43 @@ const Dashboard = () => {
     } else {
       setProfile(data);
     }
+    
+    // Check if user has data
+    await checkUserData(userId);
+  };
+
+  const checkUserData = async (userId: string) => {
+    // Check goals
+    const { data: goalsData } = await supabase
+      .from("goals")
+      .select("id")
+      .eq("user_id", userId)
+      .limit(1);
+    
+    // Check plans  
+    const { data: plansData } = await supabase
+      .from("plans")
+      .select("id")
+      .eq("user_id", userId)
+      .limit(1);
+      
+    // Check progress
+    const { data: progressData } = await supabase
+      .from("progress")
+      .select("id")
+      .eq("user_id", userId)
+      .limit(1);
+
+    const hasGoalsData = goalsData && goalsData.length > 0;
+    const hasPlansData = plansData && plansData.length > 0;
+    const hasProgressData = progressData && progressData.length > 0;
+
+    setHasGoals(hasGoalsData);
+    setHasPlans(hasPlansData);
+    setHasProgress(hasProgressData);
+    
+    // Show welcome guide if user has no data
+    setShowWelcome(!hasGoalsData && !hasPlansData && !hasProgressData);
   };
 
   const handleLogout = async () => {
@@ -75,6 +118,19 @@ const Dashboard = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleGuideAction = (stepId: string) => {
+    setActiveTab(stepId);
+    setShowWelcome(false);
+  };
+
+  const getCompletedSteps = () => {
+    const steps = [];
+    if (hasGoals) steps.push("goals");
+    if (hasPlans) steps.push("plans");
+    if (hasProgress) steps.push("progress");
+    return steps;
   };
 
   if (loading) {
@@ -115,34 +171,50 @@ const Dashboard = () => {
           </p>
         </div>
 
-        <Tabs defaultValue="plans" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="plans" className="flex items-center space-x-2">
-              <Calendar className="h-4 w-4" />
-              <span>Meus Planos</span>
-            </TabsTrigger>
-            <TabsTrigger value="goals" className="flex items-center space-x-2">
-              <Target className="h-4 w-4" />
-              <span>Objetivos</span>
-            </TabsTrigger>
-            <TabsTrigger value="progress" className="flex items-center space-x-2">
-              <TrendingUp className="h-4 w-4" />
-              <span>Progresso</span>
-            </TabsTrigger>
-          </TabsList>
+        {showWelcome ? (
+          <WelcomeGuide 
+            onStepAction={handleGuideAction}
+            completedSteps={getCompletedSteps()}
+          />
+        ) : (
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="plans" className="flex items-center space-x-2">
+                <Calendar className="h-4 w-4" />
+                <span>Meus Planos</span>
+              </TabsTrigger>
+              <TabsTrigger value="goals" className="flex items-center space-x-2">
+                <Target className="h-4 w-4" />
+                <span>Objetivos</span>
+              </TabsTrigger>
+              <TabsTrigger value="progress" className="flex items-center space-x-2">
+                <TrendingUp className="h-4 w-4" />
+                <span>Progresso</span>
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="plans" className="space-y-6">
-            <PlansView userId={user?.id || ""} />
-          </TabsContent>
+            <TabsContent value="plans" className="space-y-6">
+              <PlansView 
+                userId={user?.id || ""} 
+                onDataChange={() => checkUserData(user?.id || "")} 
+              />
+            </TabsContent>
 
-          <TabsContent value="goals" className="space-y-6">
-            <GoalsForm userId={user?.id || ""} />
-          </TabsContent>
+            <TabsContent value="goals" className="space-y-6">
+              <GoalsForm 
+                userId={user?.id || ""} 
+                onDataChange={() => checkUserData(user?.id || "")}
+              />
+            </TabsContent>
 
-          <TabsContent value="progress" className="space-y-6">
-            <ProgressTracker userId={user?.id || ""} />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="progress" className="space-y-6">
+              <ProgressTracker 
+                userId={user?.id || ""} 
+                onDataChange={() => checkUserData(user?.id || "")}
+              />
+            </TabsContent>
+          </Tabs>
+        )}
       </main>
     </div>
   );

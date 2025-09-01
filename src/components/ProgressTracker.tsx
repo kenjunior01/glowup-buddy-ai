@@ -24,9 +24,10 @@ interface ProgressEntry {
 
 interface ProgressTrackerProps {
   userId: string;
+  onDataChange?: () => void;
 }
 
-const ProgressTracker = ({ userId }: ProgressTrackerProps) => {
+const ProgressTracker = ({ userId, onDataChange }: ProgressTrackerProps) => {
   const [progressEntries, setProgressEntries] = useState<ProgressEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [newProgress, setNewProgress] = useState({
@@ -108,6 +109,7 @@ const ProgressTracker = ({ userId }: ProgressTrackerProps) => {
         description: "Suas informações foram salvas com sucesso.",
       });
       fetchProgress();
+      onDataChange?.();
       setNewProgress({ planId: "", notes: "", completionRate: 0 });
     }
   };

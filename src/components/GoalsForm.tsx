@@ -20,6 +20,7 @@ interface Goal {
 
 interface GoalsFormProps {
   userId: string;
+  onDataChange?: () => void;
 }
 
 const goalTypes = [
@@ -30,7 +31,7 @@ const goalTypes = [
   { value: "estilo_vida", label: "Estilo de Vida", color: "bg-orange-500" },
 ];
 
-const GoalsForm = ({ userId }: GoalsFormProps) => {
+const GoalsForm = ({ userId, onDataChange }: GoalsFormProps) => {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(false);
   const [newGoal, setNewGoal] = useState({

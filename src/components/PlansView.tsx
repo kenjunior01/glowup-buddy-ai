@@ -19,9 +19,10 @@ interface Plan {
 
 interface PlansViewProps {
   userId: string;
+  onDataChange?: () => void;
 }
 
-const PlansView = ({ userId }: PlansViewProps) => {
+const PlansView = ({ userId, onDataChange }: PlansViewProps) => {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(false);
   const [generatingPlans, setGeneratingPlans] = useState(false);
@@ -108,6 +109,7 @@ const PlansView = ({ userId }: PlansViewProps) => {
       });
       
       fetchPlans();
+      onDataChange?.();
     } catch (error: any) {
       console.error("Error generating plans:", error);
       toast({
