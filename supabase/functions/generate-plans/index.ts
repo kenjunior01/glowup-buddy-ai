@@ -22,7 +22,7 @@ serve(async (req) => {
     );
 
     // Get Groq API key from environment
-    const groqApiKey = Deno.env.get('GROQ_API_KEY');
+    const groqApiKey = Deno.env.get('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');
     if (!groqApiKey) {
       throw new Error('Groq API key not configured');
     }
