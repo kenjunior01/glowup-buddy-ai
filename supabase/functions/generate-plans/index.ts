@@ -21,10 +21,10 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get Groq API key from environment
-    const groqApiKey = Deno.env.get('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');
-    if (!groqApiKey) {
-      throw new Error('Groq API key not configured');
+    // Get DeepSeek API key from environment
+    const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
+    if (!deepseekApiKey) {
+      throw new Error('DeepSeek API key not configured');
     }
 
     // Prepare data for AI prompt
@@ -37,8 +37,8 @@ Nome: ${profile?.name || 'Usuário'}
 Idade: ${profile?.age || 'Não informado'}
 `;
 
-    // Generate plans using Groq AI
-    const plans = await generatePlansWithAI(groqApiKey, userProfile, goalsText);
+    // Generate plans using DeepSeek AI
+    const plans = await generatePlansWithAI(deepseekApiKey, userProfile, goalsText);
 
     // Save plans to database
     const planPromises = plans.map(async (plan: any) => {
@@ -117,14 +117,14 @@ FORMATO DE RESPOSTA (JSON):
 Responda APENAS com o JSON, sem comentários adicionais.
 `;
 
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama-3.1-70b-versatile',
+      model: 'deepseek-chat',
       messages: [
         {
           role: 'system',
@@ -141,7 +141,7 @@ Responda APENAS com o JSON, sem comentários adicionais.
   });
 
   if (!response.ok) {
-    throw new Error(`Groq API error: ${response.statusText}`);
+    throw new Error(`DeepSeek API error: ${response.statusText}`);
   }
 
   const data = await response.json();
