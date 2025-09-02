@@ -28,6 +28,7 @@ const PlansView = ({ userId, onDataChange }: PlansViewProps) => {
   const [loading, setLoading] = useState(false);
   const [generatingPlans, setGeneratingPlans] = useState(false);
   const [updatingPlan, setUpdatingPlan] = useState<string | null>(null);
+  const [showCompleted, setShowCompleted] = useState(false);
 
   useEffect(() => {
     fetchPlans();
@@ -102,8 +103,8 @@ const PlansView = ({ userId, onDataChange }: PlansViewProps) => {
 
   const generatePlans = async () => {
     setGeneratingPlans(true);
-    
-    // First, get user's goals
+
+    // Buscar objetivos do usuário
     const { data: goals, error: goalsError } = await supabase
       .from("goals")
       .select("*")
@@ -123,6 +124,23 @@ const PlansView = ({ userId, onDataChange }: PlansViewProps) => {
       toast({
         title: "Nenhum objetivo encontrado",
         description: "Adicione pelo menos um objetivo antes de gerar planos.",
+        variant: "destructive",
+      });
+      setGeneratingPlans(false);
+      return;
+    }
+
+    // Buscar planos ativos do usuário
+    const { data: existingPlans } = await supabase
+      .from("plans")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("active", true);
+
+    if (existingPlans && existingPlans.length > 0) {
+      toast({
+        title: "Planos já gerados",
+        description: "Você já possui planos ativos. Conclua ou arquive antes de gerar novos.",
         variant: "destructive",
       });
       setGeneratingPlans(false);
@@ -154,7 +172,6 @@ const PlansView = ({ userId, onDataChange }: PlansViewProps) => {
         title: "Planos gerados com sucesso!",
         description: "Seus novos planos personalizados estão prontos.",
       });
-      
       fetchPlans();
       onDataChange?.();
     } catch (error: any) {
@@ -242,6 +259,10 @@ const PlansView = ({ userId, onDataChange }: PlansViewProps) => {
     return <p className="text-sm text-muted-foreground">{content}</p>;
   };
 
+  // Separar planos ativos e concluídos
+  const activePlans = plans.filter((p) => !p.completed);
+  const completedPlans = plans.filter((p) => !!p.completed);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -251,70 +272,120 @@ const PlansView = ({ userId, onDataChange }: PlansViewProps) => {
             Planos personalizados gerados por IA com base nos seus objetivos
           </p>
         </div>
-        <Button onClick={generatePlans} disabled={generatingPlans}>
-          {generatingPlans ? (
-            <>
-              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-              Gerando...
-            </>
-          ) : (
-            <>
-              <Sparkles className="h-4 w-4 mr-2" />
-              Gerar Novos Planos
-            </>
-          )}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={generatePlans} disabled={generatingPlans}>
+            {generatingPlans ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Gerando...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4 mr-2" />
+                Gerar Novos Planos
+              </>
+            )}
+          </Button>
+          <Button variant={showCompleted ? "default" : "outline"} onClick={() => setShowCompleted((v) => !v)}>
+            {showCompleted ? "Ver Ativos" : "Ver Concluídos"}
+          </Button>
+        </div>
       </div>
 
       {loading ? (
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
         </div>
-      ) : plans.length === 0 ? (
-        <EmptyState
-          icon={<Calendar className="h-16 w-16" />}
-          title="Nenhum plano encontrado"
-          description="Clique em 'Gerar Novos Planos' para que nossa IA crie planos personalizados baseados nos seus objetivos!"
-          actionLabel="Gerar Primeiros Planos"
-          onAction={generatePlans}
-        />
+      ) : (showCompleted ? (
+        completedPlans.length === 0 ? (
+          <EmptyState
+            icon={<Calendar className="h-16 w-16" />}
+            title="Nenhum plano concluído"
+            description="Conclua algum plano para visualizar aqui."
+          />
+        ) : (
+          <div className="grid gap-6">
+            {completedPlans.map((plan) => (
+              <Card key={plan.id} className="opacity-60">
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="flex items-center space-x-2">
+                        <Badge className={`${getPlanTypeColor(plan.plan_type)} text-white`}>
+                          {getPlanTypeLabel(plan.plan_type)}
+                        </Badge>
+                        <span>Plano {getPlanTypeLabel(plan.plan_type)}</span>
+                      </CardTitle>
+                      <CardDescription>
+                        {formatDate(plan.start_date)} - {formatDate(plan.end_date)}
+                      </CardDescription>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={!!plan.completed}
+                        disabled={true}
+                        id={`complete-plan-${plan.id}`}
+                      />
+                      <label htmlFor={`complete-plan-${plan.id}`} className="text-sm cursor-pointer">
+                        Concluído
+                      </label>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {renderPlanContent(plan.content)}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )
       ) : (
-        <div className="grid gap-6">
-          {plans.map((plan) => (
-            <Card key={plan.id} className={plan.completed ? "opacity-60" : ""}>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Badge className={`${getPlanTypeColor(plan.plan_type)} text-white`}>
-                        {getPlanTypeLabel(plan.plan_type)}
-                      </Badge>
-                      <span>Plano {getPlanTypeLabel(plan.plan_type)}</span>
-                    </CardTitle>
-                    <CardDescription>
-                      {formatDate(plan.start_date)} - {formatDate(plan.end_date)}
-                    </CardDescription>
+        activePlans.length === 0 ? (
+          <EmptyState
+            icon={<Calendar className="h-16 w-16" />}
+            title="Nenhum plano ativo encontrado"
+            description="Clique em 'Gerar Novos Planos' para que nossa IA crie planos personalizados baseados nos seus objetivos!"
+            actionLabel="Gerar Primeiros Planos"
+            onAction={generatePlans}
+          />
+        ) : (
+          <div className="grid gap-6">
+            {activePlans.map((plan) => (
+              <Card key={plan.id}>
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="flex items-center space-x-2">
+                        <Badge className={`${getPlanTypeColor(plan.plan_type)} text-white`}>
+                          {getPlanTypeLabel(plan.plan_type)}
+                        </Badge>
+                        <span>Plano {getPlanTypeLabel(plan.plan_type)}</span>
+                      </CardTitle>
+                      <CardDescription>
+                        {formatDate(plan.start_date)} - {formatDate(plan.end_date)}
+                      </CardDescription>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={!!plan.completed}
+                        disabled={updatingPlan === plan.id}
+                        onCheckedChange={(checked) => handleCompletePlan(plan, !!checked)}
+                        id={`complete-plan-${plan.id}`}
+                      />
+                      <label htmlFor={`complete-plan-${plan.id}`} className="text-sm cursor-pointer">
+                        {plan.completed ? "Concluído" : "Marcar como concluído"}
+                      </label>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      checked={!!plan.completed}
-                      disabled={updatingPlan === plan.id}
-                      onCheckedChange={(checked) => handleCompletePlan(plan, !!checked)}
-                      id={`complete-plan-${plan.id}`}
-                    />
-                    <label htmlFor={`complete-plan-${plan.id}`} className="text-sm cursor-pointer">
-                      {plan.completed ? "Concluído" : "Marcar como concluído"}
-                    </label>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {renderPlanContent(plan.content)}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+                </CardHeader>
+                <CardContent>
+                  {renderPlanContent(plan.content)}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )
+      ))}
     </div>
   );
 };

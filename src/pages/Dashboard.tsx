@@ -8,11 +8,12 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { User } from "@supabase/supabase-js";
-import { Sparkles, Target, Calendar, TrendingUp, LogOut } from "lucide-react";
+import { Sparkles, Target, Calendar, TrendingUp, LogOut, User as UserIcon } from "lucide-react";
 import GoalsForm from "@/components/GoalsForm";
 import PlansView from "@/components/PlansView";
 import ProgressTracker from "@/components/ProgressTracker";
 import WelcomeGuide from "@/components/WelcomeGuide";
+import ProfileForm from "@/components/ProfileForm";
 
 interface Profile {
   id: string;
@@ -178,7 +179,7 @@ const Dashboard = () => {
           />
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="plans" className="flex items-center space-x-2">
                 <Calendar className="h-4 w-4" />
                 <span>Meus Planos</span>
@@ -190,6 +191,10 @@ const Dashboard = () => {
               <TabsTrigger value="progress" className="flex items-center space-x-2">
                 <TrendingUp className="h-4 w-4" />
                 <span>Progresso</span>
+              </TabsTrigger>
+              <TabsTrigger value="profile" className="flex items-center space-x-2">
+                <UserIcon className="h-4 w-4" />
+                <span>Perfil</span>
               </TabsTrigger>
             </TabsList>
 
@@ -212,6 +217,10 @@ const Dashboard = () => {
                 userId={user?.id || ""} 
                 onDataChange={() => checkUserData(user?.id || "")}
               />
+            </TabsContent>
+
+            <TabsContent value="profile" className="space-y-6">
+              <ProfileForm userId={user?.id || ""} />
             </TabsContent>
           </Tabs>
         )}
