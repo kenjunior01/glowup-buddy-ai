@@ -1,0 +1,104 @@
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../integrations/supabase/client';
+import { Tables } from '../integrations/supabase/types';
+import { Button } from './ui/button';
+
+export default function Friends() {
+  const [users, setUsers] = useState<Tables<'profiles'>[]>([]);
+  const [friends, setFriends] = useState<Tables<'profiles'>[]>([]);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [userId, setUserId] = useState<string>("");
+
+  useEffect(() => {
+    // Buscar usuário logado
+    const getUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) setUserId(session.user.id);
+    };
+    getUser();
+  }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+    // Buscar todos usuários (exceto o próprio)
+    const fetchUsers = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, name")
+        .neq("id", userId);
+      setUsers(data || []);
+    };
+    // Buscar amigos
+    const fetchFriends = async () => {
+      const { data } = await supabase
+        .from('friendships')
+        .select('*, profiles:friend_id(name, id)')
+        .eq('user_id', userId)
+        .eq('status', 'accepted');
+      setFriends(data ? data.map((f: any) => f.profiles as Tables<'profiles'>) : []);
+    };
+    // Buscar pedidos recebidos
+    const fetchRequests = async () => {
+      const { data } = await supabase
+        .from('friendships')
+        .select('*, profiles:user_id(name, id)')
+        .eq('friend_id', userId)
+        .eq('status', 'pending');
+      setRequests(data || []);
+    };
+    fetchUsers();
+    fetchFriends();
+    fetchRequests();
+  }, [userId]);
+
+  const sendFriendRequest = async (friendId: string) => {
+    await supabase
+      .from('friendships')
+      .insert({ user_id: userId, friend_id: friendId, status: 'pending' });
+    alert("Pedido de amizade enviado!");
+  };
+
+  const acceptFriendRequest = async (requestId: string) => {
+    await supabase
+      .from('friendships')
+      .update({ status: 'accepted' })
+      .eq('id', requestId);
+    alert("Pedido aceito!");
+  };
+
+  return (
+    <div>
+      <h2 className="font-bold mb-2">Amigos</h2>
+      <div className="mb-4">
+        <h3 className="font-semibold">Adicionar amigo</h3>
+        <ul>
+          {users.map(u => (
+            <li key={u.id} className="flex items-center gap-2">
+              <span>{u.name}</span>
+              <Button size="sm" onClick={() => sendFriendRequest(u.id)}>Solicitar amizade</Button>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="mb-4">
+        <h3 className="font-semibold">Pedidos recebidos</h3>
+        <ul>
+          {requests.map(r => (
+            <li key={r.id} className="flex items-center gap-2">
+              <span>{r.profiles?.name}</span>
+              <Button size="sm" onClick={() => acceptFriendRequest(r.id)}>Aceitar</Button>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div>
+        <h3 className="font-semibold">Meus amigos</h3>
+        <ul>
+          {friends.map(f => (
+            <li key={f.id}>{f.name}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}

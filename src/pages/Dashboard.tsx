@@ -9,16 +9,21 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { User } from "@supabase/supabase-js";
 import { Sparkles, Target, Calendar, TrendingUp, LogOut, User as UserIcon } from "lucide-react";
+import { achievements } from "@/lib/achievements";
+import { userRanking } from "@/lib/ranking";
 import GoalsForm from "@/components/GoalsForm";
 import PlansView from "@/components/PlansView";
 import ProgressTracker from "@/components/ProgressTracker";
 import WelcomeGuide from "@/components/WelcomeGuide";
 import ProfileForm from "@/components/ProfileForm";
+import Friends from '../components/Friends';
 
 interface Profile {
   id: string;
   name: string;
   age?: number;
+  pontos?: number;
+  conquistas?: string[];
 }
 
 const Dashboard = () => {
@@ -134,6 +139,9 @@ const Dashboard = () => {
     return steps;
   };
 
+  // Conquistas reais do usuário
+  const unlockedAchievements = achievements.filter(a => profile?.conquistas?.includes(a.id));
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -165,11 +173,50 @@ const Dashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        {/* Medalhas/Conquistas */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold mb-2">Seu Plano de Transformação</h2>
           <p className="text-muted-foreground">
             Acompanhe seu progresso e evolua a cada dia com planos personalizados por IA
           </p>
+          <div className="mt-2 mb-2">
+            <span className="font-bold text-lg text-yellow-700">Pontos: {profile?.pontos ?? 0}</span>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-4">
+            {unlockedAchievements.length === 0 ? (
+              <span className="text-sm text-yellow-600">Nenhuma conquista desbloqueada ainda. Complete planos e missões para ganhar medalhas!</span>
+            ) : (
+              unlockedAchievements.map(a => (
+                <div key={a.id} className="flex flex-col items-center p-2 bg-yellow-50 border border-yellow-200 rounded-lg min-w-[120px]">
+                  <span className="text-3xl mb-1">{a.icon}</span>
+                  <span className="font-bold text-yellow-700 text-sm">{a.title}</span>
+                  <span className="text-xs text-yellow-600 text-center">{a.description}</span>
+                </div>
+              ))
+            )}
+          </div>
+          {/* Ranking de usuários */}
+          <div className="mt-8">
+            <h3 className="text-xl font-bold mb-2 text-blue-700">Ranking Semanal</h3>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-blue-800">
+                    <th className="text-left">Usuário</th>
+                    <th className="text-right">Pontos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {userRanking.map((u, idx) => (
+                    <tr key={u.name} className={idx === 0 ? "font-bold text-blue-900" : ""}>
+                      <td>{u.name}</td>
+                      <td className="text-right">{u.points}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
         {showWelcome ? (
@@ -221,6 +268,7 @@ const Dashboard = () => {
 
             <TabsContent value="profile" className="space-y-6">
               <ProfileForm userId={user?.id || ""} />
+              <Friends />
             </TabsContent>
           </Tabs>
         )}

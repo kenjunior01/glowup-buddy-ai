@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { getRandomMission } from "@/lib/missions";
 import { toast } from "@/hooks/use-toast";
 import { TrendingUp, Plus, Calendar } from "lucide-react";
 import EmptyState from "./EmptyState";
@@ -28,6 +29,7 @@ interface ProgressTrackerProps {
 }
 
 const ProgressTracker = ({ userId, onDataChange }: ProgressTrackerProps) => {
+  const [weeklyMission, setWeeklyMission] = useState<any>(null);
   const [progressEntries, setProgressEntries] = useState<ProgressEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [newProgress, setNewProgress] = useState({
@@ -38,6 +40,7 @@ const ProgressTracker = ({ userId, onDataChange }: ProgressTrackerProps) => {
 
   useEffect(() => {
     fetchProgress();
+    setWeeklyMission(getRandomMission());
   }, [userId]);
 
   const fetchProgress = async () => {
@@ -104,9 +107,20 @@ const ProgressTracker = ({ userId, onDataChange }: ProgressTrackerProps) => {
         variant: "destructive",
       });
     } else {
+      // Feedback motivacional
+      let feedbackMsg = "Ótimo trabalho! Continue evoluindo!";
+      if (completionRate === 100) {
+        feedbackMsg = "Parabéns! Você concluiu seu plano! Medalha de conquista desbloqueada! 🏅";
+      } else if (completionRate >= 80) {
+        feedbackMsg = "Você está quase lá! Mantenha o ritmo!";
+      } else if (completionRate >= 40) {
+        feedbackMsg = "Bom progresso! Tente avançar mais um pouco.";
+      } else {
+        feedbackMsg = "Todo começo é difícil, mas você consegue!";
+      }
       toast({
         title: "Progresso atualizado!",
-        description: "Suas informações foram salvas com sucesso.",
+        description: feedbackMsg,
       });
       fetchProgress();
       onDataChange?.();
@@ -174,7 +188,15 @@ const ProgressTracker = ({ userId, onDataChange }: ProgressTrackerProps) => {
               <span className="text-sm text-muted-foreground">{calculateOverallProgress()}%</span>
             </div>
             <Progress value={calculateOverallProgress()} className="w-full" />
-            
+            {/* Missão semanal surpresa */}
+            {weeklyMission && (
+              <div className="mt-6 p-4 rounded-lg bg-blue-50 border border-blue-200">
+                <div className="font-bold text-blue-700 mb-1">Missão da Semana:</div>
+                <div className="text-blue-900 font-medium">{weeklyMission.title}</div>
+                <div className="text-sm text-blue-800 mb-2">{weeklyMission.description}</div>
+                <div className="text-xs text-blue-600">Recompensa: {weeklyMission.reward}</div>
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">
