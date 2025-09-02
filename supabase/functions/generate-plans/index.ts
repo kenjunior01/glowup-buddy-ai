@@ -21,10 +21,10 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get DeepSeek API key from environment
-    const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
-    if (!deepseekApiKey) {
-      throw new Error('DeepSeek API key not configured');
+    // Get Gemini API key from environment
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+    if (!geminiApiKey) {
+      throw new Error('Gemini API key not configured');
     }
 
     // Prepare data for AI prompt
@@ -37,8 +37,8 @@ Nome: ${profile?.name || 'Usuário'}
 Idade: ${profile?.age || 'Não informado'}
 `;
 
-    // Generate plans using DeepSeek AI
-    const plans = await generatePlansWithAI(deepseekApiKey, userProfile, goalsText);
+    // Generate plans using Gemini AI
+    const plans = await generatePlansWithAI(geminiApiKey, userProfile, goalsText);
 
     // Save plans to database
     const planPromises = plans.map(async (plan: any) => {
@@ -54,7 +54,7 @@ Idade: ${profile?.age || 'Não informado'}
       // Deactivate old plans of the same type
       await supabaseClient
         .from('plans')
-        .update({ is_active: false })
+        .update({ active: false })
         .eq('user_id', userId)
         .eq('plan_type', plan.type);
 
@@ -67,7 +67,7 @@ Idade: ${profile?.age || 'Não informado'}
           content: plan.content,
           start_date: new Date().toISOString().split('T')[0],
           end_date: endDate.toISOString().split('T')[0],
-          is_active: true
+          active: true
         });
     });
 
@@ -115,48 +115,75 @@ FORMATO DE RESPOSTA (JSON):
 }
 
 Responda APENAS com o JSON, sem comentários adicionais.
+
+Você é um especialista em transformação pessoal e coaching de vida. Crie planos de Glow Up personalizados e motivadores.
 `;
 
-  const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'deepseek-chat',
-      messages: [
-        {
-          role: 'system',
-          content: 'Você é um especialista em transformação pessoal e coaching de vida. Crie planos de Glow Up personalizados e motivadores.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 1000
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`DeepSeek API error: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  const aiResponse = data.choices[0].message.content;
-  
   try {
-    const planContent = JSON.parse(aiResponse);
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: prompt
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1000,
+        }
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Gemini API error response:', errorText);
+      
+      if (response.status === 429) {
+        throw new Error('Limite de requisições do Gemini atingido. Tente novamente em alguns minutos.');
+      } else if (response.status === 403) {
+        throw new Error('Chave da API Gemini inválida ou sem permissões.');
+      } else {
+        throw new Error(`Gemini API error: ${response.statusText}`);
+      }
+    }
+
+    const data = await response.json();
+    console.log('Gemini API response:', JSON.stringify(data, null, 2));
     
-    return [
-      { type: 'daily', content: planContent.daily },
-      { type: 'weekly', content: planContent.weekly },
-      { type: 'monthly', content: planContent.monthly }
-    ];
-  } catch (parseError) {
-    // Fallback if AI doesn't return valid JSON
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+      throw new Error('Resposta inválida da API Gemini');
+    }
+    
+    const aiResponse = data.candidates[0].content.parts[0].text;
+    
+    try {
+      // Try to extract JSON from the response
+      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+      const jsonString = jsonMatch ? jsonMatch[0] : aiResponse;
+      const planContent = JSON.parse(jsonString);
+      
+      return [
+        { type: 'daily', content: planContent.daily },
+        { type: 'weekly', content: planContent.weekly },
+        { type: 'monthly', content: planContent.monthly }
+      ];
+    } catch (parseError) {
+      console.error('JSON parsing error:', parseError);
+      console.error('AI Response:', aiResponse);
+      throw parseError;
+    }
+  } catch (error) {
+    console.error('Error calling Gemini API:', error);
+    
+    // Fallback if AI doesn't work at all
     return [
       { 
         type: 'daily', 
