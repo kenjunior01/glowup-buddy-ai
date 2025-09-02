@@ -15,6 +15,7 @@ interface Plan {
   start_date: string;
   end_date: string;
   active: boolean;
+  completed?: boolean;
 }
 
 interface PlansViewProps {
@@ -26,6 +27,7 @@ const PlansView = ({ userId, onDataChange }: PlansViewProps) => {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(false);
   const [generatingPlans, setGeneratingPlans] = useState(false);
+  const [updatingPlan, setUpdatingPlan] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPlans();
@@ -37,7 +39,6 @@ const PlansView = ({ userId, onDataChange }: PlansViewProps) => {
       .from("plans")
       .select("*")
       .eq("user_id", userId)
-      .eq("active", true)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -51,6 +52,52 @@ const PlansView = ({ userId, onDataChange }: PlansViewProps) => {
       setPlans(data || []);
     }
     setLoading(false);
+  };
+
+  // Marcar plano como concluído
+  const handleCompletePlan = async (plan: Plan, completed: boolean) => {
+    setUpdatingPlan(plan.id);
+    // Atualiza status do plano
+    const { error: planError } = await supabase
+      .from("plans")
+      .update({ completed, active: !completed })
+      .eq("id", plan.id);
+
+    // Registra no histórico de progresso
+    if (completed) {
+      const { error: progressError } = await supabase
+        .from("progress")
+        .insert({
+          user_id: userId,
+          plan_id: plan.id,
+          progress_notes: "Plano concluído!",
+          completion_rate: 100,
+          completed_tasks: plan.content,
+        });
+      if (progressError) {
+        toast({
+          title: "Erro ao registrar progresso",
+          description: progressError.message,
+          variant: "destructive",
+        });
+      }
+    }
+
+    if (planError) {
+      toast({
+        title: "Erro ao atualizar plano",
+        description: planError.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: completed ? "Plano marcado como concluído!" : "Plano reativado!",
+        description: completed ? "Parabéns por concluir seu plano!" : "Plano está ativo novamente.",
+      });
+      fetchPlans();
+      onDataChange?.();
+    }
+    setUpdatingPlan(null);
   };
 
   const generatePlans = async () => {
@@ -226,7 +273,7 @@ const PlansView = ({ userId, onDataChange }: PlansViewProps) => {
       ) : plans.length === 0 ? (
         <EmptyState
           icon={<Calendar className="h-16 w-16" />}
-          title="Nenhum plano ativo encontrado"
+          title="Nenhum plano encontrado"
           description="Clique em 'Gerar Novos Planos' para que nossa IA crie planos personalizados baseados nos seus objetivos!"
           actionLabel="Gerar Primeiros Planos"
           onAction={generatePlans}
@@ -234,7 +281,7 @@ const PlansView = ({ userId, onDataChange }: PlansViewProps) => {
       ) : (
         <div className="grid gap-6">
           {plans.map((plan) => (
-            <Card key={plan.id}>
+            <Card key={plan.id} className={plan.completed ? "opacity-60" : ""}>
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
@@ -247,6 +294,17 @@ const PlansView = ({ userId, onDataChange }: PlansViewProps) => {
                     <CardDescription>
                       {formatDate(plan.start_date)} - {formatDate(plan.end_date)}
                     </CardDescription>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      checked={!!plan.completed}
+                      disabled={updatingPlan === plan.id}
+                      onCheckedChange={(checked) => handleCompletePlan(plan, !!checked)}
+                      id={`complete-plan-${plan.id}`}
+                    />
+                    <label htmlFor={`complete-plan-${plan.id}`} className="text-sm cursor-pointer">
+                      {plan.completed ? "Concluído" : "Marcar como concluído"}
+                    </label>
                   </div>
                 </div>
               </CardHeader>
