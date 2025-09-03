@@ -20,7 +20,15 @@ export default function ChallengeFriends({ planId, friends }: { planId: string, 
     if (!selected || !userId) return;
     await supabase
       .from('challenges')
-      .insert({ plan_id: planId, challenger_id: userId, challenged_id: selected, status: 'pending' });
+      .insert({ 
+        creator_id: userId, 
+        challenger_id: selected, 
+        title: "Desafio de Plano",
+        description: "Complete este plano antes de mim!",
+        challenge_type: 'custom',
+        reward_points: 100,
+        status: 'pending' 
+      });
     alert("Desafio enviado!");
   };
 

@@ -16,7 +16,7 @@ import PlansView from "@/components/PlansView";
 import ProgressTracker from "@/components/ProgressTracker";
 import WelcomeGuide from "@/components/WelcomeGuide";
 import ProfileForm from "@/components/ProfileForm";
-import Friends from '../components/Friends';
+import SocialFeed from "@/components/SocialFeed";
 
 interface Profile {
   id: string;
@@ -29,7 +29,7 @@ interface Profile {
 const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("plans");
   const [hasGoals, setHasGoals] = useState(false);
@@ -226,10 +226,10 @@ const Dashboard = () => {
           />
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="plans" className="flex items-center space-x-2">
                 <Calendar className="h-4 w-4" />
-                <span>Meus Planos</span>
+                <span>Planos</span>
               </TabsTrigger>
               <TabsTrigger value="goals" className="flex items-center space-x-2">
                 <Target className="h-4 w-4" />
@@ -238,6 +238,10 @@ const Dashboard = () => {
               <TabsTrigger value="progress" className="flex items-center space-x-2">
                 <TrendingUp className="h-4 w-4" />
                 <span>Progresso</span>
+              </TabsTrigger>
+              <TabsTrigger value="social" className="flex items-center space-x-2">
+                <UserIcon className="h-4 w-4" />
+                <span>Social</span>
               </TabsTrigger>
               <TabsTrigger value="profile" className="flex items-center space-x-2">
                 <UserIcon className="h-4 w-4" />
@@ -266,9 +270,12 @@ const Dashboard = () => {
               />
             </TabsContent>
 
+            <TabsContent value="social" className="space-y-6">
+              <SocialFeed />
+            </TabsContent>
+
             <TabsContent value="profile" className="space-y-6">
               <ProfileForm userId={user?.id || ""} />
-              <Friends />
             </TabsContent>
           </Tabs>
         )}
