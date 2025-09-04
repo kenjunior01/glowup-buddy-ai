@@ -1,287 +1,201 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { toast } from "@/hooks/use-toast";
-import { User } from "@supabase/supabase-js";
-import { Sparkles, Target, Calendar, TrendingUp, LogOut, User as UserIcon } from "lucide-react";
-import { achievements } from "@/lib/achievements";
-import { userRanking } from "@/lib/ranking";
-import GoalsForm from "@/components/GoalsForm";
-import PlansView from "@/components/PlansView";
-import ProgressTracker from "@/components/ProgressTracker";
-import WelcomeGuide from "@/components/WelcomeGuide";
-import ProfileForm from "@/components/ProfileForm";
-import SocialFeed from "@/components/SocialFeed";
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../integrations/supabase/client';
+import GamificationHub from '../components/GamificationHub';
+import MobileBottomNav from '../components/MobileBottomNav';
+import StoryRing from '../components/StoryRing';
+import PostCard from '../components/PostCard';
+import StreakCounter from '../components/StreakCounter';
+import QuickStats from '../components/QuickStats';
+import { Bell, Search, Plus } from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { ScrollArea } from '../components/ui/scroll-area';
 
-interface Profile {
-  id: string;
-  name: string;
-  age?: number;
-  pontos?: number;
-  conquistas?: string[];
-}
-
-const Dashboard = () => {
-  const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<any>(null);
+export default function Dashboard() {
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("plans");
-  const [hasGoals, setHasGoals] = useState(false);
-  const [hasPlans, setHasPlans] = useState(false);
-  const [hasProgress, setHasProgress] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
+
+  // Mock data for social media features
+  const stories = [
+    { name: 'Ana Silva', avatar: '', hasStory: true, isViewed: false },
+    { name: 'Carlos', avatar: '', hasStory: true, isViewed: true },
+    { name: 'Maria', avatar: '', hasStory: true, isViewed: false },
+    { name: 'João', avatar: '', hasStory: false },
+  ];
+
+  const posts = [
+    {
+      id: '1',
+      user: { name: 'Ana Silva', avatar: '', level: 12 },
+      type: 'achievement' as const,
+      content: 'Consegui completar meu primeiro mês de exercícios consecutivos! 🎉',
+      timestamp: '2h atrás',
+      likes: 24,
+      comments: 8,
+      achievement: {
+        title: 'Mestre da Consistência',
+        points: 500,
+        icon: '🏆'
+      }
+    },
+    {
+      id: '2', 
+      user: { name: 'Carlos Mendes', avatar: '', level: 8 },
+      type: 'progress' as const,
+      content: 'Mais um dia focado nos estudos! Quase chegando na meta mensal.',
+      timestamp: '4h atrás',
+      likes: 15,
+      comments: 3,
+      progress: {
+        current: 18,
+        target: 25,
+        unit: 'dias'
+      }
+    },
+    {
+      id: '3',
+      user: { name: 'Maria Santos', avatar: '', level: 15 },
+      type: 'social' as const, 
+      content: 'Bom dia pessoal! Quem mais vai encarar o desafio de 10.000 passos hoje? 💪',
+      timestamp: '6h atrás',
+      likes: 31,
+      comments: 12
+    }
+  ];
+
+  const userStats = {
+    level: 9,
+    points: 12450,
+    rank: 127,
+    friends: 23,
+    achievements: 15,
+    weeklyGrowth: 12
+  };
 
   useEffect(() => {
-    checkUser();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session?.user) {
-        navigate("/auth");
-      } else {
-        setUser(session.user);
-        fetchProfile(session.user.id);
+    const fetchUser = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          setUser({
+            ...session.user,
+            profile: profile || {}
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error);
+      } finally {
+        setLoading(false);
       }
-    });
+    };
 
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    fetchUser();
+  }, []);
 
-  const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) {
-      navigate("/auth");
-      return;
-    }
-    
-    setUser(session.user);
-    await fetchProfile(session.user.id);
-    setLoading(false);
+  const handleCheckIn = () => {
+    // Handle daily check-in logic
+    console.log('Daily check-in completed!');
   };
-
-  const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
-    
-    if (error) {
-      console.error("Error fetching profile:", error);
-    } else {
-      setProfile(data);
-    }
-    
-    // Check if user has data
-    await checkUserData(userId);
-  };
-
-  const checkUserData = async (userId: string) => {
-    // Check goals
-    const { data: goalsData } = await supabase
-      .from("goals")
-      .select("id")
-      .eq("user_id", userId)
-      .limit(1);
-    
-    // Check plans  
-    const { data: plansData } = await supabase
-      .from("plans")
-      .select("id")
-      .eq("user_id", userId)
-      .limit(1);
-      
-    // Check progress
-    const { data: progressData } = await supabase
-      .from("progress")
-      .select("id")
-      .eq("user_id", userId)
-      .limit(1);
-
-    const hasGoalsData = goalsData && goalsData.length > 0;
-    const hasPlansData = plansData && plansData.length > 0;
-    const hasProgressData = progressData && progressData.length > 0;
-
-    setHasGoals(hasGoalsData);
-    setHasPlans(hasPlansData);
-    setHasProgress(hasProgressData);
-    
-    // Show welcome guide if user has no data
-    setShowWelcome(!hasGoalsData && !hasPlansData && !hasProgressData);
-  };
-
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: "Erro ao sair",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleGuideAction = (stepId: string) => {
-    setActiveTab(stepId);
-    setShowWelcome(false);
-  };
-
-  const getCompletedSteps = () => {
-    const steps = [];
-    if (hasGoals) steps.push("goals");
-    if (hasPlans) steps.push("plans");
-    if (hasProgress) steps.push("progress");
-    return steps;
-  };
-
-  // Conquistas reais do usuário
-  const unlockedAchievements = achievements.filter(a => profile?.conquistas?.includes(a.id));
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse-soft">
+          <div className="w-8 h-8 gradient-primary rounded-full"></div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Sparkles className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              GlowUp Planner AI
-            </h1>
+    <div className="min-h-screen bg-background pb-20">
+      {/* Header */}
+      <div className="sticky top-0 z-40 bg-card/95 backdrop-blur-lg border-b border-border mobile-safe">
+        <div className="flex items-center justify-between p-4">
+          <div>
+            <h1 className="text-xl font-bold text-gradient">GlowUp</h1>
+            <p className="text-sm text-muted-foreground">
+              Olá, {user?.profile?.name || 'Usuário'}! 👋
+            </p>
           </div>
-          <div className="flex items-center space-x-4">
-            <Badge variant="outline" className="text-sm">
-              Olá, {profile?.name || user?.email}
-            </Badge>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sair
+          
+          <div className="flex items-center space-x-2">
+            <Button variant="ghost" size="icon" className="scale-press tap-highlight relative">
+              <Bell className="w-5 h-5" />
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-accent rounded-full notification-pulse"></div>
+            </Button>
+            <Button variant="ghost" size="icon" className="scale-press tap-highlight">
+              <Search className="w-5 h-5" />
+            </Button>
+            <Button size="icon" className="social-button">
+              <Plus className="w-5 h-5" />
             </Button>
           </div>
         </div>
-      </header>
+      </div>
 
-      <main className="container mx-auto px-4 py-8">
-        {/* Medalhas/Conquistas */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">Seu Plano de Transformação</h2>
-          <p className="text-muted-foreground">
-            Acompanhe seu progresso e evolua a cada dia com planos personalizados por IA
-          </p>
-          <div className="mt-2 mb-2">
-            <span className="font-bold text-lg text-yellow-700">Pontos: {profile?.pontos ?? 0}</span>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-4">
-            {unlockedAchievements.length === 0 ? (
-              <span className="text-sm text-yellow-600">Nenhuma conquista desbloqueada ainda. Complete planos e missões para ganhar medalhas!</span>
-            ) : (
-              unlockedAchievements.map(a => (
-                <div key={a.id} className="flex flex-col items-center p-2 bg-yellow-50 border border-yellow-200 rounded-lg min-w-[120px]">
-                  <span className="text-3xl mb-1">{a.icon}</span>
-                  <span className="font-bold text-yellow-700 text-sm">{a.title}</span>
-                  <span className="text-xs text-yellow-600 text-center">{a.description}</span>
-                </div>
-              ))
-            )}
-          </div>
-          {/* Ranking de usuários */}
-          <div className="mt-8">
-            <h3 className="text-xl font-bold mb-2 text-blue-700">Ranking Semanal</h3>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-blue-800">
-                    <th className="text-left">Usuário</th>
-                    <th className="text-right">Pontos</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {userRanking.map((u, idx) => (
-                    <tr key={u.name} className={idx === 0 ? "font-bold text-blue-900" : ""}>
-                      <td>{u.name}</td>
-                      <td className="text-right">{u.points}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      <ScrollArea className="h-[calc(100vh-140px)]">
+        <div className="space-y-6">
+          {/* Stories Section */}
+          <div className="px-4 pt-4">
+            <div className="flex space-x-4 overflow-x-auto pb-2">
+              <StoryRing isAddStory onClick={() => console.log('Add story')} />
+              {stories.map((story, index) => (
+                <StoryRing
+                  key={index}
+                  user={story}
+                  onClick={() => console.log('View story')}
+                />
+              ))}
             </div>
           </div>
+
+          {/* Quick Stats */}
+          <div className="px-4">
+            <QuickStats stats={userStats} />
+          </div>
+
+          {/* Streak Counter */}
+          <div className="px-4">
+            <StreakCounter
+              currentStreak={7}
+              longestStreak={14}
+              todayCompleted={false}
+              onCheckIn={handleCheckIn}
+            />
+          </div>
+
+          {/* Gamification Hub */}
+          <div className="px-4">
+            <GamificationHub />
+          </div>
+
+          {/* Social Feed */}
+          <div className="px-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Feed da Comunidade</h2>
+              <Button variant="ghost" size="sm" className="text-primary">
+                Ver todos
+              </Button>
+            </div>
+            
+            {posts.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))}
+          </div>
+
+          {/* Bottom padding for mobile nav */}
+          <div className="h-8"></div>
         </div>
+      </ScrollArea>
 
-        {showWelcome ? (
-          <WelcomeGuide 
-            onStepAction={handleGuideAction}
-            completedSteps={getCompletedSteps()}
-          />
-        ) : (
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="plans" className="flex items-center space-x-2">
-                <Calendar className="h-4 w-4" />
-                <span>Planos</span>
-              </TabsTrigger>
-              <TabsTrigger value="goals" className="flex items-center space-x-2">
-                <Target className="h-4 w-4" />
-                <span>Objetivos</span>
-              </TabsTrigger>
-              <TabsTrigger value="progress" className="flex items-center space-x-2">
-                <TrendingUp className="h-4 w-4" />
-                <span>Progresso</span>
-              </TabsTrigger>
-              <TabsTrigger value="social" className="flex items-center space-x-2">
-                <UserIcon className="h-4 w-4" />
-                <span>Social</span>
-              </TabsTrigger>
-              <TabsTrigger value="profile" className="flex items-center space-x-2">
-                <UserIcon className="h-4 w-4" />
-                <span>Perfil</span>
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="plans" className="space-y-6">
-              <PlansView 
-                userId={user?.id || ""} 
-                onDataChange={() => checkUserData(user?.id || "")} 
-              />
-            </TabsContent>
-
-            <TabsContent value="goals" className="space-y-6">
-              <GoalsForm 
-                userId={user?.id || ""} 
-                onDataChange={() => checkUserData(user?.id || "")}
-              />
-            </TabsContent>
-
-            <TabsContent value="progress" className="space-y-6">
-              <ProgressTracker 
-                userId={user?.id || ""} 
-                onDataChange={() => checkUserData(user?.id || "")}
-              />
-            </TabsContent>
-
-            <TabsContent value="social" className="space-y-6">
-              <SocialFeed />
-            </TabsContent>
-
-            <TabsContent value="profile" className="space-y-6">
-              <ProfileForm userId={user?.id || ""} />
-            </TabsContent>
-          </Tabs>
-        )}
-      </main>
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   );
-};
-
-export default Dashboard;
+}
