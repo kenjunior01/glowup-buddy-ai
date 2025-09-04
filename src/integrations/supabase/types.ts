@@ -16,12 +16,15 @@ export type Database = {
     Tables: {
       challenges: {
         Row: {
+          accepted_at: string | null
           challenge_type: string
           challenger_id: string
           completed_at: string | null
           created_at: string
           creator_id: string
           description: string
+          evidence_description: string | null
+          evidence_url: string | null
           expires_at: string
           id: string
           reward_points: number
@@ -29,12 +32,15 @@ export type Database = {
           title: string
         }
         Insert: {
+          accepted_at?: string | null
           challenge_type?: string
           challenger_id: string
           completed_at?: string | null
           created_at?: string
           creator_id: string
           description: string
+          evidence_description?: string | null
+          evidence_url?: string | null
           expires_at?: string
           id?: string
           reward_points?: number
@@ -42,12 +48,15 @@ export type Database = {
           title: string
         }
         Update: {
+          accepted_at?: string | null
           challenge_type?: string
           challenger_id?: string
           completed_at?: string | null
           created_at?: string
           creator_id?: string
           description?: string
+          evidence_description?: string | null
+          evidence_url?: string | null
           expires_at?: string
           id?: string
           reward_points?: number
@@ -369,6 +378,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_challenge: {
+        Args: { challenge_id: string }
+        Returns: boolean
+      }
+      complete_challenge: {
+        Args: {
+          challenge_id: string
+          evidence_description?: string
+          evidence_url?: string
+        }
+        Returns: boolean
+      }
+      create_user_challenge: {
+        Args: {
+          challenge_description: string
+          challenge_title: string
+          challenge_type?: string
+          challenger_user_id: string
+          expires_days?: number
+          reward_points?: number
+        }
+        Returns: string
+      }
       update_user_streak: {
         Args: { user_uuid: string }
         Returns: undefined
