@@ -3,9 +3,14 @@ import { supabase } from '../integrations/supabase/client';
 import { Tables } from '../integrations/supabase/types';
 import { Button } from './ui/button';
 
+type SimpleProfile = {
+  id: string;
+  name: string | null;
+};
+
 export default function Friends() {
-  const [users, setUsers] = useState<Tables<'profiles'>[]>([]);
-  const [friends, setFriends] = useState<Tables<'profiles'>[]>([]);
+  const [users, setUsers] = useState<SimpleProfile[]>([]);
+  const [friends, setFriends] = useState<SimpleProfile[]>([]);
   const [requests, setRequests] = useState<any[]>([]);
   const [userId, setUserId] = useState<string>("");
 
@@ -35,7 +40,7 @@ export default function Friends() {
         .select('*, profiles:friend_id(name, id)')
         .eq('user_id', userId)
         .eq('status', 'accepted');
-      setFriends(data ? data.map((f: any) => f.profiles as Tables<'profiles'>) : []);
+      setFriends(data ? data.map((f: any) => f.profiles as SimpleProfile) : []);
     };
     // Buscar pedidos recebidos
     const fetchRequests = async () => {
