@@ -3,18 +3,27 @@ import { supabase } from '../integrations/supabase/client';
 import GamificationHub from '../components/GamificationHub';
 import MobileBottomNav from '../components/MobileBottomNav';
 import StoryRing from '../components/StoryRing';
-import PostCard from '../components/PostCard';
 import StreakCounter from '../components/StreakCounter';
 import QuickStats from '../components/QuickStats';
+import RealSocialFeed from '../components/RealSocialFeed';
+import UsersList from '../components/UsersList';
+import ChallengeModal from '../components/ChallengeModal';
+import MyChallenges from '../components/MyChallenges';
 import { Bell, Search, Plus } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { ScrollArea } from '../components/ui/scroll-area';
 
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
+  const [userStats, setUserStats] = useState<any>(null);
+  const [currentStreak, setCurrentStreak] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [showChallengeModal, setShowChallengeModal] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [selectedUserName, setSelectedUserName] = useState<string>('');
+  const [activeView, setActiveView] = useState<'feed' | 'users' | 'challenges'>('feed');
 
-  // Mock data for social media features
+  // Mock stories - pode ser real depois
   const stories = [
     { name: 'Ana Silva', avatar: '', hasStory: true, isViewed: false },
     { name: 'Carlos', avatar: '', hasStory: true, isViewed: true },
@@ -22,84 +31,81 @@ export default function Dashboard() {
     { name: 'João', avatar: '', hasStory: false },
   ];
 
-  const posts = [
-    {
-      id: '1',
-      user: { name: 'Ana Silva', avatar: '', level: 12 },
-      type: 'achievement' as const,
-      content: 'Consegui completar meu primeiro mês de exercícios consecutivos! 🎉',
-      timestamp: '2h atrás',
-      likes: 24,
-      comments: 8,
-      achievement: {
-        title: 'Mestre da Consistência',
-        points: 500,
-        icon: '🏆'
-      }
-    },
-    {
-      id: '2', 
-      user: { name: 'Carlos Mendes', avatar: '', level: 8 },
-      type: 'progress' as const,
-      content: 'Mais um dia focado nos estudos! Quase chegando na meta mensal.',
-      timestamp: '4h atrás',
-      likes: 15,
-      comments: 3,
-      progress: {
-        current: 18,
-        target: 25,
-        unit: 'dias'
-      }
-    },
-    {
-      id: '3',
-      user: { name: 'Maria Santos', avatar: '', level: 15 },
-      type: 'social' as const, 
-      content: 'Bom dia pessoal! Quem mais vai encarar o desafio de 10.000 passos hoje? 💪',
-      timestamp: '6h atrás',
-      likes: 31,
-      comments: 12
-    }
-  ];
-
-  const userStats = {
-    level: 9,
-    points: 12450,
-    rank: 127,
-    friends: 23,
-    achievements: 15,
-    weeklyGrowth: 12
-  };
-
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          
-          setUser({
-            ...session.user,
-            profile: profile || {}
-          });
-        }
-      } catch (error) {
-        console.error('Error fetching user:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
+    fetchUserData();
   }, []);
 
-  const handleCheckIn = () => {
-    // Handle daily check-in logic
-    console.log('Daily check-in completed!');
+  const fetchUserData = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        // Fetch user profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        // Fetch user streak
+        const { data: streak } = await supabase
+          .from('streaks')
+          .select('current_streak, longest_streak')
+          .eq('user_id', session.user.id)
+          .single();
+
+        // Count friends
+        const { count: friendsCount } = await supabase
+          .from('friendships')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', session.user.id)
+          .eq('status', 'accepted');
+
+        const userProfile = profile || {};
+        const userStreak = streak || { current_streak: 0, longest_streak: 0 };
+
+        setUser({
+          ...session.user,
+          profile: userProfile
+        });
+
+        setUserStats({
+          level: (userProfile as any)?.level || 1,
+          points: (userProfile as any)?.pontos || 0,
+          rank: 127, // Mock rank for now
+          friends: friendsCount || 0,
+          achievements: ((userProfile as any)?.conquistas as any[])?.length || 0,
+          weeklyGrowth: 12 // Mock growth
+        });
+
+        setCurrentStreak(userStreak.current_streak);
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCheckIn = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+
+      await supabase.rpc('update_user_streak', {
+        user_uuid: session.user.id
+      });
+
+      // Refresh user data
+      fetchUserData();
+    } catch (error) {
+      console.error('Error updating streak:', error);
+    }
+  };
+
+  const handleChallengeUser = (userId: string, userName: string) => {
+    setSelectedUserId(userId);
+    setSelectedUserName(userName);
+    setShowChallengeModal(true);
   };
 
   if (loading) {
@@ -125,14 +131,28 @@ export default function Dashboard() {
           </div>
           
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="icon" className="scale-press tap-highlight relative">
-              <Bell className="w-5 h-5" />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="scale-press tap-highlight relative"
+              onClick={() => setActiveView('feed')}
+            >
+              <Bell className={`w-5 h-5 ${activeView === 'feed' ? 'text-primary' : ''}`} />
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-accent rounded-full notification-pulse"></div>
             </Button>
-            <Button variant="ghost" size="icon" className="scale-press tap-highlight">
-              <Search className="w-5 h-5" />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="scale-press tap-highlight"
+              onClick={() => setActiveView('users')}
+            >
+              <Search className={`w-5 h-5 ${activeView === 'users' ? 'text-primary' : ''}`} />
             </Button>
-            <Button size="icon" className="social-button">
+            <Button 
+              size="icon" 
+              className="social-button"
+              onClick={() => setActiveView('challenges')}
+            >
               <Plus className="w-5 h-5" />
             </Button>
           </div>
@@ -157,13 +177,13 @@ export default function Dashboard() {
 
           {/* Quick Stats */}
           <div className="px-4">
-            <QuickStats stats={userStats} />
+            <QuickStats stats={userStats || {}} />
           </div>
 
           {/* Streak Counter */}
           <div className="px-4">
             <StreakCounter
-              currentStreak={7}
+              currentStreak={currentStreak}
               longestStreak={14}
               todayCompleted={false}
               onCheckIn={handleCheckIn}
@@ -175,18 +195,13 @@ export default function Dashboard() {
             <GamificationHub />
           </div>
 
-          {/* Social Feed */}
+          {/* Dynamic Content Based on Active View */}
           <div className="px-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Feed da Comunidade</h2>
-              <Button variant="ghost" size="sm" className="text-primary">
-                Ver todos
-              </Button>
-            </div>
-            
-            {posts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
+            {activeView === 'feed' && <RealSocialFeed />}
+            {activeView === 'users' && (
+              <UsersList onChallengeUser={handleChallengeUser} />
+            )}
+            {activeView === 'challenges' && <MyChallenges />}
           </div>
 
           {/* Bottom padding for mobile nav */}
@@ -196,6 +211,14 @@ export default function Dashboard() {
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
+
+      {/* Challenge Modal */}
+      <ChallengeModal
+        isOpen={showChallengeModal}
+        onClose={() => setShowChallengeModal(false)}
+        targetUserId={selectedUserId}
+        targetUserName={selectedUserName}
+      />
     </div>
   );
 }
