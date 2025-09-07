@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
+import { useToast } from '../hooks/use-toast';
 import { Tables } from '../integrations/supabase/types';
 import { Button } from './ui/button';
 
 export default function ChallengeFriends({ planId, friends }: { planId: string, friends: any[] }) {
   const [selected, setSelected] = useState<string>('');
   const [userId, setUserId] = useState<string>("");
+  const { toast } = useToast();
 
   useEffect(() => {
     // Buscar usuário logado
@@ -29,7 +31,10 @@ export default function ChallengeFriends({ planId, friends }: { planId: string, 
         reward_points: 100,
         status: 'pending' 
       });
-    alert("Desafio enviado!");
+    toast({
+      title: "Desafio enviado!",
+      description: "Seu amigo foi notificado sobre o desafio.",
+    });
   };
 
   return (

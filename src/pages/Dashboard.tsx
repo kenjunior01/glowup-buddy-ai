@@ -171,12 +171,12 @@ export default function Dashboard() {
           {stories.length > 0 && (
             <div className="px-4 pt-4">
               <div className="flex space-x-4 overflow-x-auto pb-2">
-                <StoryRing isAddStory onClick={() => console.log('Add story - Coming soon')} />
+                <StoryRing isAddStory onClick={() => {}} />
                 {stories.map((story, index) => (
                   <StoryRing
                     key={index}
                     user={story}
-                    onClick={() => console.log('View story')}
+                    onClick={() => {}}
                   />
                 ))}
               </div>

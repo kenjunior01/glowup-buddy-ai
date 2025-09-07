@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
+import { useToast } from '../hooks/use-toast';
 import { Tables } from '../integrations/supabase/types';
 import { Button } from './ui/button';
 
@@ -13,6 +14,7 @@ export default function Friends() {
   const [friends, setFriends] = useState<SimpleProfile[]>([]);
   const [requests, setRequests] = useState<any[]>([]);
   const [userId, setUserId] = useState<string>("");
+  const { toast } = useToast();
 
   useEffect(() => {
     // Buscar usuário logado
@@ -60,7 +62,10 @@ export default function Friends() {
     await supabase
       .from('friendships')
       .insert({ user_id: userId, friend_id: friendId, status: 'pending' });
-    alert("Pedido de amizade enviado!");
+    toast({
+      title: "Pedido enviado!",
+      description: "Pedido de amizade enviado com sucesso.",
+    });
   };
 
   const acceptFriendRequest = async (requestId: string) => {
@@ -68,7 +73,10 @@ export default function Friends() {
       .from('friendships')
       .update({ status: 'accepted' })
       .eq('id', requestId);
-    alert("Pedido aceito!");
+    toast({
+      title: "Amizade aceita!",
+      description: "Vocês agora são amigos no GlowUp.",
+    });
   };
 
   return (

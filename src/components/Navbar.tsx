@@ -56,6 +56,24 @@ const Navbar = () => {
                 >
                   Dashboard
                 </Button>
+                <Button
+                  variant={location.pathname === "/social" ? "default" : "ghost"}
+                  onClick={() => navigate("/social")}
+                >
+                  Social
+                </Button>
+                <Button
+                  variant={location.pathname === "/challenges" ? "default" : "ghost"}
+                  onClick={() => navigate("/challenges")}
+                >
+                  Desafios
+                </Button>
+                <Button
+                  variant={location.pathname === "/profile" ? "default" : "ghost"}
+                  onClick={() => navigate("/profile")}
+                >
+                  Perfil
+                </Button>
                 <Button variant="ghost" onClick={handleSignOut}>
                   Sair
                 </Button>
@@ -105,6 +123,36 @@ const Navbar = () => {
                     className="justify-start"
                   >
                     Dashboard
+                  </Button>
+                  <Button
+                    variant={location.pathname === "/social" ? "default" : "ghost"}
+                    onClick={() => {
+                      navigate("/social");
+                      setIsMenuOpen(false);
+                    }}
+                    className="justify-start"
+                  >
+                    Social
+                  </Button>
+                  <Button
+                    variant={location.pathname === "/challenges" ? "default" : "ghost"}
+                    onClick={() => {
+                      navigate("/challenges");
+                      setIsMenuOpen(false);
+                    }}
+                    className="justify-start"
+                  >
+                    Desafios
+                  </Button>
+                  <Button
+                    variant={location.pathname === "/profile" ? "default" : "ghost"}
+                    onClick={() => {
+                      navigate("/profile");
+                      setIsMenuOpen(false);
+                    }}
+                    className="justify-start"
+                  >
+                    Perfil
                   </Button>
                   <Button 
                     variant="ghost" 
