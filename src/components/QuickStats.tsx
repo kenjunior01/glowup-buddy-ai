@@ -82,7 +82,7 @@ export default function QuickStats({ stats }: QuickStatsProps) {
         ))}
       </div>
 
-      <div className="pt-2 border-t border-border/50">
+          <div className="pt-2 border-t border-border/50">
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">Próximo nível</span>
           <span className="font-medium">Nível {stats.level + 1}</span>
@@ -91,13 +91,13 @@ export default function QuickStats({ stats }: QuickStatsProps) {
         <div className="mt-2 w-full bg-muted rounded-full h-2">
           <div 
             className="gradient-primary h-2 rounded-full progress-fill"
-            style={{ width: '73%' }}
+            style={{ width: `${((stats.points % 100) / 100) * 100}%` }}
           />
         </div>
         
         <div className="flex justify-between text-xs text-muted-foreground mt-1">
-          <span>2.340 XP</span>
-          <span>3.200 XP</span>
+          <span>{stats.points} XP</span>
+          <span>{(stats.level * 100)} XP</span>
         </div>
       </div>
     </div>

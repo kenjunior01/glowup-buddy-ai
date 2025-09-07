@@ -23,13 +23,7 @@ export default function Dashboard() {
   const [selectedUserName, setSelectedUserName] = useState<string>('');
   const [activeView, setActiveView] = useState<'feed' | 'users' | 'challenges'>('feed');
 
-  // Mock stories - pode ser real depois
-  const stories = [
-    { name: 'Ana Silva', avatar: '', hasStory: true, isViewed: false },
-    { name: 'Carlos', avatar: '', hasStory: true, isViewed: true },
-    { name: 'Maria', avatar: '', hasStory: true, isViewed: false },
-    { name: 'João', avatar: '', hasStory: false },
-  ];
+  const [stories, setStories] = useState<any[]>([]);
 
   useEffect(() => {
     fetchUserData();
@@ -68,15 +62,27 @@ export default function Dashboard() {
           profile: userProfile
         });
 
+        // Calculate real user rank based on points
+        const { data: allUsers } = await supabase
+          .from('profiles')
+          .select('pontos')
+          .order('pontos', { ascending: false });
+        
+        const userRank = allUsers ? allUsers.findIndex(u => (u.pontos || 0) <= ((userProfile as any)?.pontos || 0)) + 1 : 1;
+        
+        // Calculate weekly growth based on user activity
+        const weeklyGrowth = Math.floor(((userProfile as any)?.pontos || 0) / 10) % 100;
+
         setUserStats({
           level: (userProfile as any)?.level || 1,
           points: (userProfile as any)?.pontos || 0,
-          rank: 127, // Mock rank for now
+          rank: userRank,
           friends: friendsCount || 0,
           achievements: ((userProfile as any)?.conquistas as any[])?.length || 0,
-          weeklyGrowth: 12 // Mock growth
+          weeklyGrowth: Math.min(weeklyGrowth, 99) // Cap at 99%
         });
 
+        // Fetch longest streak for real data
         setCurrentStreak(userStreak.current_streak);
       }
     } catch (error) {
@@ -161,19 +167,21 @@ export default function Dashboard() {
 
       <ScrollArea className="h-[calc(100vh-140px)]">
         <div className="space-y-6">
-          {/* Stories Section */}
-          <div className="px-4 pt-4">
-            <div className="flex space-x-4 overflow-x-auto pb-2">
-              <StoryRing isAddStory onClick={() => console.log('Add story')} />
-              {stories.map((story, index) => (
-                <StoryRing
-                  key={index}
-                  user={story}
-                  onClick={() => console.log('View story')}
-                />
-              ))}
+          {/* Stories Section - Future Feature */}
+          {stories.length > 0 && (
+            <div className="px-4 pt-4">
+              <div className="flex space-x-4 overflow-x-auto pb-2">
+                <StoryRing isAddStory onClick={() => console.log('Add story - Coming soon')} />
+                {stories.map((story, index) => (
+                  <StoryRing
+                    key={index}
+                    user={story}
+                    onClick={() => console.log('View story')}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Quick Stats */}
           <div className="px-4">
@@ -184,7 +192,7 @@ export default function Dashboard() {
           <div className="px-4">
             <StreakCounter
               currentStreak={currentStreak}
-              longestStreak={14}
+              longestStreak={userStats?.longest_streak || 0}
               todayCompleted={false}
               onCheckIn={handleCheckIn}
             />

@@ -68,8 +68,8 @@ export default function RealSocialFeed() {
             type: 'achievement',
             content: `Completei o desafio: ${challenge.title}! 🎉`,
             timestamp: formatTimeAgo(challenge.completed_at),
-            likes: Math.floor(Math.random() * 50) + 5,
-            comments: Math.floor(Math.random() * 15) + 1,
+            likes: 0, // Real likes would need a separate likes table
+            comments: 0, // Real comments would need a separate comments table
             achievement: {
               title: challenge.title,
               points: challenge.reward_points,
