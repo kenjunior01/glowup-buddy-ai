@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import ProfileForm from '@/components/ProfileForm';
+import { BadgesSystem } from '@/components/BadgesSystem';
+import { DailyMissions } from '@/components/DailyMissions';
+import { CalendarIntegration } from '@/components/CalendarIntegration';
+import { StoriesSystem } from '@/components/StoriesSystem';
+import { CommunityGroups } from '@/components/CommunityGroups';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -243,88 +248,50 @@ export default function Profile() {
         </div>
 
         <Tabs defaultValue="info" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="info">Informações</TabsTrigger>
             <TabsTrigger value="achievements">Conquistas</TabsTrigger>
-            <TabsTrigger value="settings">Configurações</TabsTrigger>
+            <TabsTrigger value="missions">Missões</TabsTrigger>
+            <TabsTrigger value="calendar">Calendário</TabsTrigger>
+            <TabsTrigger value="social">Social</TabsTrigger>
           </TabsList>
 
           <TabsContent value="info" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5" />
-                  Informações Pessoais
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Idade:</span>
-                  <span>{profile?.age || 'Não informado'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Ocupação:</span>
-                  <span>{profile?.ocupacao || 'Não informado'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Membro desde:</span>
-                  <span>{memberSince}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Sequência mais longa:</span>
-                  <span>{stats?.longest_streak || 0} dias</span>
-                </div>
-              </CardContent>
-            </Card>
+            <ProfileForm userId={profile?.id || ''} />
           </TabsContent>
 
           <TabsContent value="achievements" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Award className="w-5 h-5" />
-                  Suas Conquistas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {(!profile?.conquistas || profile.conquistas.length === 0) ? (
-                  <div className="text-center py-8">
-                    <Trophy className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">
-                      Você ainda não possui conquistas. Complete desafios e mantenha sua sequência para desbloquear!
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    {profile.conquistas.map((achievement, index) => (
-                      <div
-                        key={index}
-                        className="p-3 bg-gradient-to-br from-primary/10 to-accent/10 rounded-lg border border-primary/20"
-                      >
-                        <div className="text-center">
-                          <Trophy className="w-6 h-6 mx-auto mb-2 text-primary" />
-                          <p className="font-medium text-sm">{achievement}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <BadgesSystem 
+              userId={profile?.id || ''} 
+              userStats={{
+                current_streak: stats?.current_streak || 0,
+                longest_streak: stats?.longest_streak || 0,
+                total_challenges: profile?.total_challenges_completed || 0,
+                friends_count: stats?.total_friends || 0,
+                login_days: 15,
+                points: profile?.pontos || 0
+              }}
+            />
           </TabsContent>
 
-          <TabsContent value="settings" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="w-5 h-5" />
-                  Editar Perfil
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ProfileForm userId={profile?.id || ''} />
-              </CardContent>
-            </Card>
+          <TabsContent value="missions" className="space-y-4">
+            <DailyMissions userId={profile?.id || ''} />
+          </TabsContent>
+
+          <TabsContent value="calendar" className="space-y-4">
+            <CalendarIntegration userId={profile?.id || ''} />
+          </TabsContent>
+
+          <TabsContent value="social" className="space-y-4">
+            <StoriesSystem 
+              userId={profile?.id || ''} 
+              userName={profile?.name || 'Usuário'}
+              userAvatar={profile?.avatar_url}
+            />
+            <CommunityGroups 
+              userId={profile?.id || ''}
+              userName={profile?.name || 'Usuário'}
+            />
           </TabsContent>
         </Tabs>
       </div>
