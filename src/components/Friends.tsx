@@ -77,6 +77,50 @@ export default function Friends() {
       title: "Amizade aceita!",
       description: "Vocês agora são amigos no GlowUp.",
     });
+    // Refresh data
+    if (userId) {
+      const fetchFriends = async () => {
+        const { data } = await supabase
+          .from('friendships')
+          .select('*, profiles:friend_id(name, id)')
+          .eq('user_id', userId)
+          .eq('status', 'accepted');
+        setFriends(data ? data.map((f: any) => f.profiles as SimpleProfile) : []);
+      };
+      const fetchRequests = async () => {
+        const { data } = await supabase
+          .from('friendships')
+          .select('*, profiles:user_id(name, id)')
+          .eq('friend_id', userId)
+          .eq('status', 'pending');
+        setRequests(data || []);
+      };
+      fetchFriends();
+      fetchRequests();
+    }
+  };
+
+  const rejectFriendRequest = async (requestId: string) => {
+    await supabase
+      .from('friendships')
+      .delete()
+      .eq('id', requestId);
+    toast({
+      title: "Pedido recusado",
+      description: "Pedido de amizade recusado.",
+    });
+    // Refresh requests
+    if (userId) {
+      const fetchRequests = async () => {
+        const { data } = await supabase
+          .from('friendships')
+          .select('*, profiles:user_id(name, id)')
+          .eq('friend_id', userId)
+          .eq('status', 'pending');
+        setRequests(data || []);
+      };
+      fetchRequests();
+    }
   };
 
   return (
@@ -100,6 +144,7 @@ export default function Friends() {
             <li key={r.id} className="flex items-center gap-2">
               <span>{r.profiles?.name}</span>
               <Button size="sm" onClick={() => acceptFriendRequest(r.id)}>Aceitar</Button>
+              <Button size="sm" variant="outline" onClick={() => rejectFriendRequest(r.id)}>Recusar</Button>
             </li>
           ))}
         </ul>
