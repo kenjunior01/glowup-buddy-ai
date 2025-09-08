@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Menu, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { NotificationBell } from "@/components/NotificationBell";
 import type { User } from "@supabase/supabase-js";
 
 const Navbar = () => {
@@ -74,6 +75,7 @@ const Navbar = () => {
                 >
                   Perfil
                 </Button>
+                <NotificationBell />
                 <Button variant="ghost" onClick={handleSignOut}>
                   Sair
                 </Button>

@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "@/hooks/use-toast";
+import { AvatarUpload } from '@/components/AvatarUpload';
+import { useToast } from "@/hooks/use-toast";
 
 interface ProfileFormProps {
   userId: string;
@@ -14,6 +15,7 @@ const ProfileForm = ({ userId }: ProfileFormProps) => {
   const [profile, setProfile] = useState<any>({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchProfile();
@@ -66,7 +68,17 @@ const ProfileForm = ({ userId }: ProfileFormProps) => {
       <CardHeader>
         <CardTitle>Informações do Perfil</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
+        <div className="flex justify-center">
+          <AvatarUpload 
+            userId={userId}
+            avatarUrl={profile.avatar_url}
+            userName={profile.name}
+            onUploadComplete={(url) => setProfile(prev => ({ ...prev, avatar_url: url }))}
+          />
+        </div>
+        
+        <div className="space-y-4">
         <Input name="name" value={profile.name || ""} onChange={handleChange} placeholder="Nome" />
         <Input name="age" value={profile.age || ""} onChange={handleChange} placeholder="Idade" type="number" />
         <Input name="ocupacao" value={profile.ocupacao || ""} onChange={handleChange} placeholder="Ocupação" />
@@ -75,6 +87,7 @@ const ProfileForm = ({ userId }: ProfileFormProps) => {
         <Input name="mentalidade" value={profile.mentalidade || ""} onChange={handleChange} placeholder="Mentalidade (ex: motivação, foco)" />
         <Textarea name="informacoes_extras" value={profile.informacoes_extras || ""} onChange={handleChange} placeholder="Informações adicionais" />
         <Button onClick={handleSave} disabled={saving}>{saving ? "Salvando..." : "Salvar"}</Button>
+        </div>
       </CardContent>
     </Card>
   );

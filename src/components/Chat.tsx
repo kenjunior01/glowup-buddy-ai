@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Send, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { SkeletonMessage } from '@/components/SkeletonCard';
 
 interface ChatProps {
   friendId: string;
@@ -35,8 +36,39 @@ const Chat: React.FC<ChatProps> = ({ friendId }) => {
   useEffect(() => {
     if (currentUserId && friendId) {
       fetchMessages();
+      
+      // Set up real-time subscription for new messages
+      const channel = supabase
+        .channel('messages')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `or(and(sender_id.eq.${currentUserId},receiver_id.eq.${friendId}),and(sender_id.eq.${friendId},receiver_id.eq.${currentUserId}))`,
+          },
+          (payload) => {
+            const newMessage = payload.new as Message;
+            setMessages(prev => [...prev, newMessage]);
+            scrollToBottom();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [currentUserId, friendId]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const getCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -83,7 +115,7 @@ const Chat: React.FC<ChatProps> = ({ friendId }) => {
       });
     } else {
       setNewMessage('');
-      fetchMessages();
+      scrollToBottom();
     }
     
     setLoading(false);

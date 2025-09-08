@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import RealSocialFeed from '@/components/RealSocialFeed';
-import UsersList from '@/components/UsersList';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import { UserSearch } from '@/components/UserSearch';
+import { SkeletonCard, SkeletonUserCard } from '@/components/SkeletonCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, TrendingUp, Award } from 'lucide-react';
@@ -47,7 +47,11 @@ export default function Social() {
             </h1>
           </div>
         </div>
-        <LoadingSpinner text="Carregando comunidade..." className="mt-20" />
+        <div className="p-4 space-y-6">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
       </div>
     );
   }
@@ -88,8 +92,10 @@ export default function Social() {
               </CardHeader>
               <CardContent>
                 {loading ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    Carregando ranking...
+                  <div className="space-y-3">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <SkeletonUserCard key={i} />
+                    ))}
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -129,9 +135,9 @@ export default function Social() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="users" className="space-y-4">
-            <UsersList onChallengeUser={handleChallengeUser} />
-          </TabsContent>
+            <TabsContent value="users" className="space-y-6">
+              <UserSearch onChallengeUser={handleChallengeUser} />
+            </TabsContent>
         </Tabs>
       </div>
     </div>
