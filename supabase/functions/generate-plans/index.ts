@@ -21,10 +21,10 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get Gemini API key from environment
-    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
-    if (!geminiApiKey) {
-      throw new Error('Gemini API key not configured');
+    // Get Lovable API key from environment
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!lovableApiKey) {
+      throw new Error('Lovable API key not configured');
     }
 
     // Prepare data for AI prompt
@@ -37,8 +37,8 @@ Nome: ${profile?.name || 'Usuário'}
 Idade: ${profile?.age || 'Não informado'}
 `;
 
-    // Generate plans using Gemini AI
-    const plans = await generatePlansWithAI(geminiApiKey, userProfile, goalsText);
+    // Generate plans using Lovable AI
+    const plans = await generatePlansWithAI(lovableApiKey, userProfile, goalsText);
 
     // Save plans to database
     const planPromises = plans.map(async (plan: any) => {
@@ -91,14 +91,7 @@ Idade: ${profile?.age || 'Não informado'}
 });
 
 async function generatePlansWithAI(apiKey: string, userProfile: string, goalsText: string) {
-  const prompt = `
-Com base no perfil do usuário e seus objetivos, gere planos de transformação pessoal (Glow Up) estruturados em JSON.
-
-PERFIL DO USUÁRIO:
-${userProfile}
-
-OBJETIVOS:
-${goalsText}
+  const systemPrompt = `Você é um especialista em transformação pessoal e coaching de vida. Crie planos de Glow Up personalizados e motivadores.
 
 INSTRUÇÕES:
 - Gere 3 planos: diário, semanal e mensal
@@ -106,66 +99,64 @@ INSTRUÇÕES:
 - As atividades devem ser específicas para os objetivos mencionados
 - Use uma linguagem motivadora e positiva
 - Considere a idade e perfil do usuário
+- Responda APENAS com JSON válido no formato especificado`;
+
+  const userPrompt = `Com base no perfil do usuário e seus objetivos, gere planos de transformação pessoal estruturados.
+
+PERFIL DO USUÁRIO:
+${userProfile}
+
+OBJETIVOS:
+${goalsText}
 
 FORMATO DE RESPOSTA (JSON):
 {
   "daily": ["atividade 1", "atividade 2", "atividade 3"],
   "weekly": ["atividade 1", "atividade 2", "atividade 3"],
   "monthly": ["atividade 1", "atividade 2", "atividade 3"]
-}
-
-Responda APENAS com o JSON, sem comentários adicionais.
-
-Você é um especialista em transformação pessoal e coaching de vida. Crie planos de Glow Up personalizados e motivadores.
-`;
+}`;
 
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: prompt
-              }
-            ]
-          }
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
         ],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1000,
-        }
+        temperature: 0.7,
+        max_tokens: 1000,
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Gemini API error response:', errorText);
+      console.error('Lovable AI error response:', errorText);
       
       if (response.status === 429) {
-        throw new Error('Limite de requisições do Gemini atingido. Tente novamente em alguns minutos.');
-      } else if (response.status === 403) {
-        throw new Error('Chave da API Gemini inválida ou sem permissões.');
+        throw new Error('Limite de requisições atingido. Tente novamente em alguns minutos.');
+      } else if (response.status === 402) {
+        throw new Error('Créditos insuficientes. Adicione créditos em Settings -> Workspace -> Usage.');
       } else {
-        throw new Error(`Gemini API error: ${response.statusText}`);
+        throw new Error(`AI Gateway error: ${response.statusText}`);
       }
     }
 
     const data = await response.json();
-    console.log('Gemini API response:', JSON.stringify(data, null, 2));
+    console.log('Lovable AI response:', JSON.stringify(data, null, 2));
     
-    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-      throw new Error('Resposta inválida da API Gemini');
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error('Resposta inválida da API');
     }
     
-    const aiResponse = data.candidates[0].content.parts[0].text;
+    const aiResponse = data.choices[0].message.content;
     
     try {
-      // Try to extract JSON from the response
       const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
       const jsonString = jsonMatch ? jsonMatch[0] : aiResponse;
       const planContent = JSON.parse(jsonString);
@@ -181,9 +172,8 @@ Você é um especialista em transformação pessoal e coaching de vida. Crie pla
       throw parseError;
     }
   } catch (error) {
-    console.error('Error calling Gemini API:', error);
+    console.error('Error calling Lovable AI:', error);
     
-    // Fallback if AI doesn't work at all
     return [
       { 
         type: 'daily', 

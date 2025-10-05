@@ -27,6 +27,7 @@ interface DailyMissionsProps {
 export const DailyMissions = ({ userId }: DailyMissionsProps) => {
   const [missions, setMissions] = useState<DailyMission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingAI, setLoadingAI] = useState(false);
   const { toast } = useToast();
 
   const missionTemplates: Omit<DailyMission, 'id' | 'current' | 'completed'>[] = [
@@ -211,7 +212,6 @@ export const DailyMissions = ({ userId }: DailyMissionsProps) => {
 
   const handleQuickAction = async (mission: DailyMission) => {
     if (mission.action_required === 'checkin') {
-      // Trigger daily check-in
       try {
         const { error } = await supabase.rpc('update_user_streak', { 
           user_uuid: userId 
@@ -223,6 +223,47 @@ export const DailyMissions = ({ userId }: DailyMissionsProps) => {
       } catch (error) {
         console.error('Error with check-in:', error);
       }
+    }
+  };
+
+  const getAISuggestions = async () => {
+    setLoadingAI(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('suggest-missions', {
+        body: { userId }
+      });
+
+      if (error) throw error;
+
+      if (data?.missions && data.missions.length > 0) {
+        const aiMissions = data.missions.map((m: any, index: number) => ({
+          id: `ai_mission_${Date.now()}_${index}`,
+          title: m.title,
+          description: m.description,
+          icon: Award,
+          target: 1,
+          current: 0,
+          completed: false,
+          reward_points: m.points || 20,
+          type: m.type || 'challenge'
+        }));
+
+        setMissions(prev => [...aiMissions, ...prev]);
+        
+        toast({
+          title: "✨ Missões IA Geradas!",
+          description: `${data.missions.length} novas missões personalizadas adicionadas`,
+        });
+      }
+    } catch (error) {
+      console.error('Error getting AI suggestions:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível obter sugestões da IA.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingAI(false);
     }
   };
 
@@ -250,15 +291,29 @@ export const DailyMissions = ({ userId }: DailyMissionsProps) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Award className="w-5 h-5" />
-          Missões Diárias ({completedCount}/{missions.length})
-        </CardTitle>
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <span>Pontos ganhos hoje: {totalRewards}</span>
-          <Badge variant={completedCount === missions.length ? "default" : "secondary"}>
-            {completedCount === missions.length ? "Todas completas! 🎉" : "Em progresso"}
-          </Badge>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Award className="w-5 h-5" />
+              Missões Diárias ({completedCount}/{missions.length})
+            </CardTitle>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
+              <span>Pontos ganhos hoje: {totalRewards}</span>
+              <Badge variant={completedCount === missions.length ? "default" : "secondary"}>
+                {completedCount === missions.length ? "Todas completas! 🎉" : "Em progresso"}
+              </Badge>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={getAISuggestions}
+            disabled={loadingAI}
+            className="gap-2"
+          >
+            <Zap className="w-4 h-4" />
+            {loadingAI ? 'Gerando...' : 'Sugestões IA'}
+          </Button>
         </div>
       </CardHeader>
       <CardContent>

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { MessageCircle, Users, Search } from 'lucide-react';
+import { MessageCircle, Users, Search, Bot, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 interface Friend {
@@ -15,6 +15,7 @@ interface Friend {
   last_message?: string;
   unread_count?: number;
   last_seen?: string;
+  isAI?: boolean;
 }
 
 export default function ChatPage() {
@@ -129,6 +130,37 @@ export default function ChatPage() {
             </Card>
           ) : (
             <div className="space-y-2">
+              {/* AI Assistant Button */}
+              <Button
+                variant={selectedFriend?.id === 'ai-assistant' ? "secondary" : "ghost"}
+                className="w-full justify-start p-3 h-auto bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30"
+                onClick={() => setSelectedFriend({
+                  id: 'ai-assistant',
+                  name: 'Assistente IA GlowUp',
+                  last_message: 'Seu coach pessoal motivacional',
+                  isAI: true
+                })}
+              >
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <Bot className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">Assistente IA GlowUp</p>
+                      <Badge variant="secondary" className="text-xs gap-1">
+                        <Sparkles className="w-3 h-3" />
+                        IA
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Seu coach pessoal motivacional
+                    </p>
+                  </div>
+                </div>
+              </Button>
+
+              {/* Friends List */}
               {filteredFriends.map((friend) => (
                 <Button
                   key={friend.id}
