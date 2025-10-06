@@ -11,3 +11,6 @@ verify_jwt = true
 
 [functions.moderate-content]
 verify_jwt = true
+
+[functions.generate-caption]
+verify_jwt = true

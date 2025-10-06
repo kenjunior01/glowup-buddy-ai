@@ -13,7 +13,9 @@ import {
   Clock,
   Zap,
   Trophy,
-  Target
+  Target,
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 import {
   Dialog,
@@ -49,6 +51,8 @@ export const StoriesSystem = ({ userId, userName, userAvatar }: StoriesSystemPro
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [generatingCaption, setGeneratingCaption] = useState(false);
+  const [suggestedCaptions, setSuggestedCaptions] = useState<string[]>([]);
   const [newStory, setNewStory] = useState({
     content: '',
     type: 'progress' as Story['type']
@@ -111,10 +115,59 @@ export const StoriesSystem = ({ userId, userName, userAvatar }: StoriesSystemPro
     }
   };
 
+  const generateCaption = async () => {
+    try {
+      setGeneratingCaption(true);
+      
+      const { data, error } = await supabase.functions.invoke('generate-caption', {
+        body: {
+          storyType: newStory.type,
+          userContext: newStory.content || null
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.captions) {
+        setSuggestedCaptions(data.captions);
+        toast({
+          title: "✨ Legendas geradas!",
+          description: "Escolha uma das sugestões ou continue editando.",
+        });
+      }
+    } catch (error) {
+      console.error('Error generating caption:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível gerar legendas. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingCaption(false);
+    }
+  };
+
   const createStory = async () => {
     if (!newStory.content.trim()) return;
 
     try {
+      // Moderar conteúdo antes de publicar
+      const { data: moderation } = await supabase.functions.invoke('moderate-content', {
+        body: {
+          content: newStory.content,
+          type: 'story'
+        }
+      });
+
+      if (moderation && !moderation.safe) {
+        toast({
+          title: "⚠️ Conteúdo inadequado",
+          description: moderation.reason || "Por favor, revise seu conteúdo.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const story: Story = {
         id: `story_${Date.now()}`,
         user_id: userId,
@@ -131,6 +184,7 @@ export const StoriesSystem = ({ userId, userName, userAvatar }: StoriesSystemPro
       // In real app, save to database
       setStories(prev => [story, ...prev]);
       setNewStory({ content: '', type: 'progress' });
+      setSuggestedCaptions([]);
       setIsCreating(false);
 
       toast({
@@ -233,19 +287,66 @@ export const StoriesSystem = ({ userId, userName, userAvatar }: StoriesSystemPro
                       <option value="milestone">Marco Importante</option>
                     </select>
                   </div>
-                  <Textarea
-                    value={newStory.content}
-                    onChange={(e) => setNewStory(prev => ({ ...prev, content: e.target.value }))}
-                    placeholder="Compartilhe sua jornada, conquistas ou desafios..."
-                    className="min-h-[100px]"
-                  />
+                  
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Textarea
+                        value={newStory.content}
+                        onChange={(e) => setNewStory(prev => ({ ...prev, content: e.target.value }))}
+                        placeholder="Compartilhe sua jornada, conquistas ou desafios..."
+                        className="min-h-[100px]"
+                      />
+                    </div>
+                    
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={generateCaption}
+                      disabled={generatingCaption}
+                      className="w-full"
+                    >
+                      {generatingCaption ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Gerando legendas...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          Gerar legendas com IA
+                        </>
+                      )}
+                    </Button>
+
+                    {suggestedCaptions.length > 0 && (
+                      <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
+                        <p className="text-sm font-medium">Sugestões de legendas:</p>
+                        {suggestedCaptions.map((caption, index) => (
+                          <Button
+                            key={index}
+                            variant="ghost"
+                            size="sm"
+                            className="w-full justify-start text-left h-auto py-2 px-3"
+                            onClick={() => setNewStory(prev => ({ ...prev, content: caption }))}
+                          >
+                            <span className="text-sm">{caption}</span>
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
                   <div className="flex gap-2 pt-4">
-                    <Button onClick={createStory} className="flex-1">
+                    <Button onClick={createStory} className="flex-1" disabled={!newStory.content.trim()}>
                       Publicar Story
                     </Button>
                     <Button 
                       variant="outline" 
-                      onClick={() => setIsCreating(false)}
+                      onClick={() => {
+                        setIsCreating(false);
+                        setSuggestedCaptions([]);
+                      }}
                     >
                       Cancelar
                     </Button>

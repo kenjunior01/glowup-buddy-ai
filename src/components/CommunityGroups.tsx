@@ -137,6 +137,24 @@ export const CommunityGroups = ({ userId, userName }: CommunityGroupsProps) => {
     if (!newGroup.name.trim()) return;
 
     try {
+      // Moderar o conteúdo antes de criar o grupo
+      const contentToModerate = `${newGroup.name}\n${newGroup.description}`;
+      const { data: moderation } = await supabase.functions.invoke('moderate-content', {
+        body: {
+          content: contentToModerate,
+          type: 'group'
+        }
+      });
+
+      if (moderation && !moderation.safe) {
+        toast({
+          title: "⚠️ Conteúdo inadequado",
+          description: moderation.reason || "Por favor, revise o nome e descrição do grupo.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const group: Group = {
         id: `group_${Date.now()}`,
         name: newGroup.name,
@@ -158,7 +176,7 @@ export const CommunityGroups = ({ userId, userName }: CommunityGroupsProps) => {
       setIsCreating(false);
 
       toast({
-        title: "Grupo criado!",
+        title: "✅ Grupo criado!",
         description: `${newGroup.name} foi criado com sucesso.`,
       });
     } catch (error) {
