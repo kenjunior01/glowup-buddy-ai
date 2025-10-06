@@ -1,1 +1,28 @@
 project_id = "pfgkrghsteyvhtehlyfs"
+
+[functions.generate-plans]
+verify_jwt = false
+
+[functions.suggest-missions]
+verify_jwt = false
+
+[functions.moderate-content]
+verify_jwt = false
+
+[functions.chat-assistant]
+verify_jwt = false
+
+[functions.generate-caption]
+verify_jwt = false
+
+[functions.create-user-challenge]
+verify_jwt = false
+
+[functions.update-user-streak]
+verify_jwt = false
+
+[functions.accept-challenge]
+verify_jwt = false
+
+[functions.complete-challenge]
+verify_jwt = false

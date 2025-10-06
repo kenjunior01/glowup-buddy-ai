@@ -83,7 +83,7 @@ const ProgressTracker = ({ userId, onDataChange }: ProgressTrackerProps) => {
       plan_id: planId,
       progress_notes: notes,
       completion_rate: completionRate,
-      completed_tasks: [],
+      completed_tasks: 0,
     };
 
     let error;

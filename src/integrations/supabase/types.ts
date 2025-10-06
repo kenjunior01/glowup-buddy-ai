@@ -14,7 +14,317 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      challenges: {
+        Row: {
+          challenge_type: string
+          challenger_id: string | null
+          completed_at: string | null
+          created_at: string | null
+          creator_id: string
+          description: string | null
+          expires_at: string | null
+          id: string
+          reward_points: number | null
+          status: string | null
+          title: string
+        }
+        Insert: {
+          challenge_type: string
+          challenger_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          creator_id: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          reward_points?: number | null
+          status?: string | null
+          title: string
+        }
+        Update: {
+          challenge_type?: string
+          challenger_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          creator_id?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          reward_points?: number | null
+          status?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      friendships: {
+        Row: {
+          created_at: string | null
+          friend_id: string
+          id: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          friend_id: string
+          id?: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          friend_id?: string
+          id?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      goals: {
+        Row: {
+          completed: boolean | null
+          created_at: string | null
+          goal_description: string
+          goal_type: string | null
+          id: string
+          target_date: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string | null
+          goal_description: string
+          goal_type?: string | null
+          id?: string
+          target_date: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string | null
+          goal_description?: string
+          goal_type?: string | null
+          id?: string
+          target_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          read_at: string | null
+          receiver_id: string | null
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          read_at?: string | null
+          receiver_id?: string | null
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          read_at?: string | null
+          receiver_id?: string | null
+          sender_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          read: boolean | null
+          title: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          read?: boolean | null
+          title?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          read?: boolean | null
+          title?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      plans: {
+        Row: {
+          active: boolean | null
+          completed: boolean | null
+          content: string | null
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          plan_type: string | null
+          start_date: string | null
+          status: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean | null
+          completed?: boolean | null
+          content?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          plan_type?: string | null
+          start_date?: string | null
+          status?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean | null
+          completed?: boolean | null
+          content?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          plan_type?: string | null
+          start_date?: string | null
+          status?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          conquistas: string[] | null
+          created_at: string | null
+          experience_points: number | null
+          id: string
+          level: number | null
+          name: string | null
+          pontos: number | null
+          total_challenges_completed: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          conquistas?: string[] | null
+          created_at?: string | null
+          experience_points?: number | null
+          id: string
+          level?: number | null
+          name?: string | null
+          pontos?: number | null
+          total_challenges_completed?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          conquistas?: string[] | null
+          created_at?: string | null
+          experience_points?: number | null
+          id?: string
+          level?: number | null
+          name?: string | null
+          pontos?: number | null
+          total_challenges_completed?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      progress: {
+        Row: {
+          completed_tasks: number | null
+          completion_rate: number | null
+          created_at: string | null
+          id: string
+          plan_id: string | null
+          progress_notes: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_tasks?: number | null
+          completion_rate?: number | null
+          created_at?: string | null
+          id?: string
+          plan_id?: string | null
+          progress_notes?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_tasks?: number | null
+          completion_rate?: number | null
+          created_at?: string | null
+          id?: string
+          plan_id?: string | null
+          progress_notes?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "progress_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      streaks: {
+        Row: {
+          created_at: string | null
+          current_streak: number | null
+          id: string
+          last_activity_date: string | null
+          last_checkin: string | null
+          longest_streak: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          last_activity_date?: string | null
+          last_checkin?: string | null
+          longest_streak?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          last_activity_date?: string | null
+          last_checkin?: string | null
+          longest_streak?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
