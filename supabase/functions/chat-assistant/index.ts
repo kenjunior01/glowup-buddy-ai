@@ -67,7 +67,6 @@ Responda de forma natural e conversacional.`;
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message }
         ],
-        temperature: 0.8,
         max_tokens: 500,
       }),
     });

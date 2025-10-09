@@ -37,8 +37,8 @@ serve(async (req) => {
       .select('*')
       .eq('user_id', userId);
 
-    const { data: posts } = await supabaseClient
-      .from('posts')
+    const { data: recentProgress } = await supabaseClient
+      .from('progress')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
@@ -47,10 +47,10 @@ serve(async (req) => {
     const systemPrompt = `Você é um especialista em gamificação e Glow Up. Sugira missões diárias personalizadas.
 
 PERFIL DO USUÁRIO:
-- Nível: ${profile?.nivel || 1}
+- Nível: ${profile?.level || 1}
 - Pontos: ${profile?.pontos || 0}
 - Objetivos: ${goals?.length || 0}
-- Posts recentes: ${posts?.length || 0}
+- Progresso recente: ${recentProgress?.length || 0}
 
 Baseado no comportamento do usuário, sugira 3 missões DIFERENTES das padrão:
 - Devem ser específicas e alcançáveis hoje
@@ -83,7 +83,6 @@ Responda APENAS com JSON:
           { role: 'system', content: systemPrompt },
           { role: 'user', content: 'Gere missões personalizadas para hoje' }
         ],
-        temperature: 0.9,
         max_tokens: 800,
       }),
     });
