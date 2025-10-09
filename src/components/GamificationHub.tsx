@@ -129,8 +129,8 @@ const GamificationHub = () => {
     if (!currentUserId) return;
 
     try {
-      const { error } = await supabase.rpc('update_user_streak', {
-        user_uuid: currentUserId
+      const { error } = await supabase.functions.invoke('update-user-streak', {
+        body: {}
       });
 
       if (error) {

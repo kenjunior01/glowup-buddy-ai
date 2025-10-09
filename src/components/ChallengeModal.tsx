@@ -58,13 +58,20 @@ export default function ChallengeModal({
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc('create_user_challenge', {
-        challenger_user_id: targetUserId,
-        challenge_title: title.trim(),
-        challenge_description: description.trim(),
-        challenge_type: challengeType,
-        reward_points: rewardPoints,
-        expires_days: expiresDays
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + expiresDays);
+      
+      const { data, error } = await supabase.functions.invoke('create-user-challenge', {
+        body: {
+          challengeData: {
+            challenger_id: targetUserId,
+            title: title.trim(),
+            description: description.trim(),
+            challenge_type: challengeType,
+            reward_points: rewardPoints,
+            expires_at: expiresAt.toISOString()
+          }
+        }
       });
 
       if (error) {

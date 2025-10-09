@@ -97,8 +97,8 @@ export default function Dashboard() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return;
 
-      await supabase.rpc('update_user_streak', {
-        user_uuid: session.user.id
+      await supabase.functions.invoke('update-user-streak', {
+        body: {}
       });
 
       // Refresh user data

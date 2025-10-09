@@ -213,8 +213,8 @@ export const DailyMissions = ({ userId }: DailyMissionsProps) => {
   const handleQuickAction = async (mission: DailyMission) => {
     if (mission.action_required === 'checkin') {
       try {
-        const { error } = await supabase.rpc('update_user_streak', { 
-          user_uuid: userId 
+        const { error } = await supabase.functions.invoke('update-user-streak', {
+          body: {}
         });
         
         if (!error) {

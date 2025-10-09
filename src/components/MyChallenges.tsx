@@ -101,8 +101,8 @@ export default function MyChallenges() {
 
   const acceptChallenge = async (challengeId: string) => {
     try {
-      const { data, error } = await supabase.rpc('accept_challenge', {
-        challenge_id: challengeId
+      const { data, error } = await supabase.functions.invoke('accept-challenge', {
+        body: { challengeId }
       });
 
       if (error) {
@@ -132,9 +132,8 @@ export default function MyChallenges() {
 
     setCompletingChallenge(selectedChallenge.id);
     try {
-      const { data, error } = await supabase.rpc('complete_challenge', {
-        challenge_id: selectedChallenge.id,
-        evidence_description: evidenceDescription || 'Desafio concluído!'
+      const { data, error } = await supabase.functions.invoke('complete-challenge', {
+        body: { challengeId: selectedChallenge.id }
       });
 
       if (error) {
