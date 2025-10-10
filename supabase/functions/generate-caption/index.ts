@@ -14,9 +14,9 @@ serve(async (req) => {
   try {
     const { storyType, userContext } = await req.json();
 
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    if (!lovableApiKey) {
-      throw new Error('Lovable API key not configured');
+    const agentRouterApiKey = Deno.env.get('AGENTROUTER_API_KEY');
+    if (!agentRouterApiKey) {
+      throw new Error('AgentRouter API key not configured');
     }
 
     const typeDescriptions = {
@@ -47,26 +47,25 @@ Responda APENAS com JSON no formato:
     const userPrompt = `Gere legendas para um story de tipo: ${storyType}
 ${userContext ? `\nContexto adicional: ${userContext}` : ''}`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://agentrouter.org/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
+        'Authorization': `Bearer ${agentRouterApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.9,
         max_tokens: 400,
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Lovable AI error:', errorText);
+      console.error('AgentRouter AI error:', errorText);
       
       if (response.status === 429) {
         throw new Error('Limite de requisições atingido. Tente novamente em alguns minutos.');

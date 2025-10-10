@@ -20,9 +20,9 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    if (!lovableApiKey) {
-      throw new Error('Lovable API key not configured');
+    const agentRouterApiKey = Deno.env.get('AGENTROUTER_API_KEY');
+    if (!agentRouterApiKey) {
+      throw new Error('AgentRouter API key not configured');
     }
 
     // Buscar perfil e progresso do usuário
@@ -55,14 +55,14 @@ Sua missão é:
 
 Responda de forma natural e conversacional.`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://agentrouter.org/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
+        'Authorization': `Bearer ${agentRouterApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message }
@@ -73,7 +73,7 @@ Responda de forma natural e conversacional.`;
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Lovable AI error:', errorText);
+      console.error('AgentRouter AI error:', errorText);
       
       if (response.status === 429) {
         throw new Error('Limite de requisições atingido. Tente novamente em alguns minutos.');

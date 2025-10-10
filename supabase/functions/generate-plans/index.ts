@@ -21,10 +21,10 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get Lovable API key from environment
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    if (!lovableApiKey) {
-      throw new Error('Lovable API key not configured');
+    // Get AgentRouter API key from environment
+    const agentRouterApiKey = Deno.env.get('AGENTROUTER_API_KEY');
+    if (!agentRouterApiKey) {
+      throw new Error('AgentRouter API key not configured');
     }
 
     // Prepare data for AI prompt
@@ -37,8 +37,8 @@ Nome: ${profile?.name || 'Usuário'}
 Idade: ${profile?.age || 'Não informado'}
 `;
 
-    // Generate plans using Lovable AI
-    const plans = await generatePlansWithAI(lovableApiKey, userProfile, goalsText);
+    // Generate plans using AgentRouter AI
+    const plans = await generatePlansWithAI(agentRouterApiKey, userProfile, goalsText);
 
     // Save plans to database
     const planPromises = plans.map(async (plan: any) => {
@@ -117,14 +117,14 @@ FORMATO DE RESPOSTA (JSON):
 }`;
 
   try {
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://agentrouter.org/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
@@ -135,7 +135,7 @@ FORMATO DE RESPOSTA (JSON):
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Lovable AI error response:', errorText);
+      console.error('AgentRouter AI error response:', errorText);
       
       if (response.status === 429) {
         throw new Error('Limite de requisições atingido. Tente novamente em alguns minutos.');
