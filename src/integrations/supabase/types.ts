@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       challenges: {
         Row: {
+          accepted_at: string | null
           challenge_type: string
           challenger_id: string | null
           completed_at: string | null
@@ -29,6 +30,7 @@ export type Database = {
           title: string
         }
         Insert: {
+          accepted_at?: string | null
           challenge_type: string
           challenger_id?: string | null
           completed_at?: string | null
@@ -42,6 +44,7 @@ export type Database = {
           title: string
         }
         Update: {
+          accepted_at?: string | null
           challenge_type?: string
           challenger_id?: string | null
           completed_at?: string | null

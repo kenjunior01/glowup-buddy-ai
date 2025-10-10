@@ -34,7 +34,10 @@ serve(async (req) => {
 
     const { data, error } = await supabaseClient
       .from('challenges')
-      .update({ status: 'accepted' })
+      .update({ 
+        status: 'accepted',
+        accepted_at: new Date().toISOString()
+      })
       .eq('id', challengeId)
       .eq('challenger_id', user.id)
       .select()

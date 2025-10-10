@@ -1,16 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MyChallenges from '@/components/MyChallenges';
 import UsersList from '@/components/UsersList';
 import ChallengeModal from '@/components/ChallengeModal';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trophy, Target, Plus, Zap } from 'lucide-react';
+import { Trophy, Target, Plus, Zap, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Challenges() {
   const [showChallengeModal, setShowChallengeModal] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [selectedUserName, setSelectedUserName] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    active: 0,
+    completed: 0,
+    pending: 0,
+  });
+
+  useEffect(() => {
+    fetchChallengeStats();
+  }, []);
+
+  const fetchChallengeStats = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        setLoading(false);
+        return;
+      }
+
+      const { data: challenges, error } = await supabase
+        .from('challenges')
+        .select('status')
+        .or(`creator_id.eq.${session.user.id},challenger_id.eq.${session.user.id}`);
+
+      if (error) {
+        console.error('Error fetching challenges:', error);
+        setLoading(false);
+        return;
+      }
+
+      const active = challenges?.filter(c => c.status === 'accepted').length || 0;
+      const completed = challenges?.filter(c => c.status === 'completed').length || 0;
+      const pending = challenges?.filter(c => c.status === 'pending').length || 0;
+
+      setStats({ active, completed, pending });
+    } catch (error) {
+      console.error('Error in fetchChallengeStats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChallengeUser = (userId: string, userName: string) => {
     setSelectedUserId(userId);
@@ -19,9 +61,9 @@ export default function Challenges() {
   };
 
   const challengeStats = [
-    { label: 'Ativos', value: 3, icon: Zap, color: 'text-blue-500' },
-    { label: 'Completados', value: 12, icon: Trophy, color: 'text-green-500' },
-    { label: 'Pendentes', value: 2, icon: Target, color: 'text-orange-500' },
+    { label: 'Ativos', value: stats.active, icon: Zap, color: 'text-blue-500' },
+    { label: 'Completados', value: stats.completed, icon: Trophy, color: 'text-green-500' },
+    { label: 'Pendentes', value: stats.pending, icon: Target, color: 'text-orange-500' },
   ];
 
   return (
@@ -38,30 +80,30 @@ export default function Challenges() {
                 Desafie amigos e conquiste suas metas
               </p>
             </div>
-            <Button 
-              onClick={() => setShowChallengeModal(true)}
-              className="social-button"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Novo Desafio
-            </Button>
           </div>
         </div>
       </div>
 
       <div className="p-4 space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-3 gap-3">
-          {challengeStats.map(({ label, value, icon: Icon, color }) => (
-            <Card key={label} className="text-center">
-              <CardContent className="p-4">
-                <Icon className={`w-6 h-6 mx-auto mb-2 ${color}`} />
-                <div className="text-2xl font-bold">{value}</div>
-                <div className="text-xs text-muted-foreground">{label}</div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            <span className="ml-2 text-muted-foreground">Carregando estatísticas...</span>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-3">
+            {challengeStats.map(({ label, value, icon: Icon, color }) => (
+              <Card key={label} className="text-center">
+                <CardContent className="p-4">
+                  <Icon className={`w-6 h-6 mx-auto mb-2 ${color}`} />
+                  <div className="text-2xl font-bold">{value}</div>
+                  <div className="text-xs text-muted-foreground">{label}</div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         <Tabs defaultValue="my-challenges" className="w-full">
           <TabsList className="grid w-full grid-cols-2">

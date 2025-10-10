@@ -7,7 +7,7 @@ import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
 import { useToast } from '../hooks/use-toast';
-import { Loader2, Trophy, Clock, Target } from 'lucide-react';
+import { Loader2, Trophy, Clock, Target, Sparkles } from 'lucide-react';
 
 interface ChallengeModalProps {
   isOpen: boolean;
@@ -28,6 +28,7 @@ export default function ChallengeModal({
   const [rewardPoints, setRewardPoints] = useState(100);
   const [expiresDays, setExpiresDays] = useState(7);
   const [loading, setLoading] = useState(false);
+  const [generatingAI, setGeneratingAI] = useState(false);
   const { toast } = useToast();
 
   const challengeTypes = [
@@ -110,13 +111,79 @@ export default function ChallengeModal({
     }
   };
 
+  const handleGenerateWithAI = async () => {
+    if (!targetUserId) {
+      toast({
+        title: "Erro",
+        description: "Selecione um usuário primeiro",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setGeneratingAI(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-smart-challenge', {
+        body: { targetUserId }
+      });
+
+      if (error) throw error;
+
+      if (data?.challenge) {
+        setTitle(data.challenge.title);
+        setDescription(data.challenge.description);
+        setChallengeType(data.challenge.challengeType);
+        setRewardPoints(Number(data.challenge.rewardPoints));
+        setExpiresDays(Number(data.challenge.expiresDays));
+
+        toast({
+          title: "✨ Desafio gerado!",
+          description: "Desafio personalizado criado pela IA",
+          className: "gradient-primary text-white"
+        });
+      }
+    } catch (error) {
+      console.error('Error generating challenge:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível gerar o desafio com IA",
+        variant: "destructive"
+      });
+    } finally {
+      setGeneratingAI(false);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="post-card max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
-            <Trophy className="w-5 h-5 text-primary" />
-            <span>Criar Desafio</span>
+          <DialogTitle className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Trophy className="w-5 h-5 text-primary" />
+              <span>Criar Desafio</span>
+            </div>
+            {targetUserId && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleGenerateWithAI}
+                disabled={generatingAI}
+                className="text-xs h-8"
+              >
+                {generatingAI ? (
+                  <>
+                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                    Gerando...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    Gerar com IA
+                  </>
+                )}
+              </Button>
+            )}
           </DialogTitle>
           <p className="text-sm text-muted-foreground">
             Desafie <span className="font-semibold text-primary">{targetUserName}</span> para uma atividade!
@@ -125,7 +192,9 @@ export default function ChallengeModal({
 
         <div className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Título do Desafio</Label>
+            <Label htmlFor="title">
+              Título do Desafio <span className="text-destructive">*</span>
+            </Label>
             <Input
               id="title"
               placeholder="Ex: Fazer 30 flexões por dia"
@@ -139,7 +208,9 @@ export default function ChallengeModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Descrição</Label>
+            <Label htmlFor="description">
+              Descrição <span className="text-destructive">*</span>
+            </Label>
             <Textarea
               id="description"
               placeholder="Descreva os detalhes do desafio..."
