@@ -8,6 +8,7 @@ import { Trophy, Clock, CheckCircle, XCircle, User, Calendar, Target, Zap } from
 import { useToast } from '../hooks/use-toast';
 import { Textarea } from './ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import ChallengeCoach from './ChallengeCoach';
 
 interface Challenge {
   id: string;
@@ -254,17 +255,23 @@ export default function MyChallenges() {
         )}
 
         {isReceived && challenge.status === 'active' && (
-          <Button
-            onClick={() => {
-              setSelectedChallenge(challenge);
-              setShowCompleteModal(true);
-            }}
-            className="w-full gradient-success text-white hover:opacity-90"
-            size="sm"
-          >
-            <Trophy className="w-4 h-4 mr-2" />
-            Marcar como Concluído
-          </Button>
+          <div className="space-y-3">
+            <ChallengeCoach 
+              challengeId={challenge.id}
+              challengeTitle={challenge.title}
+            />
+            <Button
+              onClick={() => {
+                setSelectedChallenge(challenge);
+                setShowCompleteModal(true);
+              }}
+              className="w-full gradient-success text-white hover:opacity-90"
+              size="sm"
+            >
+              <Trophy className="w-4 h-4 mr-2" />
+              Marcar como Concluído
+            </Button>
+          </div>
         )}
 
         {challenge.status === 'completed' && (
