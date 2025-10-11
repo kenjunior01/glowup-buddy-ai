@@ -1,10 +1,39 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, Target, TrendingUp, Brain, Calendar, Zap } from "lucide-react";
+import { Sparkles, Target, TrendingUp, Brain, Calendar, Zap, Plus } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import RealSocialFeed from "@/components/RealSocialFeed";
+import ChallengeModal from "@/components/ChallengeModal";
+import UsersList from "@/components/UsersList";
 
 const Index = () => {
   const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showChallengeModal, setShowChallengeModal] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [selectedUserName, setSelectedUserName] = useState<string>('');
+  const [showUsersList, setShowUsersList] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleChallengeUser = (userId: string, userName: string) => {
+    setSelectedUserId(userId);
+    setSelectedUserName(userName);
+    setShowUsersList(false);
+    setShowChallengeModal(true);
+  };
 
   return (
     <div className="min-h-screen">
@@ -137,6 +166,30 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Social Feed Section - Only for authenticated users */}
+      {isAuthenticated && (
+        <section className="py-20 px-4 bg-card">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl font-bold text-gradient">Feed da Comunidade</h2>
+              <Button 
+                onClick={() => setShowUsersList(!showUsersList)}
+                className="social-button"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Criar Desafio
+              </Button>
+            </div>
+            
+            {showUsersList ? (
+              <UsersList onChallengeUser={handleChallengeUser} />
+            ) : (
+              <RealSocialFeed />
+            )}
+          </div>
+        </section>
+      )}
+
       {/* CTA Section */}
       <section className="py-20 px-4 text-center">
         <div className="max-w-3xl mx-auto">
@@ -147,14 +200,22 @@ const Index = () => {
             Junte-se a milhares de pessoas que já estão transformando suas vidas com nossa IA personalizada.
           </p>
           <Button 
-            onClick={() => navigate("/auth")}
+            onClick={() => navigate(isAuthenticated ? "/dashboard" : "/auth")}
             size="lg" 
             className="gradient-primary text-white hover:opacity-90 shadow-glow"
           >
-            Começar Agora - É Grátis
+            {isAuthenticated ? "Ir para Dashboard" : "Começar Agora - É Grátis"}
           </Button>
         </div>
       </section>
+
+      {/* Challenge Modal */}
+      <ChallengeModal
+        isOpen={showChallengeModal}
+        onClose={() => setShowChallengeModal(false)}
+        targetUserId={selectedUserId}
+        targetUserName={selectedUserName}
+      />
     </div>
   );
 };

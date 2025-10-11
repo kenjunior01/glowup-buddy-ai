@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../integrations/supabase/client';
-import GamificationHub from '../components/GamificationHub';
-import MobileBottomNav from '../components/MobileBottomNav';
-import StoryRing from '../components/StoryRing';
-import StreakCounter from '../components/StreakCounter';
-import QuickStats from '../components/QuickStats';
-import RealSocialFeed from '../components/RealSocialFeed';
-import UsersList from '../components/UsersList';
-import ChallengeModal from '../components/ChallengeModal';
-import MyChallenges from '../components/MyChallenges';
+import { supabase } from '@/integrations/supabase/client';
+import GamificationHub from '@/components/GamificationHub';
+import MobileBottomNav from '@/components/MobileBottomNav';
+import StoryRing from '@/components/StoryRing';
+import StreakCounter from '@/components/StreakCounter';
+import QuickStats from '@/components/QuickStats';
+import RealSocialFeed from '@/components/RealSocialFeed';
+import UsersList from '@/components/UsersList';
+import ChallengeModal from '@/components/ChallengeModal';
+import MyChallenges from '@/components/MyChallenges';
 import { Bell, Search, Plus } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { ScrollArea } from '../components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null);

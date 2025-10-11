@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../integrations/supabase/client';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { Users, UserPlus, Trophy, Zap } from 'lucide-react';
-import { useToast } from '../hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Users, UserPlus, Trophy, Zap, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface User {
   id: string;

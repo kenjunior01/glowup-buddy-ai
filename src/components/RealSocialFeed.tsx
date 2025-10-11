@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../integrations/supabase/client';
-import PostCard from './PostCard';
-import { Button } from './ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import PostCard from '@/components/PostCard';
+import { Button } from '@/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
-import { useToast } from '../hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 export default function RealSocialFeed() {
   const [posts, setPosts] = useState<any[]>([]);
