@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Trophy, Clock, CheckCircle, XCircle, User, Calendar, Target, Zap } from 'lucide-react';
-import { useToast } from '../hooks/use-toast';
-import { Textarea } from './ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import ChallengeCoach from './ChallengeCoach';
+import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import ChallengeCoach from '@/components/ChallengeCoach';
 
 interface Challenge {
   id: string;
@@ -168,6 +168,7 @@ export default function MyChallenges() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'bg-warning/10 text-warning border-warning/20';
+      case 'accepted': return 'bg-info/10 text-info border-info/20';
       case 'active': return 'bg-info/10 text-info border-info/20';
       case 'completed': return 'bg-success/10 text-success border-success/20';
       case 'expired': return 'bg-muted/50 text-muted-foreground border-muted';
@@ -178,6 +179,7 @@ export default function MyChallenges() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending': return <Clock className="w-4 h-4" />;
+      case 'accepted': return <Target className="w-4 h-4" />;
       case 'active': return <Target className="w-4 h-4" />;
       case 'completed': return <CheckCircle className="w-4 h-4" />;
       case 'expired': return <XCircle className="w-4 h-4" />;
@@ -254,7 +256,7 @@ export default function MyChallenges() {
           </Button>
         )}
 
-        {isReceived && challenge.status === 'active' && (
+        {isReceived && (challenge.status === 'accepted' || challenge.status === 'active') && (
           <div className="space-y-3">
             <ChallengeCoach 
               challengeId={challenge.id}
