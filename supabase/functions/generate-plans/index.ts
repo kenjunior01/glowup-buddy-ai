@@ -1,11 +1,26 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Input validation schema
+const plansSchema = z.object({
+  userId: z.string().uuid().optional(), // Optional, will use authenticated user ID
+  goals: z.array(z.object({
+    goal_type: z.string(),
+    goal_description: z.string(),
+    target_date: z.string().optional(),
+  })),
+  profile: z.object({
+    name: z.string().optional(),
+    age: z.number().optional(),
+  }).optional(),
+});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -13,15 +28,59 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, goals, profile } = await req.json();
-
-    // Initialize Supabase client
+    // 1. AUTENTICAÇÃO
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: req.headers.get('Authorization')! },
+        },
+      }
     );
 
-    // Get AgentRouter API key from environment
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('Authentication error:', authError);
+      return new Response(
+        JSON.stringify({ error: 'Não autorizado' }),
+        { 
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // 2. VALIDAÇÃO DE INPUT
+    const body = await req.json();
+    const validationResult = plansSchema.safeParse(body);
+    
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({ error: 'Dados inválidos', details: validationResult.error.issues }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    const { userId: requestedUserId, goals, profile } = validationResult.data;
+
+    // 3. VALIDAÇÃO DE AUTORIZAÇÃO - userId deve ser o mesmo do usuário autenticado
+    if (requestedUserId && requestedUserId !== user.id) {
+      return new Response(
+        JSON.stringify({ error: 'Acesso negado' }),
+        { 
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    const userId = user.id;
+
     const agentRouterApiKey = Deno.env.get('AGENTROUTER_API_KEY');
     if (!agentRouterApiKey) {
       throw new Error('AgentRouter API key not configured');
@@ -37,7 +96,7 @@ Nome: ${profile?.name || 'Usuário'}
 Idade: ${profile?.age || 'Não informado'}
 `;
 
-    // Generate plans using AgentRouter AI
+    // Generate plans using AI
     const plans = await generatePlansWithAI(agentRouterApiKey, userProfile, goalsText);
 
     // Save plans to database
@@ -65,6 +124,7 @@ Idade: ${profile?.age || 'Não informado'}
           user_id: userId,
           plan_type: plan.type,
           content: plan.content,
+          title: `Plano ${plan.type === 'daily' ? 'Diário' : plan.type === 'weekly' ? 'Semanal' : 'Mensal'}`,
           start_date: new Date().toISOString().split('T')[0],
           end_date: endDate.toISOString().split('T')[0],
           active: true
@@ -140,14 +200,14 @@ FORMATO DE RESPOSTA (JSON):
       if (response.status === 429) {
         throw new Error('Limite de requisições atingido. Tente novamente em alguns minutos.');
       } else if (response.status === 402) {
-        throw new Error('Créditos insuficientes. Adicione créditos em Settings -> Workspace -> Usage.');
+        throw new Error('Créditos insuficientes. Adicione créditos em Settings → Workspace → Usage.');
       } else {
         throw new Error(`AI Gateway error: ${response.statusText}`);
       }
     }
 
     const data = await response.json();
-    console.log('Lovable AI response:', JSON.stringify(data, null, 2));
+    console.log('AI response:', JSON.stringify(data, null, 2));
     
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
       throw new Error('Resposta inválida da API');
@@ -171,7 +231,7 @@ FORMATO DE RESPOSTA (JSON):
       throw parseError;
     }
   } catch (error) {
-    console.error('Error calling Lovable AI:', error);
+    console.error('Error calling AI:', error);
     
     return [
       { 

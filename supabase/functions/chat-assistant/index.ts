@@ -1,11 +1,18 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Input validation schema
+const chatSchema = z.object({
+  message: z.string().min(1).max(2000),
+  userId: z.string().uuid().optional(), // Optional, will use authenticated user ID
+});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -13,12 +20,58 @@ serve(async (req) => {
   }
 
   try {
-    const { message, userId } = await req.json();
-
+    // 1. AUTENTICAÇÃO
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: req.headers.get('Authorization')! },
+        },
+      }
     );
+
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('Authentication error:', authError);
+      return new Response(
+        JSON.stringify({ error: 'Não autorizado' }),
+        { 
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // 2. VALIDAÇÃO DE INPUT
+    const body = await req.json();
+    const validationResult = chatSchema.safeParse(body);
+    
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({ error: 'Dados inválidos', details: validationResult.error.issues }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    const { message, userId: requestedUserId } = validationResult.data;
+
+    // 3. VALIDAÇÃO DE AUTORIZAÇÃO - userId deve ser o mesmo do usuário autenticado
+    if (requestedUserId && requestedUserId !== user.id) {
+      return new Response(
+        JSON.stringify({ error: 'Acesso negado' }),
+        { 
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    const userId = user.id;
 
     const agentRouterApiKey = Deno.env.get('AGENTROUTER_API_KEY');
     if (!agentRouterApiKey) {
@@ -42,7 +95,7 @@ serve(async (req) => {
 CONTEXTO DO USUÁRIO:
 - Nome: ${profile?.name || 'Usuário'}
 - Pontos: ${profile?.pontos || 0}
-- Nível: ${profile?.nivel || 1}
+- Nível: ${profile?.level || 1}
 - Objetivos: ${goals?.length || 0} metas definidas
 
 Sua missão é:
@@ -76,9 +129,21 @@ Responda de forma natural e conversacional.`;
       console.error('AgentRouter AI error:', errorText);
       
       if (response.status === 429) {
-        throw new Error('Limite de requisições atingido. Tente novamente em alguns minutos.');
+        return new Response(
+          JSON.stringify({ error: 'Limite de requisições atingido. Tente novamente em alguns minutos.' }),
+          { 
+            status: 429,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
       } else if (response.status === 402) {
-        throw new Error('Créditos insuficientes.');
+        return new Response(
+          JSON.stringify({ error: 'Créditos insuficientes.' }),
+          { 
+            status: 402,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
       }
       throw new Error(`AI Gateway error: ${response.statusText}`);
     }
