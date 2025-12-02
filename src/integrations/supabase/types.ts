@@ -16,8 +16,6 @@ export type Database = {
     Tables: {
       challenges: {
         Row: {
-          accepted_at: string | null
-          challenge_type: string
           challenger_id: string | null
           completed_at: string | null
           created_at: string | null
@@ -27,11 +25,11 @@ export type Database = {
           id: string
           reward_points: number | null
           status: string | null
+          target_user_id: string | null
           title: string
+          updated_at: string | null
         }
         Insert: {
-          accepted_at?: string | null
-          challenge_type: string
           challenger_id?: string | null
           completed_at?: string | null
           created_at?: string | null
@@ -41,11 +39,11 @@ export type Database = {
           id?: string
           reward_points?: number | null
           status?: string | null
+          target_user_id?: string | null
           title: string
+          updated_at?: string | null
         }
         Update: {
-          accepted_at?: string | null
-          challenge_type?: string
           challenger_id?: string | null
           completed_at?: string | null
           created_at?: string | null
@@ -55,7 +53,9 @@ export type Database = {
           id?: string
           reward_points?: number | null
           status?: string | null
+          target_user_id?: string | null
           title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -65,6 +65,7 @@ export type Database = {
           friend_id: string
           id: string
           status: string | null
+          updated_at: string | null
           user_id: string
         }
         Insert: {
@@ -72,6 +73,7 @@ export type Database = {
           friend_id: string
           id?: string
           status?: string | null
+          updated_at?: string | null
           user_id: string
         }
         Update: {
@@ -79,36 +81,40 @@ export type Database = {
           friend_id?: string
           id?: string
           status?: string | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
       }
       goals: {
         Row: {
-          completed: boolean | null
           created_at: string | null
           goal_description: string
           goal_type: string | null
           id: string
-          target_date: string
+          status: string | null
+          target_date: string | null
+          updated_at: string | null
           user_id: string
         }
         Insert: {
-          completed?: boolean | null
           created_at?: string | null
           goal_description: string
           goal_type?: string | null
           id?: string
-          target_date: string
+          status?: string | null
+          target_date?: string | null
+          updated_at?: string | null
           user_id: string
         }
         Update: {
-          completed?: boolean | null
           created_at?: string | null
           goal_description?: string
           goal_type?: string | null
           id?: string
-          target_date?: string
+          status?: string | null
+          target_date?: string | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -118,6 +124,7 @@ export type Database = {
           content: string
           created_at: string | null
           id: string
+          is_ai: boolean | null
           read_at: string | null
           receiver_id: string | null
           sender_id: string
@@ -126,6 +133,7 @@ export type Database = {
           content: string
           created_at?: string | null
           id?: string
+          is_ai?: boolean | null
           read_at?: string | null
           receiver_id?: string | null
           sender_id: string
@@ -134,6 +142,7 @@ export type Database = {
           content?: string
           created_at?: string | null
           id?: string
+          is_ai?: boolean | null
           read_at?: string | null
           receiver_id?: string | null
           sender_id?: string
@@ -146,8 +155,8 @@ export type Database = {
           id: string
           message: string
           read: boolean | null
-          title: string | null
-          type: string
+          title: string
+          type: string | null
           user_id: string
         }
         Insert: {
@@ -155,8 +164,8 @@ export type Database = {
           id?: string
           message: string
           read?: boolean | null
-          title?: string | null
-          type: string
+          title: string
+          type?: string | null
           user_id: string
         }
         Update: {
@@ -164,8 +173,8 @@ export type Database = {
           id?: string
           message?: string
           read?: boolean | null
-          title?: string | null
-          type?: string
+          title?: string
+          type?: string | null
           user_id?: string
         }
         Relationships: []
@@ -178,11 +187,13 @@ export type Database = {
           created_at: string | null
           description: string | null
           end_date: string | null
+          goal_id: string | null
           id: string
           plan_type: string | null
           start_date: string | null
-          status: string | null
+          steps: Json | null
           title: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
@@ -192,11 +203,13 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           end_date?: string | null
+          goal_id?: string | null
           id?: string
           plan_type?: string | null
           start_date?: string | null
-          status?: string | null
+          steps?: Json | null
           title: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
@@ -206,21 +219,31 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           end_date?: string | null
+          goal_id?: string | null
           id?: string
           plan_type?: string | null
           start_date?: string | null
-          status?: string | null
+          steps?: Json | null
           title?: string
+          updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "plans_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
           avatar_url: string | null
-          bio: string | null
           conquistas: string[] | null
           created_at: string | null
+          display_name: string | null
           experience_points: number | null
           id: string
           level: number | null
@@ -231,9 +254,9 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
-          bio?: string | null
           conquistas?: string[] | null
           created_at?: string | null
+          display_name?: string | null
           experience_points?: number | null
           id: string
           level?: number | null
@@ -244,9 +267,9 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
-          bio?: string | null
           conquistas?: string[] | null
           created_at?: string | null
+          display_name?: string | null
           experience_points?: number | null
           id?: string
           level?: number | null
@@ -262,9 +285,12 @@ export type Database = {
           completed_tasks: number | null
           completion_rate: number | null
           created_at: string | null
+          goal_id: string | null
           id: string
+          notes: string | null
           plan_id: string | null
           progress_notes: string | null
+          progress_percentage: number | null
           updated_at: string | null
           user_id: string
         }
@@ -272,9 +298,12 @@ export type Database = {
           completed_tasks?: number | null
           completion_rate?: number | null
           created_at?: string | null
+          goal_id?: string | null
           id?: string
+          notes?: string | null
           plan_id?: string | null
           progress_notes?: string | null
+          progress_percentage?: number | null
           updated_at?: string | null
           user_id: string
         }
@@ -282,13 +311,23 @@ export type Database = {
           completed_tasks?: number | null
           completion_rate?: number | null
           created_at?: string | null
+          goal_id?: string | null
           id?: string
+          notes?: string | null
           plan_id?: string | null
           progress_notes?: string | null
+          progress_percentage?: number | null
           updated_at?: string | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "progress_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "progress_plan_id_fkey"
             columns: ["plan_id"]
@@ -304,8 +343,8 @@ export type Database = {
           current_streak: number | null
           id: string
           last_activity_date: string | null
-          last_checkin: string | null
           longest_streak: number | null
+          updated_at: string | null
           user_id: string
         }
         Insert: {
@@ -313,8 +352,8 @@ export type Database = {
           current_streak?: number | null
           id?: string
           last_activity_date?: string | null
-          last_checkin?: string | null
           longest_streak?: number | null
+          updated_at?: string | null
           user_id: string
         }
         Update: {
@@ -322,8 +361,8 @@ export type Database = {
           current_streak?: number | null
           id?: string
           last_activity_date?: string | null
-          last_checkin?: string | null
           longest_streak?: number | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
