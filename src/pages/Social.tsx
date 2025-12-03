@@ -2,21 +2,39 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import RealSocialFeed from '@/components/RealSocialFeed';
 import { UserSearch } from '@/components/UserSearch';
+import FriendsSystem from '@/components/FriendsSystem';
 import { SkeletonCard, SkeletonUserCard } from '@/components/SkeletonCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, TrendingUp, Award } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Users, TrendingUp, Trophy, UserPlus } from 'lucide-react';
+import MobileBottomNav from '@/components/MobileBottomNav';
 
 export default function Social() {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string>('');
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
 
   useEffect(() => {
-    fetchLeaderboard();
+    fetchData();
   }, []);
 
-  const fetchLeaderboard = async () => {
+  const fetchData = async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUserId(session.user.id);
+        
+        // Fetch pending friend requests count
+        const { count } = await supabase
+          .from('friendships')
+          .select('*', { count: 'exact', head: true })
+          .eq('friend_id', session.user.id)
+          .eq('status', 'pending');
+        setPendingRequestsCount(count || 0);
+      }
+
       const { data } = await supabase
         .from('profiles')
         .select('id, name, pontos, level')
@@ -25,14 +43,13 @@ export default function Social() {
       
       setLeaderboard(data || []);
     } catch (error) {
-      console.error('Error fetching leaderboard:', error);
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleChallengeUser = (userId: string, userName: string) => {
-    // Navigate to challenge creation or show modal
     console.log('Challenge user:', userId, userName);
   };
 
@@ -52,6 +69,7 @@ export default function Social() {
             <SkeletonCard key={i} />
           ))}
         </div>
+        <MobileBottomNav />
       </div>
     );
   }
@@ -72,14 +90,32 @@ export default function Social() {
 
       <div className="p-4 space-y-6">
         <Tabs defaultValue="feed" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="feed">Feed</TabsTrigger>
+            <TabsTrigger value="friends" className="relative">
+              Amigos
+              {pendingRequestsCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs flex items-center justify-center">
+                  {pendingRequestsCount}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="ranking">Ranking</TabsTrigger>
-            <TabsTrigger value="users">Usuários</TabsTrigger>
+            <TabsTrigger value="users">Buscar</TabsTrigger>
           </TabsList>
 
           <TabsContent value="feed" className="space-y-4">
             <RealSocialFeed />
+          </TabsContent>
+
+          <TabsContent value="friends" className="space-y-4">
+            {userId ? (
+              <FriendsSystem userId={userId} />
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                Faça login para ver seus amigos
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="ranking" className="space-y-4">
@@ -91,55 +127,48 @@ export default function Social() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {loading ? (
-                  <div className="space-y-3">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <SkeletonUserCard key={i} />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {leaderboard.map((user, index) => (
-                      <div
-                        key={user.id}
-                        className={`flex items-center justify-between p-3 rounded-lg ${
-                          index === 0 ? 'bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20' :
-                          index === 1 ? 'bg-gradient-to-r from-gray-500/10 to-gray-600/10 border border-gray-500/20' :
-                          index === 2 ? 'bg-gradient-to-r from-orange-600/10 to-orange-700/10 border border-orange-600/20' :
-                          'bg-secondary/30'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                            index === 0 ? 'bg-yellow-500 text-white' :
-                            index === 1 ? 'bg-gray-500 text-white' :
-                            index === 2 ? 'bg-orange-600 text-white' :
-                            'bg-muted text-muted-foreground'
-                          }`}>
-                            {index < 3 ? '🏆' : index + 1}
-                          </div>
-                          <div>
-                            <p className="font-semibold">{user.name || 'Usuário'}</p>
-                            <p className="text-sm text-muted-foreground">Nível {user.level}</p>
-                          </div>
+                <div className="space-y-3">
+                  {leaderboard.map((user, index) => (
+                    <div
+                      key={user.id}
+                      className={`flex items-center justify-between p-3 rounded-lg transition-all ${
+                        index === 0 ? 'bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20' :
+                        index === 1 ? 'bg-gradient-to-r from-gray-500/10 to-gray-600/10 border border-gray-500/20' :
+                        index === 2 ? 'bg-gradient-to-r from-orange-600/10 to-orange-700/10 border border-orange-600/20' :
+                        'bg-secondary/30 hover:bg-secondary/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                          index === 0 ? 'bg-yellow-500 text-white' :
+                          index === 1 ? 'bg-gray-400 text-white' :
+                          index === 2 ? 'bg-orange-600 text-white' :
+                          'bg-muted text-muted-foreground'
+                        }`}>
+                          {index < 3 ? <Trophy className="w-4 h-4" /> : index + 1}
                         </div>
-                        <div className="text-right">
-                          <p className="font-bold text-primary">{user.pontos || 0}</p>
-                          <p className="text-xs text-muted-foreground">pontos</p>
+                        <div>
+                          <p className="font-semibold">{user.name || 'Usuário'}</p>
+                          <p className="text-sm text-muted-foreground">Nível {user.level || 1}</p>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
+                      <div className="text-right">
+                        <p className="font-bold text-primary">{user.pontos || 0}</p>
+                        <p className="text-xs text-muted-foreground">pontos</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-            <TabsContent value="users" className="space-y-6">
-              <UserSearch onChallengeUser={handleChallengeUser} />
-            </TabsContent>
+          <TabsContent value="users" className="space-y-6">
+            <UserSearch onChallengeUser={handleChallengeUser} />
+          </TabsContent>
         </Tabs>
       </div>
+      <MobileBottomNav />
     </div>
   );
 }

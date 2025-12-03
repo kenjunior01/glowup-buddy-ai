@@ -11,6 +11,7 @@ import Social from "./pages/Social";
 import Challenges from "./pages/Challenges";
 import ChatPage from "./pages/Chat";
 import Profile from "./pages/Profile";
+import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
               <Route path="/challenges" element={<Challenges />} />
               <Route path="/chat" element={<ChatPage />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/notifications" element={<Notifications />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
