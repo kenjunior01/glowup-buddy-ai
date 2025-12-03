@@ -10,10 +10,12 @@ import UsersList from '@/components/UsersList';
 import ChallengeModal from '@/components/ChallengeModal';
 import MyChallenges from '@/components/MyChallenges';
 import { Bell, Search, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [userStats, setUserStats] = useState<any>(null);
   const [currentStreak, setCurrentStreak] = useState(0);
@@ -141,9 +143,9 @@ export default function Dashboard() {
               variant="ghost" 
               size="icon" 
               className="scale-press tap-highlight relative"
-              onClick={() => setActiveView('feed')}
+              onClick={() => navigate('/notifications')}
             >
-              <Bell className={`w-5 h-5 ${activeView === 'feed' ? 'text-primary' : ''}`} />
+              <Bell className="w-5 h-5" />
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-accent rounded-full notification-pulse"></div>
             </Button>
             <Button 

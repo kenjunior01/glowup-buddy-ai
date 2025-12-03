@@ -6,6 +6,9 @@ import { DailyMissions } from '@/components/DailyMissions';
 import { CalendarIntegration } from '@/components/CalendarIntegration';
 import { StoriesSystem } from '@/components/StoriesSystem';
 import { CommunityGroups } from '@/components/CommunityGroups';
+import GoalsWithAI from '@/components/GoalsWithAI';
+import PlansView from '@/components/PlansView';
+import MobileBottomNav from '@/components/MobileBottomNav';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +23,8 @@ import {
   Target,
   LogOut,
   Settings,
-  Award
+  Award,
+  Sparkles
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -247,20 +251,47 @@ export default function Profile() {
           </Card>
         </div>
 
-        <Tabs defaultValue="info" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="info">Informações</TabsTrigger>
-            <TabsTrigger value="achievements">Conquistas</TabsTrigger>
-            <TabsTrigger value="missions">Missões</TabsTrigger>
-            <TabsTrigger value="calendar">Calendário</TabsTrigger>
-            <TabsTrigger value="social">Social</TabsTrigger>
+        <Tabs defaultValue="goals" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-6">
+            <TabsTrigger value="goals" className="flex items-center gap-1">
+              <Target className="w-4 h-4" />
+              <span className="hidden md:inline">Objetivos</span>
+            </TabsTrigger>
+            <TabsTrigger value="plans" className="flex items-center gap-1">
+              <Sparkles className="w-4 h-4" />
+              <span className="hidden md:inline">Planos IA</span>
+            </TabsTrigger>
+            <TabsTrigger value="missions" className="flex items-center gap-1">
+              <Award className="w-4 h-4" />
+              <span className="hidden md:inline">Missões</span>
+            </TabsTrigger>
+            <TabsTrigger value="achievements" className="flex items-center gap-1">
+              <Trophy className="w-4 h-4" />
+              <span className="hidden md:inline">Conquistas</span>
+            </TabsTrigger>
+            <TabsTrigger value="info" className="flex items-center gap-1">
+              <User className="w-4 h-4" />
+              <span className="hidden md:inline">Perfil</span>
+            </TabsTrigger>
+            <TabsTrigger value="calendar" className="flex items-center gap-1">
+              <Calendar className="w-4 h-4" />
+              <span className="hidden md:inline">Calendário</span>
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="info" className="space-y-4">
-            <ProfileForm userId={profile?.id || ''} />
+          <TabsContent value="goals" className="space-y-4 mt-4">
+            <GoalsWithAI userId={profile?.id || ''} onDataChange={fetchUserStats} />
           </TabsContent>
 
-          <TabsContent value="achievements" className="space-y-4">
+          <TabsContent value="plans" className="space-y-4 mt-4">
+            <PlansView userId={profile?.id || ''} onDataChange={fetchUserStats} />
+          </TabsContent>
+
+          <TabsContent value="missions" className="space-y-4 mt-4">
+            <DailyMissions userId={profile?.id || ''} />
+          </TabsContent>
+
+          <TabsContent value="achievements" className="space-y-4 mt-4">
             <BadgesSystem 
               userId={profile?.id || ''} 
               userStats={{
@@ -274,27 +305,16 @@ export default function Profile() {
             />
           </TabsContent>
 
-          <TabsContent value="missions" className="space-y-4">
-            <DailyMissions userId={profile?.id || ''} />
+          <TabsContent value="info" className="space-y-4 mt-4">
+            <ProfileForm userId={profile?.id || ''} />
           </TabsContent>
 
-          <TabsContent value="calendar" className="space-y-4">
+          <TabsContent value="calendar" className="space-y-4 mt-4">
             <CalendarIntegration userId={profile?.id || ''} />
-          </TabsContent>
-
-          <TabsContent value="social" className="space-y-4">
-            <StoriesSystem 
-              userId={profile?.id || ''} 
-              userName={profile?.name || 'Usuário'}
-              userAvatar={profile?.avatar_url}
-            />
-            <CommunityGroups 
-              userId={profile?.id || ''}
-              userName={profile?.name || 'Usuário'}
-            />
           </TabsContent>
         </Tabs>
       </div>
+      <MobileBottomNav />
     </div>
   );
 }
