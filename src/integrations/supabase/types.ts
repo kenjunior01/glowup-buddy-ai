@@ -337,6 +337,65 @@ export type Database = {
           },
         ]
       }
+      stories: {
+        Row: {
+          content: string
+          created_at: string
+          expires_at: string
+          id: string
+          image_url: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          image_url?: string | null
+          type?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          image_url?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      story_likes: {
+        Row: {
+          created_at: string
+          id: string
+          story_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          story_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          story_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_likes_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       streaks: {
         Row: {
           created_at: string | null

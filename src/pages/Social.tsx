@@ -3,17 +3,20 @@ import { supabase } from '@/integrations/supabase/client';
 import RealSocialFeed from '@/components/RealSocialFeed';
 import { UserSearch } from '@/components/UserSearch';
 import FriendsSystem from '@/components/FriendsSystem';
-import { SkeletonCard, SkeletonUserCard } from '@/components/SkeletonCard';
+import { StoriesSystem } from '@/components/StoriesSystem';
+import { SkeletonCard } from '@/components/SkeletonCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, TrendingUp, Trophy, UserPlus } from 'lucide-react';
+import { Users, TrendingUp, Trophy, Camera } from 'lucide-react';
 import MobileBottomNav from '@/components/MobileBottomNav';
 
 export default function Social() {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>('');
+  const [userName, setUserName] = useState<string>('');
+  const [userAvatar, setUserAvatar] = useState<string>('');
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
 
   useEffect(() => {
@@ -25,6 +28,18 @@ export default function Social() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         setUserId(session.user.id);
+        
+        // Fetch user profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('display_name, name, avatar_url')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (profile) {
+          setUserName(profile.display_name || profile.name || 'Usuário');
+          setUserAvatar(profile.avatar_url || '');
+        }
         
         // Fetch pending friend requests count
         const { count } = await supabase
@@ -90,8 +105,12 @@ export default function Social() {
 
       <div className="p-4 space-y-6">
         <Tabs defaultValue="feed" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="feed">Feed</TabsTrigger>
+            <TabsTrigger value="stories">
+              <Camera className="w-4 h-4 mr-1 hidden sm:inline" />
+              Stories
+            </TabsTrigger>
             <TabsTrigger value="friends" className="relative">
               Amigos
               {pendingRequestsCount > 0 && (
@@ -106,6 +125,16 @@ export default function Social() {
 
           <TabsContent value="feed" className="space-y-4">
             <RealSocialFeed />
+          </TabsContent>
+
+          <TabsContent value="stories" className="space-y-4">
+            {userId ? (
+              <StoriesSystem userId={userId} userName={userName} userAvatar={userAvatar} />
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                Faça login para ver stories
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="friends" className="space-y-4">
