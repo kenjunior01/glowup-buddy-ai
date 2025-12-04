@@ -12,6 +12,7 @@ import Challenges from "./pages/Challenges";
 import ChatPage from "./pages/Chat";
 import Profile from "./pages/Profile";
 import Notifications from "./pages/Notifications";
+import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
               <Route path="/chat" element={<ChatPage />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/notifications" element={<Notifications />} />
+              <Route path="/install" element={<Install />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
