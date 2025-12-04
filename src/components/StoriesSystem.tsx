@@ -15,7 +15,8 @@ import {
   Trophy,
   Target,
   Sparkles,
-  Loader2
+  Loader2,
+  Trash2
 } from 'lucide-react';
 import {
   Dialog,
@@ -30,14 +31,14 @@ import { useToast } from '@/hooks/use-toast';
 interface Story {
   id: string;
   user_id: string;
-  user_name: string;
-  user_avatar?: string;
   content: string;
   type: 'progress' | 'achievement' | 'challenge' | 'milestone';
-  image_url?: string;
+  image_url?: string | null;
   created_at: string;
+  expires_at: string;
+  user_name?: string;
+  user_avatar?: string;
   likes_count: number;
-  comments_count: number;
   liked_by_user: boolean;
 }
 
@@ -60,54 +61,93 @@ export const StoriesSystem = ({ userId, userName, userAvatar }: StoriesSystemPro
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchStories();
-  }, []);
+    if (userId) {
+      fetchStories();
+      
+      // Subscribe to realtime updates
+      const channel = supabase
+        .channel('stories-realtime')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'stories',
+        }, () => fetchStories())
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'story_likes',
+        }, () => fetchStories())
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [userId]);
 
   const fetchStories = async () => {
     try {
       setLoading(true);
       
-      // Simulate stories data (in real app, fetch from posts/stories table)
-      const mockStories: Story[] = [
-        {
-          id: '1',
-          user_id: 'user1',
-          user_name: 'Ana Silva',
-          user_avatar: '',
-          content: 'Completei minha sequência de 7 dias! 🔥 Cada dia fica mais fácil manter a consistência.',
-          type: 'achievement',
-          created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          likes_count: 12,
-          comments_count: 3,
-          liked_by_user: false
-        },
-        {
-          id: '2',
-          user_id: 'user2',
-          user_name: 'Carlos Santos',
-          user_avatar: '',
-          content: 'Desafio aceito! Vamos ver quem consegue mais pontos esta semana 💪',
-          type: 'challenge',
-          created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-          likes_count: 8,
-          comments_count: 5,
-          liked_by_user: true
-        },
-        {
-          id: '3',
-          user_id: 'user3',
-          user_name: 'Maria Costa',
-          user_avatar: '',
-          content: 'Primeiro mês no GlowUp concluído! 30 dias de transformação e muitas conquistas 🏆',
-          type: 'milestone',
-          created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-          likes_count: 25,
-          comments_count: 8,
-          liked_by_user: false
-        }
-      ];
+      // Fetch stories that haven't expired
+      const { data: storiesData, error: storiesError } = await supabase
+        .from('stories')
+        .select('*')
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false });
 
-      setStories(mockStories);
+      if (storiesError) throw storiesError;
+
+      if (!storiesData || storiesData.length === 0) {
+        setStories([]);
+        return;
+      }
+
+      // Get unique user IDs
+      const userIds = [...new Set(storiesData.map(s => s.user_id))];
+      
+      // Fetch profiles for story authors
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, display_name, name, avatar_url')
+        .in('id', userIds);
+
+      const profilesMap = new Map(profilesData?.map(p => [p.id, p]) || []);
+
+      // Fetch likes for current user
+      const { data: likesData } = await supabase
+        .from('story_likes')
+        .select('story_id')
+        .eq('user_id', userId);
+
+      const likedStoryIds = new Set(likesData?.map(l => l.story_id) || []);
+
+      // Fetch like counts for all stories
+      const storyIds = storiesData.map(s => s.id);
+      const { data: allLikesData } = await supabase
+        .from('story_likes')
+        .select('story_id')
+        .in('story_id', storyIds);
+
+      const likeCounts = new Map<string, number>();
+      allLikesData?.forEach(like => {
+        likeCounts.set(like.story_id, (likeCounts.get(like.story_id) || 0) + 1);
+      });
+
+      // Combine data
+      const enrichedStories: Story[] = storiesData.map(story => {
+        const profile = profilesMap.get(story.user_id);
+        return {
+          ...story,
+          type: story.type as Story['type'],
+          user_name: profile?.display_name || profile?.name || 'Usuário',
+          user_avatar: profile?.avatar_url || undefined,
+          likes_count: likeCounts.get(story.id) || 0,
+          liked_by_user: likedStoryIds.has(story.id)
+        };
+      });
+
+      setStories(enrichedStories);
     } catch (error) {
       console.error('Error fetching stories:', error);
     } finally {
@@ -168,21 +208,17 @@ export const StoriesSystem = ({ userId, userName, userAvatar }: StoriesSystemPro
         return;
       }
 
-      const story: Story = {
-        id: `story_${Date.now()}`,
-        user_id: userId,
-        user_name: userName,
-        user_avatar: userAvatar,
-        content: newStory.content,
-        type: newStory.type,
-        created_at: new Date().toISOString(),
-        likes_count: 0,
-        comments_count: 0,
-        liked_by_user: false
-      };
+      // Save to database
+      const { error } = await supabase
+        .from('stories')
+        .insert({
+          user_id: userId,
+          content: newStory.content,
+          type: newStory.type,
+        });
 
-      // In real app, save to database
-      setStories(prev => [story, ...prev]);
+      if (error) throw error;
+
       setNewStory({ content: '', type: 'progress' });
       setSuggestedCaptions([]);
       setIsCreating(false);
@@ -201,20 +237,59 @@ export const StoriesSystem = ({ userId, userName, userAvatar }: StoriesSystemPro
     }
   };
 
-  const likeStory = async (storyId: string) => {
-    setStories(prev => prev.map(story => 
-      story.id === storyId
-        ? {
-            ...story,
-            liked_by_user: !story.liked_by_user,
-            likes_count: story.liked_by_user 
-              ? story.likes_count - 1 
-              : story.likes_count + 1
-          }
-        : story
-    ));
+  const deleteStory = async (storyId: string) => {
+    try {
+      const { error } = await supabase
+        .from('stories')
+        .delete()
+        .eq('id', storyId);
 
-    // In real app, update in database
+      if (error) throw error;
+
+      toast({
+        title: "Story removido",
+        description: "Seu story foi excluído.",
+      });
+    } catch (error) {
+      console.error('Error deleting story:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o story.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const toggleLike = async (storyId: string, isLiked: boolean) => {
+    try {
+      if (isLiked) {
+        await supabase
+          .from('story_likes')
+          .delete()
+          .eq('story_id', storyId)
+          .eq('user_id', userId);
+      } else {
+        await supabase
+          .from('story_likes')
+          .insert({
+            story_id: storyId,
+            user_id: userId
+          });
+      }
+
+      // Optimistic update
+      setStories(prev => prev.map(story => 
+        story.id === storyId
+          ? {
+              ...story,
+              liked_by_user: !isLiked,
+              likes_count: isLiked ? story.likes_count - 1 : story.likes_count + 1
+            }
+          : story
+      ));
+    } catch (error) {
+      console.error('Error toggling like:', error);
+    }
   };
 
   const getStoryIcon = (type: Story['type']) => {
@@ -279,7 +354,7 @@ export const StoriesSystem = ({ userId, userName, userAvatar }: StoriesSystemPro
                     <select
                       value={newStory.type}
                       onChange={(e) => setNewStory(prev => ({ ...prev, type: e.target.value as Story['type'] }))}
-                      className="w-full p-2 border rounded-md"
+                      className="w-full p-2 border rounded-md bg-background"
                     >
                       <option value="progress">Progresso</option>
                       <option value="achievement">Conquista</option>
@@ -289,14 +364,12 @@ export const StoriesSystem = ({ userId, userName, userAvatar }: StoriesSystemPro
                   </div>
                   
                   <div className="space-y-2">
-                    <div className="flex gap-2">
-                      <Textarea
-                        value={newStory.content}
-                        onChange={(e) => setNewStory(prev => ({ ...prev, content: e.target.value }))}
-                        placeholder="Compartilhe sua jornada, conquistas ou desafios..."
-                        className="min-h-[100px]"
-                      />
-                    </div>
+                    <Textarea
+                      value={newStory.content}
+                      onChange={(e) => setNewStory(prev => ({ ...prev, content: e.target.value }))}
+                      placeholder="Compartilhe sua jornada, conquistas ou desafios..."
+                      className="min-h-[100px]"
+                    />
                     
                     <Button
                       type="button"
@@ -372,10 +445,17 @@ export const StoriesSystem = ({ userId, userName, userAvatar }: StoriesSystemPro
                 </div>
               ))}
             </div>
+          ) : stories.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Camera className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>Nenhum story ainda</p>
+              <p className="text-sm">Seja o primeiro a compartilhar!</p>
+            </div>
           ) : (
             <div className="space-y-6">
               {stories.map((story) => {
                 const Icon = getStoryIcon(story.type);
+                const isOwner = story.user_id === userId;
                 
                 return (
                   <div key={story.id} className="border rounded-lg p-4 space-y-3">
@@ -384,7 +464,7 @@ export const StoriesSystem = ({ userId, userName, userAvatar }: StoriesSystemPro
                       <Avatar className="w-10 h-10">
                         <AvatarImage src={story.user_avatar} />
                         <AvatarFallback>
-                          {story.user_name.slice(0, 2).toUpperCase()}
+                          {story.user_name?.slice(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
@@ -399,38 +479,40 @@ export const StoriesSystem = ({ userId, userName, userAvatar }: StoriesSystemPro
                           {formatTime(story.created_at)} atrás
                         </p>
                       </div>
+                      {isOwner && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteStory(story.id)}
+                          className="text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
 
                     {/* Story Content */}
-                    <div className="pl-13">
-                      <p className="text-sm leading-relaxed">{story.content}</p>
-                    </div>
+                    <p className="text-sm leading-relaxed">{story.content}</p>
 
                     {/* Story Image */}
                     {story.image_url && (
-                      <div className="pl-13">
-                        <img
-                          src={story.image_url}
-                          alt="Story"
-                          className="rounded-lg max-h-60 w-full object-cover"
-                        />
-                      </div>
+                      <img
+                        src={story.image_url}
+                        alt="Story"
+                        className="rounded-lg max-h-60 w-full object-cover"
+                      />
                     )}
 
                     {/* Actions */}
-                    <div className="flex items-center gap-4 pl-13 pt-2 border-t">
+                    <div className="flex items-center gap-4 pt-2 border-t">
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => likeStory(story.id)}
+                        onClick={() => toggleLike(story.id, story.liked_by_user)}
                         className={story.liked_by_user ? 'text-red-500' : ''}
                       >
                         <Heart className={`w-4 h-4 mr-1 ${story.liked_by_user ? 'fill-current' : ''}`} />
                         {story.likes_count}
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <MessageCircle className="w-4 h-4 mr-1" />
-                        {story.comments_count}
                       </Button>
                       <Button variant="ghost" size="sm">
                         <Share2 className="w-4 h-4" />
