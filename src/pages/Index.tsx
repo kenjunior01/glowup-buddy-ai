@@ -63,7 +63,7 @@ const Index = () => {
               onClick={() => navigate("/dashboard")}
               variant="outline" 
               size="lg" 
-              className="border-white text-white hover:bg-white/10"
+              className="border-white/80 text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm"
             >
               Ver Dashboard
             </Button>
