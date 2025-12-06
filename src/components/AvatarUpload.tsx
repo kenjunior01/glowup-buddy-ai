@@ -44,12 +44,12 @@ export const AvatarUpload = ({ userId, avatarUrl, userName, onUploadComplete }: 
       }
 
       const fileExt = file.name.split('.').pop();
-      const fileName = `${userId}-${Date.now()}.${fileExt}`;
+      const filePath = `${userId}/${Date.now()}.${fileExt}`;
 
-      // Upload to Supabase Storage (we need to create the bucket first)
+      // Upload to Supabase Storage
       const { data, error } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file);
+        .upload(filePath, file, { upsert: true });
 
       if (error) {
         throw error;
@@ -58,7 +58,7 @@ export const AvatarUpload = ({ userId, avatarUrl, userName, onUploadComplete }: 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(fileName);
+        .getPublicUrl(filePath);
 
       // Update profile with new avatar URL
       const { error: updateError } = await supabase

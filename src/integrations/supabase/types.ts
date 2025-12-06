@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       challenges: {
         Row: {
+          challenge_type: string | null
           challenger_id: string | null
           completed_at: string | null
           created_at: string | null
@@ -30,6 +31,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          challenge_type?: string | null
           challenger_id?: string | null
           completed_at?: string | null
           created_at?: string | null
@@ -44,6 +46,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          challenge_type?: string | null
           challenger_id?: string | null
           completed_at?: string | null
           created_at?: string | null
@@ -240,41 +243,59 @@ export type Database = {
       }
       profiles: {
         Row: {
+          age: number | null
+          ambiente: string | null
           avatar_url: string | null
           conquistas: string[] | null
           created_at: string | null
           display_name: string | null
           experience_points: number | null
           id: string
+          informacoes_extras: string | null
           level: number | null
+          mentalidade: string | null
           name: string | null
+          ocupacao: string | null
           pontos: number | null
+          rotina: string | null
           total_challenges_completed: number | null
           updated_at: string | null
         }
         Insert: {
+          age?: number | null
+          ambiente?: string | null
           avatar_url?: string | null
           conquistas?: string[] | null
           created_at?: string | null
           display_name?: string | null
           experience_points?: number | null
           id: string
+          informacoes_extras?: string | null
           level?: number | null
+          mentalidade?: string | null
           name?: string | null
+          ocupacao?: string | null
           pontos?: number | null
+          rotina?: string | null
           total_challenges_completed?: number | null
           updated_at?: string | null
         }
         Update: {
+          age?: number | null
+          ambiente?: string | null
           avatar_url?: string | null
           conquistas?: string[] | null
           created_at?: string | null
           display_name?: string | null
           experience_points?: number | null
           id?: string
+          informacoes_extras?: string | null
           level?: number | null
+          mentalidade?: string | null
           name?: string | null
+          ocupacao?: string | null
           pontos?: number | null
+          rotina?: string | null
           total_challenges_completed?: number | null
           updated_at?: string | null
         }
