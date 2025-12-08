@@ -10,16 +10,19 @@ const corsHeaders = {
 
 // Input validation schema
 const plansSchema = z.object({
-  userId: z.string().uuid().optional(), // Optional, will use authenticated user ID
+  userId: z.string().uuid().optional(),
   goals: z.array(z.object({
     goal_type: z.string(),
     goal_description: z.string(),
-    target_date: z.string().optional(),
+    target_date: z.string().optional().nullable(),
   })),
   profile: z.object({
-    name: z.string().optional(),
-    age: z.number().optional(),
-  }).optional(),
+    name: z.string().optional().nullable(),
+    age: z.number().optional().nullable(),
+    ocupacao: z.string().optional().nullable(),
+    rotina: z.string().optional().nullable(),
+    mentalidade: z.string().optional().nullable(),
+  }).optional().nullable(),
 });
 
 serve(async (req) => {
@@ -44,7 +47,7 @@ serve(async (req) => {
     if (authError || !user) {
       console.error('Authentication error:', authError);
       return new Response(
-        JSON.stringify({ error: 'Não autorizado' }),
+        JSON.stringify({ error: 'Não autorizado. Faça login novamente.' }),
         { 
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -54,9 +57,12 @@ serve(async (req) => {
 
     // 2. VALIDAÇÃO DE INPUT
     const body = await req.json();
+    console.log('Received body:', JSON.stringify(body, null, 2));
+    
     const validationResult = plansSchema.safeParse(body);
     
     if (!validationResult.success) {
+      console.error('Validation error:', validationResult.error.issues);
       return new Response(
         JSON.stringify({ error: 'Dados inválidos', details: validationResult.error.issues }),
         { 
@@ -68,7 +74,7 @@ serve(async (req) => {
 
     const { userId: requestedUserId, goals, profile } = validationResult.data;
 
-    // 3. VALIDAÇÃO DE AUTORIZAÇÃO - userId deve ser o mesmo do usuário autenticado
+    // 3. VALIDAÇÃO DE AUTORIZAÇÃO
     if (requestedUserId && requestedUserId !== user.id) {
       return new Response(
         JSON.stringify({ error: 'Acesso negado' }),
@@ -81,23 +87,39 @@ serve(async (req) => {
 
     const userId = user.id;
 
-    const agentRouterApiKey = Deno.env.get('AGENTROUTER_API_KEY');
-    if (!agentRouterApiKey) {
-      throw new Error('AgentRouter API key not configured');
+    // 4. CHECK FOR LOVABLE API KEY
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!lovableApiKey) {
+      console.error('LOVABLE_API_KEY not configured');
+      return new Response(
+        JSON.stringify({ error: 'API de IA não configurada. Contate o suporte.' }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     // Prepare data for AI prompt
     const goalsText = goals.map((goal: any) => 
-      `${goal.goal_type}: ${goal.goal_description}${goal.target_date ? ` (meta: ${goal.target_date})` : ''}`
+      `- ${goal.goal_type}: ${goal.goal_description}${goal.target_date ? ` (meta: ${goal.target_date})` : ''}`
     ).join('\n');
 
     const userProfile = `
 Nome: ${profile?.name || 'Usuário'}
 Idade: ${profile?.age || 'Não informado'}
+Ocupação: ${profile?.ocupacao || 'Não informado'}
+Rotina: ${profile?.rotina || 'Não informado'}
+Mentalidade: ${profile?.mentalidade || 'Não informado'}
 `;
 
-    // Generate plans using AI
-    const plans = await generatePlansWithAI(agentRouterApiKey, userProfile, goalsText);
+    console.log('Generating plans for user:', userId);
+    console.log('Goals:', goalsText);
+
+    // Generate plans using Lovable AI
+    const plans = await generatePlansWithAI(lovableApiKey, userProfile, goalsText);
+
+    console.log('Generated plans:', JSON.stringify(plans, null, 2));
 
     // Save plans to database
     const planPromises = plans.map(async (plan: any) => {
@@ -118,7 +140,7 @@ Idade: ${profile?.age || 'Não informado'}
         .eq('plan_type', plan.type);
 
       // Insert new plan
-      return supabaseClient
+      const { error: insertError } = await supabaseClient
         .from('plans')
         .insert({
           user_id: userId,
@@ -129,9 +151,16 @@ Idade: ${profile?.age || 'Não informado'}
           end_date: endDate.toISOString().split('T')[0],
           active: true
         });
+
+      if (insertError) {
+        console.error('Error inserting plan:', insertError);
+        throw insertError;
+      }
     });
 
     await Promise.all(planPromises);
+
+    console.log('Plans saved successfully');
 
     return new Response(
       JSON.stringify({ success: true, message: 'Planos gerados com sucesso!' }),
@@ -141,7 +170,7 @@ Idade: ${profile?.age || 'Não informado'}
   } catch (error) {
     console.error('Error in generate-plans function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || 'Erro ao gerar planos. Tente novamente.' }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -151,111 +180,127 @@ Idade: ${profile?.age || 'Não informado'}
 });
 
 async function generatePlansWithAI(apiKey: string, userProfile: string, goalsText: string) {
-  const systemPrompt = `Você é um especialista em transformação pessoal e coaching de vida. Crie planos de Glow Up personalizados e motivadores.
+  const systemPrompt = `Você é um especialista em transformação pessoal e coaching de vida chamado GlowUp Coach. Sua missão é criar planos de Glow Up personalizados, práticos e motivadores.
 
-INSTRUÇÕES:
+INSTRUÇÕES IMPORTANTES:
 - Gere 3 planos: diário, semanal e mensal
-- Cada plano deve ter atividades práticas e alcançáveis
-- As atividades devem ser específicas para os objetivos mencionados
-- Use uma linguagem motivadora e positiva
-- Considere a idade e perfil do usuário
-- Responda APENAS com JSON válido no formato especificado`;
+- Cada plano deve ter entre 3 a 5 atividades práticas e alcançáveis
+- As atividades devem ser ESPECÍFICAS para os objetivos do usuário
+- Use linguagem motivadora, positiva e empática
+- Considere o perfil, idade, ocupação e rotina do usuário
+- Atividades devem ser realistas e mensuráveis
 
-  const userPrompt = `Com base no perfil do usuário e seus objetivos, gere planos de transformação pessoal estruturados.
-
-PERFIL DO USUÁRIO:
-${userProfile}
-
-OBJETIVOS:
-${goalsText}
-
-FORMATO DE RESPOSTA (JSON):
+FORMATO DE RESPOSTA - Responda APENAS com JSON válido:
 {
   "daily": ["atividade 1", "atividade 2", "atividade 3"],
   "weekly": ["atividade 1", "atividade 2", "atividade 3"],
   "monthly": ["atividade 1", "atividade 2", "atividade 3"]
 }`;
 
+  const userPrompt = `Crie planos de transformação pessoal personalizados para este usuário:
+
+PERFIL DO USUÁRIO:
+${userProfile}
+
+OBJETIVOS DO USUÁRIO:
+${goalsText}
+
+Gere um plano diário (para fazer todo dia), um plano semanal (tarefas da semana) e um plano mensal (metas do mês). Responda APENAS com o JSON.`;
+
   try {
-    const response = await fetch('https://agentrouter.org/v1/chat/completions', {
+    console.log('Calling Lovable AI Gateway...');
+    
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        max_tokens: 1000,
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('AgentRouter AI error response:', errorText);
+      console.error('Lovable AI error response:', response.status, errorText);
       
       if (response.status === 429) {
         throw new Error('Limite de requisições atingido. Tente novamente em alguns minutos.');
       } else if (response.status === 402) {
-        throw new Error('Créditos insuficientes. Adicione créditos em Settings → Workspace → Usage.');
+        throw new Error('Créditos de IA insuficientes. Adicione créditos no workspace Lovable.');
       } else {
-        throw new Error(`AI Gateway error: ${response.statusText}`);
+        throw new Error(`Erro na API de IA: ${response.status}`);
       }
     }
 
     const data = await response.json();
-    console.log('AI response:', JSON.stringify(data, null, 2));
+    console.log('AI response received:', JSON.stringify(data, null, 2));
     
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error('Resposta inválida da API');
+      console.error('Invalid AI response structure:', data);
+      throw new Error('Resposta inválida da IA');
     }
     
     const aiResponse = data.choices[0].message.content;
+    console.log('AI content:', aiResponse);
     
-    try {
-      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-      const jsonString = jsonMatch ? jsonMatch[0] : aiResponse;
-      const planContent = JSON.parse(jsonString);
-      
-      return [
-        { type: 'daily', content: planContent.daily },
-        { type: 'weekly', content: planContent.weekly },
-        { type: 'monthly', content: planContent.monthly }
-      ];
-    } catch (parseError) {
-      console.error('JSON parsing error:', parseError);
-      console.error('AI Response:', aiResponse);
-      throw parseError;
+    // Parse JSON from response
+    const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.error('No JSON found in response:', aiResponse);
+      throw new Error('Formato de resposta inválido');
     }
-  } catch (error) {
-    console.error('Error calling AI:', error);
     
+    const jsonString = jsonMatch[0];
+    const planContent = JSON.parse(jsonString);
+    
+    // Validate structure
+    if (!planContent.daily || !planContent.weekly || !planContent.monthly) {
+      console.error('Missing plan types in response:', planContent);
+      throw new Error('Estrutura de planos incompleta');
+    }
+    
+    return [
+      { type: 'daily', content: planContent.daily },
+      { type: 'weekly', content: planContent.weekly },
+      { type: 'monthly', content: planContent.monthly }
+    ];
+    
+  } catch (error) {
+    console.error('Error calling AI, using fallback plans:', error);
+    
+    // Return default plans as fallback
     return [
       { 
         type: 'daily', 
         content: [
-          "Beber 2 litros de água",
-          "Fazer 30 minutos de exercício",
-          "Praticar gratidão (3 coisas boas do dia)"
+          "🌅 Acordar e fazer 5 minutos de alongamento",
+          "💧 Beber 2 litros de água ao longo do dia",
+          "📝 Revisar seus objetivos por 5 minutos",
+          "🧘 Praticar 10 minutos de respiração consciente antes de dormir"
         ]
       },
       { 
         type: 'weekly', 
         content: [
-          "Planejar refeições saudáveis da semana",
-          "Fazer uma atividade que te dê prazer",
-          "Revisar e ajustar seus objetivos"
+          "🏃 Fazer 3 sessões de exercício físico de 30 minutos",
+          "📚 Dedicar 2 horas para desenvolvimento pessoal",
+          "👥 Conectar com um amigo ou familiar",
+          "🎯 Revisar progresso e ajustar metas"
         ]
       },
       { 
         type: 'monthly', 
         content: [
-          "Avaliar progresso dos últimos 30 dias",
-          "Definir uma nova meta desafiadora",
-          "Celebrar suas conquistas do mês"
+          "📊 Avaliar progresso dos últimos 30 dias",
+          "🎯 Definir uma meta desafiadora para o próximo mês",
+          "🎉 Celebrar suas conquistas do mês",
+          "💡 Aprender uma nova habilidade relacionada aos seus objetivos"
         ]
       }
     ];
