@@ -1,3 +1,6 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,40 +12,40 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Social Media Theme - Light Mode */
-    --background: 0 0% 99%;
-    --foreground: 220 9% 9%;
-    --card: 0 0% 100%;
-    --card-foreground: 220 9% 9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 9% 9%;
-    
+    --background: 240 4% 95%;
+    --foreground: 240 5% 10%;
+    --card: 0 0% 98%;
+    --card-foreground: 240 5% 10%;
+    --popover: 240 5% 90%;
+    --popover-foreground: 240 5% 10%;
+
     /* Social Purple/Pink gradient system */
-    --primary: 262 100% 64%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 333 71% 50%;
+    --primary-foreground: 327 73% 97%;
     --primary-light: 270 100% 80%;
     --primary-dark: 250 100% 55%;
-    
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 220 9% 40%;
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
-    
+
+    --secondary: 240 5% 33%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 4% 83%;
+    --muted-foreground: 240 5% 10%;
+
     /* Instagram-inspired accent */
-    --accent: 320 100% 70%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 355 100% 97%;
+    --accent-foreground: 349 89% 60%;
     --accent-light: 330 100% 85%;
-    
+
     /* Success/notification colors */
     --success: 142 76% 36%;
     --warning: 45 93% 47%;
     --info: 217 91% 60%;
-    
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 262 100% 64%;
-    --radius: 1rem;
+
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 85% 97%;
+    --border: 240 4% 83%;
+    --input: 240 4% 83%;
+    --ring: 333 71% 50%;
+    --radius: 1.5rem;
 
     /* Social media gradients for dopamine */
     --gradient-primary: linear-gradient(135deg, hsl(262 100% 64%), hsl(320 100% 70%));
@@ -50,61 +53,80 @@ All colors MUST be HSL.
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(220 14% 98%));
     --gradient-button: linear-gradient(135deg, hsl(262 100% 64%), hsl(280 100% 70%));
     --gradient-success: linear-gradient(135deg, hsl(142 76% 36%), hsl(160 84% 39%));
-    
+
     /* Shadows for elevation */
     --shadow-soft: 0 1px 3px hsl(220 9% 9% / 0.08), 0 1px 2px hsl(220 9% 9% / 0.12);
     --shadow-medium: 0 4px 6px hsl(220 9% 9% / 0.08), 0 2px 4px hsl(220 9% 9% / 0.06);
     --shadow-large: 0 10px 15px hsl(220 9% 9% / 0.1), 0 4px 6px hsl(220 9% 9% / 0.08);
     --shadow-glow: 0 0 20px hsl(262 100% 64% / 0.25);
     --shadow-story: 0 0 0 2px hsl(320 100% 70%);
-    
+
     /* Mobile-first measurements */
     --mobile-safe-area: env(safe-area-inset-top);
     --mobile-padding: 1rem;
 
     --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 280 100% 70%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 280 100% 70%;
+    --sidebar-foreground: 240 5% 10%;
+    --sidebar-primary: 333 71% 50%;
+    --sidebar-primary-foreground: 327 73% 97%;
+    --sidebar-accent: 240 5% 33%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 240 4% 83%;
+    --sidebar-ring: 333 71% 50%;
+    --chart-1: 328 85% 70%;
+    --chart-2: 351 94% 71%;
+    --chart-3: 327 87% 81%;
+    --chart-4: 352 95% 81%;
+    --chart-5: 240 3% 46%;
+    --sidebar: 0 0% 98%;
+    --font-sans: 'Poppins', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    --font-serif: 'Merriweather', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
+    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
+    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+    --tracking-normal: 0em;
+    --spacing: 0.25rem;
   }
 
   .dark {
     /* Social Media Dark Theme */
-    --background: 0 0% 6%;
+    --background: 240 5% 10%;
     --foreground: 0 0% 98%;
-    --card: 0 0% 9%;
+    --card: 240 3% 15%;
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 9%;
+    --popover: 240 5% 26%;
     --popover-foreground: 0 0% 98%;
-    
+
     /* Bright social colors for dark mode */
-    --primary: 270 100% 75%;
-    --primary-foreground: 0 0% 9%;
+    --primary: 328 85% 70%;
+    --primary-foreground: 336 83% 17%;
     --primary-light: 280 100% 85%;
     --primary-dark: 260 100% 65%;
-    
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 85%;
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 65%;
-    
-    --accent: 320 100% 80%;
-    --accent-foreground: 0 0% 9%;
+
+    --secondary: 240 3% 46%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3% 46%;
+    --muted-foreground: 0 0% 98%;
+
+    --accent: 343 87% 15%;
+    --accent-foreground: 351 94% 71%;
     --accent-light: 330 100% 90%;
-    
+
     --success: 142 76% 45%;
     --warning: 45 93% 55%;
     --info: 217 91% 70%;
-    
-    --destructive: 0 84% 70%;
-    --destructive-foreground: 0 0% 9%;
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
-    --ring: 270 100% 75%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 85% 97%;
+    --border: 240 5% 33%;
+    --input: 240 5% 33%;
+    --ring: 328 85% 70%;
 
     /* Dark mode social gradients */
     --gradient-primary: linear-gradient(135deg, hsl(270 100% 75%), hsl(320 100% 80%));
@@ -112,7 +134,7 @@ All colors MUST be HSL.
     --gradient-card: linear-gradient(145deg, hsl(0 0% 9%), hsl(0 0% 12%));
     --gradient-button: linear-gradient(135deg, hsl(270 100% 75%), hsl(290 100% 80%));
     --gradient-success: linear-gradient(135deg, hsl(142 76% 45%), hsl(160 84% 48%));
-    
+
     /* Dark mode shadows with glow */
     --shadow-soft: 0 1px 3px hsl(0 0% 0% / 0.3), 0 1px 2px hsl(0 0% 0% / 0.2);
     --shadow-medium: 0 4px 6px hsl(0 0% 0% / 0.3), 0 2px 4px hsl(0 0% 0% / 0.2);
@@ -121,13 +143,27 @@ All colors MUST be HSL.
     --shadow-story: 0 0 0 2px hsl(320 100% 80%);
 
     --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 280 100% 70%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 280 100% 70%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 328 85% 70%;
+    --sidebar-primary-foreground: 336 83% 17%;
+    --sidebar-accent: 351 94% 71%;
+    --sidebar-accent-foreground: 343 87% 15%;
+    --sidebar-border: 240 5% 33%;
+    --sidebar-ring: 328 85% 70%;
+    --chart-1: 327 87% 81%;
+    --chart-2: 352 95% 81%;
+    --chart-3: 328 85% 70%;
+    --chart-4: 351 94% 71%;
+    --chart-5: 240 5% 33%;
+    --sidebar: 240 3% 15%;
+    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
+    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
+    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
   }
 }
 
@@ -150,44 +186,44 @@ All colors MUST be HSL.
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  
+
   /* Social media utility classes */
   .gradient-primary {
     background: var(--gradient-primary);
   }
-  
+
   .gradient-story {
     background: var(--gradient-story);
   }
-  
+
   .gradient-button {
     background: var(--gradient-button);
   }
-  
+
   .gradient-success {
     background: var(--gradient-success);
   }
-  
+
   .shadow-soft {
     box-shadow: var(--shadow-soft);
   }
-  
+
   .shadow-medium {
     box-shadow: var(--shadow-medium);
   }
-  
+
   .shadow-large {
     box-shadow: var(--shadow-large);
   }
-  
+
   .shadow-glow {
     box-shadow: var(--shadow-glow);
   }
-  
+
   .shadow-story {
     box-shadow: var(--shadow-story);
   }
-  
+
   .text-gradient {
     background: var(--gradient-primary);
     -webkit-background-clip: text;
@@ -236,7 +272,7 @@ All colors MUST be HSL.
   .mobile-padding {
     padding: var(--mobile-padding);
   }
-  
+
   .mobile-safe {
     padding-top: var(--mobile-safe-area);
   }
