@@ -9,10 +9,13 @@ import RealSocialFeed from '@/components/RealSocialFeed';
 import UsersList from '@/components/UsersList';
 import ChallengeModal from '@/components/ChallengeModal';
 import MyChallenges from '@/components/MyChallenges';
-import { Bell, Search, Plus } from 'lucide-react';
+import GoalsWithAI from '@/components/GoalsWithAI';
+import PlansView from '@/components/PlansView';
+import { Bell, Search, Plus, Target, Sparkles, Users, Newspaper } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -23,7 +26,7 @@ export default function Dashboard() {
   const [showChallengeModal, setShowChallengeModal] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [selectedUserName, setSelectedUserName] = useState<string>('');
-  const [activeView, setActiveView] = useState<'feed' | 'users' | 'challenges'>('feed');
+  const [activeView, setActiveView] = useState<'feed' | 'users' | 'challenges' | 'goals' | 'plans'>('goals');
 
   const [stories, setStories] = useState<any[]>([]);
 
@@ -205,13 +208,52 @@ export default function Dashboard() {
             <GamificationHub />
           </div>
 
-          {/* Dynamic Content Based on Active View */}
-          <div className="px-4 space-y-4">
-            {activeView === 'feed' && <RealSocialFeed />}
-            {activeView === 'users' && (
-              <UsersList onChallengeUser={handleChallengeUser} />
-            )}
-            {activeView === 'challenges' && <MyChallenges />}
+          {/* Main Content Tabs */}
+          <div className="px-4">
+            <Tabs value={activeView} onValueChange={(v) => setActiveView(v as any)} className="w-full">
+              <TabsList className="grid w-full grid-cols-5 mb-4">
+                <TabsTrigger value="goals" className="flex items-center gap-1 text-xs">
+                  <Target className="w-4 h-4" />
+                  <span className="hidden sm:inline">Objetivos</span>
+                </TabsTrigger>
+                <TabsTrigger value="plans" className="flex items-center gap-1 text-xs">
+                  <Sparkles className="w-4 h-4" />
+                  <span className="hidden sm:inline">Planos IA</span>
+                </TabsTrigger>
+                <TabsTrigger value="challenges" className="flex items-center gap-1 text-xs">
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Desafios</span>
+                </TabsTrigger>
+                <TabsTrigger value="feed" className="flex items-center gap-1 text-xs">
+                  <Newspaper className="w-4 h-4" />
+                  <span className="hidden sm:inline">Feed</span>
+                </TabsTrigger>
+                <TabsTrigger value="users" className="flex items-center gap-1 text-xs">
+                  <Users className="w-4 h-4" />
+                  <span className="hidden sm:inline">Usuários</span>
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="goals" className="space-y-4">
+                {user?.id && <GoalsWithAI userId={user.id} onDataChange={fetchUserData} />}
+              </TabsContent>
+
+              <TabsContent value="plans" className="space-y-4">
+                {user?.id && <PlansView userId={user.id} onDataChange={fetchUserData} />}
+              </TabsContent>
+
+              <TabsContent value="challenges" className="space-y-4">
+                <MyChallenges />
+              </TabsContent>
+
+              <TabsContent value="feed" className="space-y-4">
+                <RealSocialFeed />
+              </TabsContent>
+
+              <TabsContent value="users" className="space-y-4">
+                <UsersList onChallengeUser={handleChallengeUser} />
+              </TabsContent>
+            </Tabs>
           </div>
 
           {/* Bottom padding for mobile nav */}
