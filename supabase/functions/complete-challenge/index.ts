@@ -1,10 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const completeChallengeSchema = z.object({
+  challengeId: z.string().uuid('Invalid challenge ID'),
+  completionNotes: z.string().max(500, 'Notes must be less than 500 characters').optional(),
+});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -30,11 +36,30 @@ serve(async (req) => {
       });
     }
 
-    const { challengeId } = await req.json();
+    const body = await req.json();
 
+    // Validate input with Zod
+    const validationResult = completeChallengeSchema.safeParse(body);
+    if (!validationResult.success) {
+      console.error('Validation error:', validationResult.error.errors);
+      return new Response(JSON.stringify({ 
+        error: 'Validation failed', 
+        details: validationResult.error.errors.map(e => e.message) 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { challengeId } = validationResult.data;
+
+    // Update challenge status
     const { data: challenge, error: challengeError } = await supabaseClient
       .from('challenges')
-      .update({ status: 'completed' })
+      .update({ 
+        status: 'completed',
+        completed_at: new Date().toISOString()
+      })
       .eq('id', challengeId)
       .eq('challenger_id', user.id)
       .select()
@@ -42,31 +67,40 @@ serve(async (req) => {
 
     if (challengeError) throw challengeError;
 
+    // Fetch user profile to update points
     const { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
       .select('pontos, experience_points, total_challenges_completed')
       .eq('id', user.id)
       .single();
 
-    if (profileError) throw profileError;
+    if (profileError) {
+      console.error('Error fetching profile:', profileError);
+    } else {
+      // Update user profile with rewards
+      const rewardPoints = challenge.reward_points || 100;
+      const experienceGain = Math.round(rewardPoints * 0.5);
 
-    const { error: updateError } = await supabaseClient
-      .from('profiles')
-      .update({
-        pontos: (profile.pontos || 0) + (challenge.reward_points || 0),
-        experience_points: (profile.experience_points || 0) + (challenge.reward_points || 0),
-        total_challenges_completed: (profile.total_challenges_completed || 0) + 1,
-      })
-      .eq('id', user.id);
+      await supabaseClient
+        .from('profiles')
+        .update({
+          pontos: (profile.pontos || 0) + rewardPoints,
+          experience_points: (profile.experience_points || 0) + experienceGain,
+          total_challenges_completed: (profile.total_challenges_completed || 0) + 1
+        })
+        .eq('id', user.id);
 
-    if (updateError) throw updateError;
+      console.log(`User ${user.id} rewarded: ${rewardPoints} points, ${experienceGain} XP`);
+    }
+
+    console.log('Challenge completed:', challengeId);
 
     return new Response(JSON.stringify({ data: challenge }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Error completing challenge:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: 'An error occurred while completing the challenge' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
