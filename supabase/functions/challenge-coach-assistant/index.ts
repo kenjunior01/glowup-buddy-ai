@@ -1,10 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const coachAssistantSchema = z.object({
+  challengeId: z.string().uuid('Invalid challenge ID'),
+  userMessage: z.string().max(1000, 'Message must be less than 1000 characters').optional(),
+  conversationHistory: z.array(z.object({
+    role: z.enum(['user', 'assistant', 'system']),
+    content: z.string()
+  })).optional(),
+});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -30,21 +40,29 @@ serve(async (req) => {
       });
     }
 
-    const { challengeId, userMessage, conversationHistory } = await req.json();
+    const body = await req.json();
 
-    if (!challengeId) {
-      return new Response(JSON.stringify({ error: 'Challenge ID is required' }), {
+    // Validate input with Zod
+    const validationResult = coachAssistantSchema.safeParse(body);
+    if (!validationResult.success) {
+      console.error('Validation error:', validationResult.error.errors);
+      return new Response(JSON.stringify({ 
+        error: 'Validation failed', 
+        details: validationResult.error.errors.map(e => e.message) 
+      }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    const { challengeId, userMessage, conversationHistory } = validationResult.data;
 
     console.log('Challenge Coach request for challenge:', challengeId);
 
     // Fetch challenge details
     const { data: challenge, error: challengeError } = await supabaseClient
       .from('challenges')
-      .select('*, creator:profiles!challenges_creator_id_fkey(name), challenger:profiles!challenges_challenger_id_fkey(name)')
+      .select('*')
       .eq('id', challengeId)
       .single();
 
@@ -55,6 +73,19 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    // Fetch creator and challenger names separately
+    const { data: creatorProfile } = await supabaseClient
+      .from('profiles')
+      .select('name')
+      .eq('id', challenge.creator_id)
+      .single();
+
+    const { data: challengerProfile } = await supabaseClient
+      .from('profiles')
+      .select('name')
+      .eq('id', challenge.challenger_id)
+      .single();
 
     // Fetch user profile
     const { data: profile, error: profileError } = await supabaseClient
@@ -97,8 +128,8 @@ INFORMAÇÕES DO DESAFIO:
 - Pontos de recompensa: ${challenge.reward_points}
 - Dias restantes: ${daysRemaining}
 - Dias ativo: ${daysActive}
-- Criado por: ${challenge.creator?.name || 'Desconhecido'}
-- Desafiado: ${challenge.challenger?.name || 'Desconhecido'}
+- Criado por: ${creatorProfile?.name || 'Desconhecido'}
+- Desafiado: ${challengerProfile?.name || 'Desconhecido'}
 
 PERFIL DO USUÁRIO:
 - Nome: ${profile.name}
@@ -151,7 +182,7 @@ REGRAS:
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
       console.error('AgentRouter API error:', aiResponse.status, errorText);
-      return new Response(JSON.stringify({ error: 'AI service error', details: errorText }), {
+      return new Response(JSON.stringify({ error: 'AI service temporarily unavailable' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -181,7 +212,7 @@ REGRAS:
     });
   } catch (error) {
     console.error('Error in challenge-coach-assistant:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: 'An error occurred while processing your request' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

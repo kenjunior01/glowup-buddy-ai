@@ -1,10 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const generateChallengeSchema = z.object({
+  targetUserId: z.string().uuid('Invalid target user ID'),
+});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -30,14 +35,22 @@ serve(async (req) => {
       });
     }
 
-    const { targetUserId } = await req.json();
+    const body = await req.json();
 
-    if (!targetUserId) {
-      return new Response(JSON.stringify({ error: 'Target user ID is required' }), {
+    // Validate input with Zod
+    const validationResult = generateChallengeSchema.safeParse(body);
+    if (!validationResult.success) {
+      console.error('Validation error:', validationResult.error.errors);
+      return new Response(JSON.stringify({ 
+        error: 'Validation failed', 
+        details: validationResult.error.errors.map(e => e.message) 
+      }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    const { targetUserId } = validationResult.data;
 
     console.log('Generating smart challenge for user:', targetUserId);
 
@@ -128,14 +141,14 @@ Gere um desafio personalizado e retorne APENAS um JSON válido com esta estrutur
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
       console.error('AgentRouter API error:', aiResponse.status, errorText);
-      return new Response(JSON.stringify({ error: 'AI service error', details: errorText }), {
+      return new Response(JSON.stringify({ error: 'AI service temporarily unavailable' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     const aiData = await aiResponse.json();
-    console.log('AI Response:', JSON.stringify(aiData));
+    console.log('AI Response received');
 
     const generatedText = aiData.choices?.[0]?.message?.content;
     if (!generatedText) {
@@ -170,7 +183,7 @@ Gere um desafio personalizado e retorne APENAS um JSON válido com esta estrutur
       });
     }
 
-    console.log('Generated challenge:', challengeData);
+    console.log('Generated challenge successfully');
 
     return new Response(JSON.stringify({ 
       challenge: {
@@ -185,7 +198,7 @@ Gere um desafio personalizado e retorne APENAS um JSON válido com esta estrutur
     });
   } catch (error) {
     console.error('Error in generate-smart-challenge:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: 'An error occurred while generating the challenge' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

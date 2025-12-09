@@ -62,6 +62,130 @@ export type Database = {
         }
         Relationships: []
       }
+      course_lessons: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          duration_minutes: number | null
+          id: string
+          is_free_preview: boolean | null
+          module_id: string
+          order_index: number
+          title: string
+          video_url: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_free_preview?: boolean | null
+          module_id: string
+          order_index?: number
+          title: string
+          video_url?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_free_preview?: boolean | null
+          module_id?: string
+          order_index?: number
+          title?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_lessons_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "course_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_modules: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          order_index: number
+          product_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          order_index?: number
+          product_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          order_index?: number
+          product_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_modules_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_progress: {
+        Row: {
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          lesson_id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          lesson_id: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          lesson_id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "course_lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_progress_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       friendships: {
         Row: {
           created_at: string | null
@@ -121,6 +245,56 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      mentoria_sessions: {
+        Row: {
+          created_at: string | null
+          duration_minutes: number | null
+          id: string
+          meeting_url: string | null
+          mentor_id: string
+          notes: string | null
+          product_id: string
+          scheduled_at: string | null
+          status: string | null
+          student_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          duration_minutes?: number | null
+          id?: string
+          meeting_url?: string | null
+          mentor_id: string
+          notes?: string | null
+          product_id: string
+          scheduled_at?: string | null
+          status?: string | null
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          duration_minutes?: number | null
+          id?: string
+          meeting_url?: string | null
+          mentor_id?: string
+          notes?: string | null
+          product_id?: string
+          scheduled_at?: string | null
+          status?: string | null
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentoria_sessions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -241,6 +415,104 @@ export type Database = {
           },
         ]
       }
+      product_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          id: string
+          product_id: string
+          rating: number
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          product_id: string
+          rating: number
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          product_id?: string
+          rating?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string | null
+          currency: string
+          description: string | null
+          file_url: string | null
+          id: string
+          is_featured: boolean | null
+          metadata: Json | null
+          price_cents: number
+          product_type: Database["public"]["Enums"]["product_type"]
+          rating_avg: number | null
+          rating_count: number | null
+          seller_id: string
+          short_description: string | null
+          status: Database["public"]["Enums"]["product_status"]
+          title: string
+          total_sales: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          is_featured?: boolean | null
+          metadata?: Json | null
+          price_cents?: number
+          product_type: Database["public"]["Enums"]["product_type"]
+          rating_avg?: number | null
+          rating_count?: number | null
+          seller_id: string
+          short_description?: string | null
+          status?: Database["public"]["Enums"]["product_status"]
+          title: string
+          total_sales?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          is_featured?: boolean | null
+          metadata?: Json | null
+          price_cents?: number
+          product_type?: Database["public"]["Enums"]["product_type"]
+          rating_avg?: number | null
+          rating_count?: number | null
+          seller_id?: string
+          short_description?: string | null
+          status?: Database["public"]["Enums"]["product_status"]
+          title?: string
+          total_sales?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           age: number | null
@@ -358,6 +630,62 @@ export type Database = {
           },
         ]
       }
+      purchases: {
+        Row: {
+          amount_cents: number
+          buyer_id: string
+          completed_at: string | null
+          created_at: string | null
+          currency: string
+          id: string
+          payment_intent_id: string | null
+          platform_fee_cents: number | null
+          product_id: string
+          seller_amount_cents: number
+          seller_id: string
+          status: Database["public"]["Enums"]["purchase_status"]
+          updated_at: string | null
+        }
+        Insert: {
+          amount_cents: number
+          buyer_id: string
+          completed_at?: string | null
+          created_at?: string | null
+          currency?: string
+          id?: string
+          payment_intent_id?: string | null
+          platform_fee_cents?: number | null
+          product_id: string
+          seller_amount_cents: number
+          seller_id: string
+          status?: Database["public"]["Enums"]["purchase_status"]
+          updated_at?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          buyer_id?: string
+          completed_at?: string | null
+          created_at?: string | null
+          currency?: string
+          id?: string
+          payment_intent_id?: string | null
+          platform_fee_cents?: number | null
+          product_id?: string
+          seller_amount_cents?: number
+          seller_id?: string
+          status?: Database["public"]["Enums"]["purchase_status"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stories: {
         Row: {
           content: string
@@ -452,10 +780,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_leaderboard: {
+        Args: { limit_count?: number }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          id: string
+          level: number
+          pontos: number
+          total_challenges_completed: number
+        }[]
+      }
+      get_public_profile: {
+        Args: { profile_id: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          id: string
+          level: number
+          pontos: number
+          total_challenges_completed: number
+        }[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      product_status: "draft" | "published" | "archived"
+      product_type: "ebook" | "mentoria" | "curso"
+      purchase_status: "pending" | "completed" | "refunded" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -582,6 +933,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      product_status: ["draft", "published", "archived"],
+      product_type: ["ebook", "mentoria", "curso"],
+      purchase_status: ["pending", "completed", "refunded", "cancelled"],
+    },
   },
 } as const
