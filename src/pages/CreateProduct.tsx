@@ -6,18 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, Upload, BookOpen, Video, Users, FileText, Loader2 } from "lucide-react";
+import { ArrowLeft, Upload, BookOpen, Video, Users, Loader2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type ProductType = Database['public']['Enums']['product_type'];
 
 const productTypes = [
   { value: 'ebook' as ProductType, label: 'E-book', icon: BookOpen, description: 'PDF, livro digital' },
-  { value: 'course' as ProductType, label: 'Curso', icon: Video, description: 'Vídeo-aulas em módulos' },
+  { value: 'curso' as ProductType, label: 'Curso', icon: Video, description: 'Vídeo-aulas em módulos' },
   { value: 'mentoria' as ProductType, label: 'Mentoria', icon: Users, description: 'Sessões ao vivo' },
-  { value: 'template' as ProductType, label: 'Template', icon: FileText, description: 'Planilhas, documentos' },
 ];
 
 const CreateProduct = () => {
@@ -100,19 +98,19 @@ const CreateProduct = () => {
         imageUrl = await uploadImage();
       }
 
-      const { data, error } = await supabase
+      const priceInCents = Math.round(parseFloat(formData.price) * 100);
+
+      const { error } = await supabase
         .from('products')
         .insert({
           seller_id: userId!,
           title: formData.title,
           description: formData.description,
-          price: parseFloat(formData.price),
-          type: formData.type as ProductType,
-          image_url: imageUrl,
+          price_cents: priceInCents,
+          product_type: formData.type as ProductType,
+          cover_image_url: imageUrl,
           status: 'published',
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
 
@@ -156,7 +154,7 @@ const CreateProduct = () => {
               {/* Product Type */}
               <div className="space-y-2">
                 <Label>Tipo de Produto *</Label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   {productTypes.map((type) => {
                     const Icon = type.icon;
                     const isSelected = formData.type === type.value;

@@ -5,23 +5,23 @@ import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductFilters } from "@/components/ProductFilters";
 import { SmartSearch } from "@/components/SmartSearch";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { MobileBottomNav } from "@/components/MobileBottomNav";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { Plus, Store, TrendingUp, Sparkles } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Product {
   id: string;
   title: string;
-  description: string;
-  price: number;
-  type: string;
-  image_url: string | null;
+  description: string | null;
+  price_cents: number;
+  product_type: string;
+  cover_image_url: string | null;
   seller_id: string;
   profiles?: {
-    display_name: string;
+    display_name: string | null;
     avatar_url: string | null;
-  };
+  } | null;
 }
 
 const Marketplace = () => {
@@ -55,9 +55,9 @@ const Marketplace = () => {
           id,
           title,
           description,
-          price,
-          type,
-          image_url,
+          price_cents,
+          product_type,
+          cover_image_url,
           seller_id,
           profiles:seller_id (
             display_name,
@@ -67,15 +67,15 @@ const Marketplace = () => {
         .eq('status', 'published');
 
       if (selectedType !== 'all') {
-        query = query.eq('type', selectedType);
+        query = query.eq('product_type', selectedType as 'ebook' | 'curso' | 'mentoria');
       }
 
       switch (sortBy) {
         case 'price_asc':
-          query = query.order('price', { ascending: true });
+          query = query.order('price_cents', { ascending: true });
           break;
         case 'price_desc':
-          query = query.order('price', { ascending: false });
+          query = query.order('price_cents', { ascending: false });
           break;
         case 'recent':
         default:
@@ -86,7 +86,7 @@ const Marketplace = () => {
       const { data, error } = await query;
 
       if (error) throw error;
-      setProducts(data || []);
+      setProducts((data as unknown as Product[]) || []);
     } catch (error) {
       console.error("Error fetching products:", error);
     } finally {
@@ -96,7 +96,7 @@ const Marketplace = () => {
 
   const filteredProducts = products.filter(product =>
     product.title.toLowerCase().includes(search.toLowerCase()) ||
-    product.description.toLowerCase().includes(search.toLowerCase())
+    (product.description || '').toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -181,12 +181,12 @@ const Marketplace = () => {
                 key={product.id}
                 id={product.id}
                 title={product.title}
-                description={product.description}
-                price={product.price}
-                type={product.type}
-                imageUrl={product.image_url}
-                sellerName={product.profiles?.display_name}
-                sellerAvatar={product.profiles?.avatar_url}
+                description={product.description || ''}
+                price={product.price_cents / 100}
+                type={product.product_type}
+                imageUrl={product.cover_image_url}
+                sellerName={product.profiles?.display_name || undefined}
+                sellerAvatar={product.profiles?.avatar_url || undefined}
               />
             ))}
           </div>
