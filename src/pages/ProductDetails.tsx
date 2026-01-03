@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { toast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, Star, ShoppingCart, BookOpen, Video, Users, 
@@ -16,17 +16,17 @@ import {
 interface Product {
   id: string;
   title: string;
-  description: string;
-  price: number;
-  type: string;
-  image_url: string | null;
+  description: string | null;
+  price_cents: number;
+  product_type: string;
+  cover_image_url: string | null;
   seller_id: string;
   created_at: string;
   profiles?: {
-    display_name: string;
+    display_name: string | null;
     avatar_url: string | null;
-    level: number;
-  };
+    level: number | null;
+  } | null;
 }
 
 interface CourseModule {
@@ -38,7 +38,7 @@ interface CourseModule {
     id: string;
     title: string;
     duration_minutes: number | null;
-    is_free_preview: boolean;
+    is_free_preview: boolean | null;
     order_index: number;
   }[];
 }
@@ -47,12 +47,10 @@ const getTypeIcon = (type: string) => {
   switch (type) {
     case 'ebook':
       return <BookOpen className="h-5 w-5" />;
-    case 'course':
+    case 'curso':
       return <Video className="h-5 w-5" />;
     case 'mentoria':
       return <Users className="h-5 w-5" />;
-    case 'template':
-      return <FileText className="h-5 w-5" />;
     default:
       return <ShoppingCart className="h-5 w-5" />;
   }
@@ -104,9 +102,9 @@ const ProductDetails = () => {
         .single();
 
       if (error) throw error;
-      setProduct(data);
+      setProduct(data as unknown as Product);
 
-      if (data?.type === 'course') {
+      if (data?.product_type === 'curso') {
         fetchModules();
       }
     } catch (error) {
@@ -178,20 +176,21 @@ const ProductDetails = () => {
       return;
     }
 
+    if (!product) return;
+
     setPurchasing(true);
     try {
-      // For now, we'll create a pending purchase
-      // In a real implementation, this would redirect to Stripe
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('purchases')
         .insert({
-          product_id: id,
+          product_id: id!,
           buyer_id: userId,
-          price_paid: product?.price || 0,
+          seller_id: product.seller_id,
+          amount_cents: product.price_cents,
+          seller_amount_cents: Math.floor(product.price_cents * 0.9),
+          platform_fee_cents: Math.floor(product.price_cents * 0.1),
           status: 'pending',
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
 
@@ -234,6 +233,7 @@ const ProductDetails = () => {
     return null;
   }
 
+  const priceInReais = product.price_cents / 100;
   const totalLessons = modules.reduce((acc, m) => acc + m.course_lessons.length, 0);
   const totalMinutes = modules.reduce((acc, m) => 
     acc + m.course_lessons.reduce((a, l) => a + (l.duration_minutes || 0), 0), 0
@@ -257,15 +257,15 @@ const ProductDetails = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Product Image */}
             <div className="aspect-video bg-muted rounded-xl overflow-hidden">
-              {product.image_url ? (
+              {product.cover_image_url ? (
                 <img 
-                  src={product.image_url} 
+                  src={product.cover_image_url} 
                   alt={product.title}
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center gradient-primary/20">
-                  {getTypeIcon(product.type)}
+                  {getTypeIcon(product.product_type)}
                 </div>
               )}
             </div>
@@ -274,8 +274,8 @@ const ProductDetails = () => {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Badge className="gap-1">
-                  {getTypeIcon(product.type)}
-                  {product.type.charAt(0).toUpperCase() + product.type.slice(1)}
+                  {getTypeIcon(product.product_type)}
+                  {product.product_type.charAt(0).toUpperCase() + product.product_type.slice(1)}
                 </Badge>
               </div>
               <h1 className="text-3xl font-bold mb-4">{product.title}</h1>
@@ -301,7 +301,7 @@ const ProductDetails = () => {
             <Tabs defaultValue="description">
               <TabsList>
                 <TabsTrigger value="description">Descrição</TabsTrigger>
-                {product.type === 'course' && modules.length > 0 && (
+                {product.product_type === 'curso' && modules.length > 0 && (
                   <TabsTrigger value="content">Conteúdo</TabsTrigger>
                 )}
                 <TabsTrigger value="reviews">Avaliações</TabsTrigger>
@@ -315,7 +315,7 @@ const ProductDetails = () => {
                 </Card>
               </TabsContent>
               
-              {product.type === 'course' && modules.length > 0 && (
+              {product.product_type === 'curso' && modules.length > 0 && (
                 <TabsContent value="content" className="mt-4 space-y-4">
                   {modules.map((module) => (
                     <Card key={module.id}>
@@ -378,11 +378,11 @@ const ProductDetails = () => {
               <CardContent className="pt-6 space-y-4">
                 <div className="text-center">
                   <span className="text-4xl font-bold text-primary">
-                    R$ {product.price.toFixed(2)}
+                    R$ {priceInReais.toFixed(2)}
                   </span>
                 </div>
 
-                {product.type === 'course' && modules.length > 0 && (
+                {product.product_type === 'curso' && modules.length > 0 && (
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center gap-2">
                       <Video className="h-4 w-4 text-muted-foreground" />

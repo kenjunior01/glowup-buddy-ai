@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { MobileBottomNav } from "@/components/MobileBottomNav";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { toast } from "@/hooks/use-toast";
 import { 
   Plus, Package, DollarSign, ShoppingBag, TrendingUp,
@@ -23,11 +23,11 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface Product {
   id: string;
   title: string;
-  description: string;
-  price: number;
-  type: string;
+  description: string | null;
+  price_cents: number;
+  product_type: string;
   status: string;
-  image_url: string | null;
+  cover_image_url: string | null;
   created_at: string;
 }
 
@@ -42,12 +42,10 @@ const getTypeIcon = (type: string) => {
   switch (type) {
     case 'ebook':
       return <BookOpen className="h-4 w-4" />;
-    case 'course':
+    case 'curso':
       return <Video className="h-4 w-4" />;
     case 'mentoria':
       return <Users className="h-4 w-4" />;
-    case 'template':
-      return <FileText className="h-4 w-4" />;
     default:
       return <Package className="h-4 w-4" />;
   }
@@ -89,7 +87,7 @@ const SellerDashboard = () => {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('*')
+        .select('id, title, description, price_cents, product_type, status, cover_image_url, created_at')
         .eq('seller_id', userId)
         .order('created_at', { ascending: false });
 
@@ -113,8 +111,8 @@ const SellerDashboard = () => {
       // Get sales data
       const { data: sales } = await supabase
         .from('purchases')
-        .select('price_paid, status, products!inner(seller_id)')
-        .eq('products.seller_id', userId);
+        .select('amount_cents, status')
+        .eq('seller_id', userId);
 
       const completedSales = sales?.filter(s => s.status === 'completed') || [];
       const pendingSales = sales?.filter(s => s.status === 'pending') || [];
@@ -122,7 +120,7 @@ const SellerDashboard = () => {
       setStats({
         totalProducts: productCount || 0,
         totalSales: completedSales.length,
-        totalRevenue: completedSales.reduce((acc, s) => acc + s.price_paid, 0),
+        totalRevenue: completedSales.reduce((acc, s) => acc + s.amount_cents, 0) / 100,
         pendingSales: pendingSales.length,
       });
     } catch (error) {
@@ -263,15 +261,15 @@ const SellerDashboard = () => {
                     className="flex items-center gap-4 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
                   >
                     <div className="h-16 w-16 rounded-lg bg-muted overflow-hidden flex-shrink-0">
-                      {product.image_url ? (
+                      {product.cover_image_url ? (
                         <img 
-                          src={product.image_url} 
+                          src={product.cover_image_url} 
                           alt={product.title}
                           className="w-full h-full object-cover"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          {getTypeIcon(product.type)}
+                          {getTypeIcon(product.product_type)}
                         </div>
                       )}
                     </div>
@@ -279,14 +277,14 @@ const SellerDashboard = () => {
                       <h3 className="font-semibold truncate">{product.title}</h3>
                       <div className="flex items-center gap-2 mt-1">
                         <Badge variant="outline" className="gap-1">
-                          {getTypeIcon(product.type)}
-                          {product.type}
+                          {getTypeIcon(product.product_type)}
+                          {product.product_type}
                         </Badge>
                         {getStatusBadge(product.status)}
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-primary">R$ {product.price.toFixed(2)}</p>
+                      <p className="font-bold text-primary">R$ {(product.price_cents / 100).toFixed(2)}</p>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

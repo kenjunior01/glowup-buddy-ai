@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { MobileBottomNav } from "@/components/MobileBottomNav";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { 
   ShoppingBag, BookOpen, Video, Users, FileText, 
   Download, Play, Calendar, ExternalLink
@@ -14,28 +14,26 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Purchase {
   id: string;
-  price_paid: number;
+  amount_cents: number;
   status: string;
   created_at: string;
   products: {
     id: string;
     title: string;
-    description: string;
-    type: string;
-    image_url: string | null;
-  };
+    description: string | null;
+    product_type: string;
+    cover_image_url: string | null;
+  } | null;
 }
 
 const getTypeIcon = (type: string) => {
   switch (type) {
     case 'ebook':
       return <BookOpen className="h-5 w-5" />;
-    case 'course':
+    case 'curso':
       return <Video className="h-5 w-5" />;
     case 'mentoria':
       return <Users className="h-5 w-5" />;
-    case 'template':
-      return <FileText className="h-5 w-5" />;
     default:
       return <ShoppingBag className="h-5 w-5" />;
   }
@@ -44,14 +42,13 @@ const getTypeIcon = (type: string) => {
 const getActionButton = (type: string, productId: string, navigate: (path: string) => void) => {
   switch (type) {
     case 'ebook':
-    case 'template':
       return (
         <Button size="sm" className="gradient-primary">
           <Download className="h-4 w-4 mr-2" />
           Baixar
         </Button>
       );
-    case 'course':
+    case 'curso':
       return (
         <Button size="sm" className="gradient-primary" onClick={() => navigate(`/product/${productId}`)}>
           <Play className="h-4 w-4 mr-2" />
@@ -97,15 +94,15 @@ const MyPurchases = () => {
         .from('purchases')
         .select(`
           id,
-          price_paid,
+          amount_cents,
           status,
           created_at,
           products (
             id,
             title,
             description,
-            type,
-            image_url
+            product_type,
+            cover_image_url
           )
         `)
         .eq('buyer_id', session.user.id)
@@ -113,7 +110,7 @@ const MyPurchases = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPurchases(data || []);
+      setPurchases((data as unknown as Purchase[]) || []);
     } catch (error) {
       console.error("Error fetching purchases:", error);
     } finally {
@@ -160,45 +157,47 @@ const MyPurchases = () => {
         ) : (
           <div className="space-y-4">
             {purchases.map((purchase) => (
-              <Card key={purchase.id} className="overflow-hidden">
-                <div className="flex flex-col sm:flex-row">
-                  <div className="sm:w-32 h-32 bg-muted flex-shrink-0">
-                    {purchase.products.image_url ? (
-                      <img 
-                        src={purchase.products.image_url} 
-                        alt={purchase.products.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        {getTypeIcon(purchase.products.type)}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1 p-4">
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge variant="outline" className="gap-1">
-                            {getTypeIcon(purchase.products.type)}
-                            {purchase.products.type}
-                          </Badge>
+              purchase.products && (
+                <Card key={purchase.id} className="overflow-hidden">
+                  <div className="flex flex-col sm:flex-row">
+                    <div className="sm:w-32 h-32 bg-muted flex-shrink-0">
+                      {purchase.products.cover_image_url ? (
+                        <img 
+                          src={purchase.products.cover_image_url} 
+                          alt={purchase.products.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          {getTypeIcon(purchase.products.product_type)}
                         </div>
-                        <h3 className="font-semibold text-lg">{purchase.products.title}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                          {purchase.products.description}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Comprado em {new Date(purchase.created_at).toLocaleDateString('pt-BR')}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {getActionButton(purchase.products.type, purchase.products.id, navigate)}
+                      )}
+                    </div>
+                    <div className="flex-1 p-4">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge variant="outline" className="gap-1">
+                              {getTypeIcon(purchase.products.product_type)}
+                              {purchase.products.product_type}
+                            </Badge>
+                          </div>
+                          <h3 className="font-semibold text-lg">{purchase.products.title}</h3>
+                          <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                            {purchase.products.description}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Comprado em {new Date(purchase.created_at).toLocaleDateString('pt-BR')}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {getActionButton(purchase.products.product_type, purchase.products.id, navigate)}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </Card>
+                </Card>
+              )
             ))}
           </div>
         )}
