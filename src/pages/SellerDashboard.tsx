@@ -293,7 +293,7 @@ const SellerDashboard = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => navigate(`/product/${product.id}`)}>
+                        <DropdownMenuItem onClick={() => navigate(`/marketplace/${product.id}`)}>
                           <Eye className="h-4 w-4 mr-2" />
                           Visualizar
                         </DropdownMenuItem>

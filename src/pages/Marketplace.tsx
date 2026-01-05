@@ -18,10 +18,8 @@ interface Product {
   product_type: string;
   cover_image_url: string | null;
   seller_id: string;
-  profiles?: {
-    display_name: string | null;
-    avatar_url: string | null;
-  } | null;
+  rating_avg: number | null;
+  rating_count: number | null;
 }
 
 const Marketplace = () => {
@@ -59,10 +57,8 @@ const Marketplace = () => {
           product_type,
           cover_image_url,
           seller_id,
-          profiles:seller_id (
-            display_name,
-            avatar_url
-          )
+          rating_avg,
+          rating_count
         `)
         .eq('status', 'published');
 
@@ -77,6 +73,12 @@ const Marketplace = () => {
         case 'price_desc':
           query = query.order('price_cents', { ascending: false });
           break;
+        case 'rating':
+          query = query.order('rating_avg', { ascending: false, nullsFirst: false });
+          break;
+        case 'popular':
+          query = query.order('total_sales', { ascending: false, nullsFirst: false });
+          break;
         case 'recent':
         default:
           query = query.order('created_at', { ascending: false });
@@ -86,7 +88,7 @@ const Marketplace = () => {
       const { data, error } = await query;
 
       if (error) throw error;
-      setProducts((data as unknown as Product[]) || []);
+      setProducts((data as Product[]) || []);
     } catch (error) {
       console.error("Error fetching products:", error);
     } finally {
@@ -114,7 +116,7 @@ const Marketplace = () => {
             </p>
           </div>
           {userId && (
-            <Button onClick={() => navigate('/seller/dashboard')} className="gradient-primary">
+            <Button onClick={() => navigate('/seller-dashboard')} className="gradient-primary">
               <Plus className="h-4 w-4 mr-2" />
               Vender Produto
             </Button>
@@ -168,7 +170,7 @@ const Marketplace = () => {
               {search ? 'Tente uma busca diferente' : 'Seja o primeiro a criar um produto!'}
             </p>
             {userId && (
-              <Button onClick={() => navigate('/seller/dashboard')} className="gradient-primary">
+              <Button onClick={() => navigate('/seller-dashboard')} className="gradient-primary">
                 <Plus className="h-4 w-4 mr-2" />
                 Criar Produto
               </Button>
@@ -185,8 +187,8 @@ const Marketplace = () => {
                 price={product.price_cents / 100}
                 type={product.product_type}
                 imageUrl={product.cover_image_url}
-                sellerName={product.profiles?.display_name || undefined}
-                sellerAvatar={product.profiles?.avatar_url || undefined}
+                rating={product.rating_avg ?? undefined}
+                reviewCount={product.rating_count ?? undefined}
               />
             ))}
           </div>
