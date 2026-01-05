@@ -122,7 +122,9 @@ Mentalidade: ${profile?.mentalidade || 'Não informado'}
     console.log('Generated plans:', JSON.stringify(plans, null, 2));
 
     // Save plans to database
-    const planPromises = plans.map(async (plan: any) => {
+    console.log('Saving plans to database...');
+    
+    for (const plan of plans) {
       const endDate = new Date();
       if (plan.type === 'daily') {
         endDate.setDate(endDate.getDate() + 1);
@@ -133,32 +135,43 @@ Mentalidade: ${profile?.mentalidade || 'Não informado'}
       }
 
       // Deactivate old plans of the same type
-      await supabaseClient
+      const { error: updateError } = await supabaseClient
         .from('plans')
         .update({ active: false })
         .eq('user_id', userId)
-        .eq('plan_type', plan.type);
+        .eq('plan_type', plan.type)
+        .eq('active', true);
 
+      if (updateError) {
+        console.error('Error deactivating old plans:', updateError);
+      }
+
+      // Ensure content is properly formatted as JSON
+      const contentToSave = Array.isArray(plan.content) ? plan.content : [plan.content];
+      
       // Insert new plan
-      const { error: insertError } = await supabaseClient
+      const { data: insertedPlan, error: insertError } = await supabaseClient
         .from('plans')
         .insert({
           user_id: userId,
           plan_type: plan.type,
-          content: plan.content,
+          content: JSON.stringify(contentToSave),
           title: `Plano ${plan.type === 'daily' ? 'Diário' : plan.type === 'weekly' ? 'Semanal' : 'Mensal'}`,
           start_date: new Date().toISOString().split('T')[0],
           end_date: endDate.toISOString().split('T')[0],
-          active: true
-        });
+          active: true,
+          completed: false
+        })
+        .select()
+        .single();
 
       if (insertError) {
         console.error('Error inserting plan:', insertError);
-        throw insertError;
+        throw new Error(`Erro ao salvar plano ${plan.type}: ${insertError.message}`);
       }
-    });
-
-    await Promise.all(planPromises);
+      
+      console.log('Inserted plan:', insertedPlan?.id);
+    }
 
     console.log('Plans saved successfully');
 
