@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Users, Trophy, MessageCircle, User } from 'lucide-react';
+import { Home, Users, Trophy, Store, User } from 'lucide-react';
 import { Badge } from './ui/badge';
 
 export default function MobileBottomNav() {
@@ -9,9 +9,9 @@ export default function MobileBottomNav() {
   const navItems = [
     { icon: Home, label: 'Home', path: '/dashboard' },
     { icon: Users, label: 'Social', path: '/social' },
-    { icon: Trophy, label: 'Challenges', path: '/challenges' },
-    { icon: MessageCircle, label: 'Chat', path: '/chat' },
-    { icon: User, label: 'Profile', path: '/profile' },
+    { icon: Store, label: 'Loja', path: '/marketplace' },
+    { icon: Trophy, label: 'Desafios', path: '/challenges' },
+    { icon: User, label: 'Perfil', path: '/profile' },
   ];
 
   return (
