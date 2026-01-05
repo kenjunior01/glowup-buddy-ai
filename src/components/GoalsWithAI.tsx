@@ -142,18 +142,31 @@ export default function GoalsWithAI({ userId, onDataChange }: GoalsWithAIProps) 
         .eq("id", userId)
         .single();
 
-      const { error } = await supabase.functions.invoke('generate-plans', {
+      const { data, error } = await supabase.functions.invoke('generate-plans', {
         body: { userId, goals, profile }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Edge function error:", error);
+        throw new Error(error.message || "Erro ao chamar função de geração de planos");
+      }
+
+      // Check if the response indicates an error
+      if (data?.error) {
+        throw new Error(data.error);
+      }
 
       toast({ title: "Planos gerados com sucesso!", description: "Veja seus novos planos personalizados." });
       fetchPlansCount();
       onDataChange?.();
     } catch (error: any) {
-      console.error("Error:", error);
-      toast({ title: "Erro ao gerar planos", description: error.message, variant: "destructive" });
+      console.error("Error generating plans:", error);
+      const errorMessage = error?.message || "Erro desconhecido ao gerar planos";
+      toast({ 
+        title: "Erro ao gerar planos", 
+        description: errorMessage, 
+        variant: "destructive" 
+      });
     }
     setGeneratingPlans(false);
   };

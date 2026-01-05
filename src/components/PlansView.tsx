@@ -271,10 +271,21 @@ const PlansView = ({ userId, onDataChange }: PlansViewProps) => {
   };
 
   const renderPlanContent = (content: any) => {
-    if (Array.isArray(content)) {
+    // Parse content if it's a string (JSON stored as text)
+    let parsedContent = content;
+    if (typeof content === 'string') {
+      try {
+        parsedContent = JSON.parse(content);
+      } catch {
+        // If parsing fails, treat as plain text
+        return <p className="text-sm text-muted-foreground">{content}</p>;
+      }
+    }
+
+    if (Array.isArray(parsedContent)) {
       return (
         <ul className="space-y-2">
-          {content.map((task, index) => (
+          {parsedContent.map((task, index) => (
             <li key={index} className="flex items-center space-x-2">
               <Checkbox id={`task-${index}`} />
               <label 
@@ -289,10 +300,10 @@ const PlansView = ({ userId, onDataChange }: PlansViewProps) => {
       );
     }
 
-    if (typeof content === 'object' && content !== null) {
+    if (typeof parsedContent === 'object' && parsedContent !== null) {
       return (
         <div className="space-y-4">
-          {Object.entries(content).map(([key, tasks]: [string, any]) => (
+          {Object.entries(parsedContent).map(([key, tasks]: [string, any]) => (
             <div key={key}>
               <h4 className="font-medium mb-2 capitalize">{key}</h4>
               {Array.isArray(tasks) ? (
@@ -318,7 +329,7 @@ const PlansView = ({ userId, onDataChange }: PlansViewProps) => {
       );
     }
 
-    return <p className="text-sm text-muted-foreground">{content}</p>;
+    return <p className="text-sm text-muted-foreground">{String(parsedContent)}</p>;
   };
 
   // Separar planos ativos, concluídos e históricos
