@@ -37,7 +37,7 @@ const getTypeLabel = (type: string) => {
   switch (type) {
     case 'ebook':
       return 'E-book';
-    case 'course':
+    case 'curso':
       return 'Curso';
     case 'mentoria':
       return 'Mentoria';
@@ -63,7 +63,7 @@ export const ProductCard = ({
   const navigate = useNavigate();
 
   return (
-    <Card className="overflow-hidden hover:shadow-large transition-all duration-300 group cursor-pointer" onClick={() => navigate(`/product/${id}`)}>
+    <Card className="overflow-hidden hover:shadow-large transition-all duration-300 group cursor-pointer" onClick={() => navigate(`/marketplace/${id}`)}>
       <div className="relative aspect-video bg-muted overflow-hidden">
         {imageUrl ? (
           <img
@@ -119,7 +119,7 @@ export const ProductCard = ({
         </div>
         <Button size="sm" className="gradient-primary" onClick={(e) => {
           e.stopPropagation();
-          navigate(`/product/${id}`);
+          navigate(`/marketplace/${id}`);
         }}>
           Ver Detalhes
         </Button>

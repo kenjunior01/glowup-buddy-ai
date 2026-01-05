@@ -22,11 +22,6 @@ interface Product {
   cover_image_url: string | null;
   seller_id: string;
   created_at: string;
-  profiles?: {
-    display_name: string | null;
-    avatar_url: string | null;
-    level: number | null;
-  } | null;
 }
 
 interface CourseModule {
@@ -60,6 +55,11 @@ const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
+  const [sellerProfile, setSellerProfile] = useState<{
+    display_name: string | null;
+    avatar_url: string | null;
+    level: number | null;
+  } | null>(null);
   const [modules, setModules] = useState<CourseModule[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
@@ -90,19 +90,22 @@ const ProductDetails = () => {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select(`
-          *,
-          profiles:seller_id (
-            display_name,
-            avatar_url,
-            level
-          )
-        `)
+        .select('*')
         .eq('id', id)
         .single();
 
       if (error) throw error;
-      setProduct(data as unknown as Product);
+      setProduct(data as Product);
+
+      // Fetch seller profile using the RPC function
+      if (data?.seller_id) {
+        const { data: profileData } = await supabase
+          .rpc('get_public_profile', { profile_id: data.seller_id });
+        
+        if (profileData && profileData.length > 0) {
+          setSellerProfile(profileData[0]);
+        }
+      }
 
       if (data?.product_type === 'curso') {
         fetchModules();
@@ -283,15 +286,15 @@ const ProductDetails = () => {
               {/* Seller Info */}
               <div className="flex items-center gap-3 mb-6">
                 <Avatar className="h-12 w-12">
-                  <AvatarImage src={product.profiles?.avatar_url || undefined} />
+                  <AvatarImage src={sellerProfile?.avatar_url || undefined} />
                   <AvatarFallback className="gradient-primary text-primary-foreground">
-                    {product.profiles?.display_name?.charAt(0).toUpperCase() || "?"}
+                    {sellerProfile?.display_name?.charAt(0).toUpperCase() || "?"}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-semibold">{product.profiles?.display_name || "Anônimo"}</p>
+                  <p className="font-semibold">{sellerProfile?.display_name || "Anônimo"}</p>
                   <p className="text-sm text-muted-foreground">
-                    Nível {product.profiles?.level || 1}
+                    Nível {sellerProfile?.level || 1}
                   </p>
                 </div>
               </div>
