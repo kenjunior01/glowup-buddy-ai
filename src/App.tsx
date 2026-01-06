@@ -18,6 +18,7 @@ import Marketplace from "./pages/Marketplace";
 import ProductDetails from "./pages/ProductDetails";
 import SellerDashboard from "./pages/SellerDashboard";
 import CreateProduct from "./pages/CreateProduct";
+import EditProduct from "./pages/EditProduct";
 import MyPurchases from "./pages/MyPurchases";
 import NotFound from "./pages/NotFound";
 
@@ -45,6 +46,7 @@ const App = () => (
               <Route path="/marketplace/:id" element={<ProductDetails />} />
               <Route path="/seller-dashboard" element={<ProtectedRoute><SellerDashboard /></ProtectedRoute>} />
               <Route path="/create-product" element={<ProtectedRoute><CreateProduct /></ProtectedRoute>} />
+              <Route path="/edit-product/:id" element={<ProtectedRoute><EditProduct /></ProtectedRoute>} />
               <Route path="/my-purchases" element={<ProtectedRoute><MyPurchases /></ProtectedRoute>} />
               <Route path="/install" element={<Install />} />
               <Route path="*" element={<NotFound />} />
