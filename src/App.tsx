@@ -20,6 +20,8 @@ import SellerDashboard from "./pages/SellerDashboard";
 import CreateProduct from "./pages/CreateProduct";
 import EditProduct from "./pages/EditProduct";
 import MyPurchases from "./pages/MyPurchases";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentCanceled from "./pages/PaymentCanceled";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +50,8 @@ const App = () => (
               <Route path="/create-product" element={<ProtectedRoute><CreateProduct /></ProtectedRoute>} />
               <Route path="/edit-product/:id" element={<ProtectedRoute><EditProduct /></ProtectedRoute>} />
               <Route path="/my-purchases" element={<ProtectedRoute><MyPurchases /></ProtectedRoute>} />
+              <Route path="/payment-success" element={<PaymentSuccess />} />
+              <Route path="/payment-canceled" element={<PaymentCanceled />} />
               <Route path="/install" element={<Install />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
