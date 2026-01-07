@@ -183,40 +183,31 @@ const ProductDetails = () => {
 
     setPurchasing(true);
     try {
-      const { error } = await supabase
-        .from('purchases')
-        .insert({
-          product_id: id!,
-          buyer_id: userId,
-          seller_id: product.seller_id,
-          amount_cents: product.price_cents,
-          seller_amount_cents: Math.floor(product.price_cents * 0.9),
-          platform_fee_cents: Math.floor(product.price_cents * 0.1),
-          status: 'pending',
-        });
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { 
+          productId: product.id,
+          productTitle: product.title,
+          priceCents: product.price_cents,
+          sellerId: product.seller_id
+        }
+      });
 
       if (error) throw error;
 
-      toast({
-        title: "Redirecionando para pagamento...",
-        description: "Você será redirecionado para completar a compra.",
-      });
-
-      // TODO: Integrate with Stripe checkout
-      // For now, simulate successful purchase
-      setTimeout(() => {
-        setHasPurchased(true);
+      if (data?.url) {
+        window.open(data.url, '_blank');
         toast({
-          title: "Compra realizada!",
-          description: "Você agora tem acesso ao produto.",
+          title: "Checkout aberto",
+          description: "Complete o pagamento na nova aba.",
         });
-      }, 2000);
-
+      } else {
+        throw new Error("URL de checkout não retornada");
+      }
     } catch (error) {
-      console.error("Error creating purchase:", error);
+      console.error("Error creating checkout:", error);
       toast({
         title: "Erro",
-        description: "Não foi possível processar a compra",
+        description: "Não foi possível iniciar o checkout",
         variant: "destructive",
       });
     } finally {
