@@ -285,13 +285,13 @@ export default function Dashboard() {
     );
   }
 
-  // Mobile Layout
+  // Mobile Layout with enhanced animations
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
-      <div className="sticky top-16 z-30 bg-card/95 backdrop-blur-lg border-b border-border mobile-safe">
+      {/* Header with glassmorphism */}
+      <div className="sticky top-16 z-30 bg-card/80 backdrop-blur-xl border-b border-border/30 mobile-safe">
         <div className="flex items-center justify-between p-4">
-          <div>
+          <div className="animate-fade-in">
             <h1 className="text-xl font-bold text-gradient">GlowUp</h1>
             <p className="text-sm text-muted-foreground">
               Olá, {user?.profile?.name || 'Usuário'}! 👋
@@ -302,7 +302,7 @@ export default function Dashboard() {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="scale-press tap-highlight relative"
+              className="scale-press tap-highlight relative hover:bg-primary/10 transition-all duration-300"
               onClick={() => navigate('/notifications')}
             >
               <Bell className="w-5 h-5" />
@@ -311,14 +311,14 @@ export default function Dashboard() {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="scale-press tap-highlight"
+              className="scale-press tap-highlight hover:bg-primary/10 transition-all duration-300"
               onClick={() => setActiveView('users')}
             >
-              <Search className={`w-5 h-5 ${activeView === 'users' ? 'text-primary' : ''}`} />
+              <Search className={`w-5 h-5 transition-colors duration-300 ${activeView === 'users' ? 'text-primary' : ''}`} />
             </Button>
             <Button 
               size="icon" 
-              className="social-button"
+              className="social-button hover:scale-110 active:scale-95 transition-transform duration-200"
               onClick={() => setActiveView('challenges')}
             >
               <Plus className="w-5 h-5" />
@@ -329,26 +329,34 @@ export default function Dashboard() {
 
       <ScrollArea className="h-[calc(100vh-200px)]">
         <div className="space-y-6">
+          {/* Stories section with animation */}
           {stories.length > 0 && (
-            <div className="px-4 pt-4">
-              <div className="flex space-x-4 overflow-x-auto pb-2">
+            <div className="px-4 pt-4 animate-fade-in">
+              <div className="flex space-x-4 overflow-x-auto pb-2 scrollbar-hide">
                 <StoryRing isAddStory onClick={() => {}} />
                 {stories.map((story, index) => (
-                  <StoryRing
+                  <div 
                     key={index}
-                    user={story}
-                    onClick={() => {}}
-                  />
+                    className="animate-scale-in"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <StoryRing
+                      user={story}
+                      onClick={() => {}}
+                    />
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
-          <div className="px-4">
+          {/* Quick Stats with staggered animation */}
+          <div className="px-4 animate-fade-in" style={{ animationDelay: '100ms' }}>
             <QuickStats stats={userStats || {}} />
           </div>
 
-          <div className="px-4">
+          {/* Streak Counter with bounce animation */}
+          <div className="px-4 animate-fade-in" style={{ animationDelay: '200ms' }}>
             <StreakCounter
               currentStreak={currentStreak}
               longestStreak={userStats?.longest_streak || 0}
@@ -357,52 +365,69 @@ export default function Dashboard() {
             />
           </div>
 
-          <div className="px-4">
+          {/* Gamification Hub */}
+          <div className="px-4 animate-fade-in" style={{ animationDelay: '300ms' }}>
             <GamificationHub />
           </div>
 
-          <div className="px-4">
+          {/* Tabs with improved mobile UX */}
+          <div className="px-4 animate-fade-in" style={{ animationDelay: '400ms' }}>
             <Tabs value={activeView} onValueChange={(v) => setActiveView(v as any)} className="w-full">
-              <TabsList className="grid w-full grid-cols-5 mb-4">
-                <TabsTrigger value="goals" className="flex items-center gap-1 text-xs">
+              <TabsList className="grid w-full grid-cols-5 mb-4 bg-muted/50 backdrop-blur-sm p-1 rounded-xl">
+                <TabsTrigger 
+                  value="goals" 
+                  className="flex items-center gap-1 text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all duration-300 rounded-lg"
+                >
                   <Target className="w-4 h-4" />
-                  <span className="hidden sm:inline">Objetivos</span>
+                  <span className="hidden sm:inline">Metas</span>
                 </TabsTrigger>
-                <TabsTrigger value="plans" className="flex items-center gap-1 text-xs">
+                <TabsTrigger 
+                  value="plans" 
+                  className="flex items-center gap-1 text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all duration-300 rounded-lg"
+                >
                   <Sparkles className="w-4 h-4" />
-                  <span className="hidden sm:inline">Planos IA</span>
+                  <span className="hidden sm:inline">IA</span>
                 </TabsTrigger>
-                <TabsTrigger value="challenges" className="flex items-center gap-1 text-xs">
+                <TabsTrigger 
+                  value="challenges" 
+                  className="flex items-center gap-1 text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all duration-300 rounded-lg"
+                >
                   <Plus className="w-4 h-4" />
                   <span className="hidden sm:inline">Desafios</span>
                 </TabsTrigger>
-                <TabsTrigger value="feed" className="flex items-center gap-1 text-xs">
+                <TabsTrigger 
+                  value="feed" 
+                  className="flex items-center gap-1 text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all duration-300 rounded-lg"
+                >
                   <Newspaper className="w-4 h-4" />
                   <span className="hidden sm:inline">Feed</span>
                 </TabsTrigger>
-                <TabsTrigger value="users" className="flex items-center gap-1 text-xs">
+                <TabsTrigger 
+                  value="users" 
+                  className="flex items-center gap-1 text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all duration-300 rounded-lg"
+                >
                   <Users className="w-4 h-4" />
-                  <span className="hidden sm:inline">Usuários</span>
+                  <span className="hidden sm:inline">Social</span>
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="goals" className="space-y-4">
+              <TabsContent value="goals" className="space-y-4 animate-fade-in">
                 {user?.id && <GoalsWithAI userId={user.id} onDataChange={fetchUserData} />}
               </TabsContent>
 
-              <TabsContent value="plans" className="space-y-4">
+              <TabsContent value="plans" className="space-y-4 animate-fade-in">
                 {user?.id && <PlansView userId={user.id} onDataChange={fetchUserData} />}
               </TabsContent>
 
-              <TabsContent value="challenges" className="space-y-4">
+              <TabsContent value="challenges" className="space-y-4 animate-fade-in">
                 <MyChallenges />
               </TabsContent>
 
-              <TabsContent value="feed" className="space-y-4">
+              <TabsContent value="feed" className="space-y-4 animate-fade-in">
                 <RealSocialFeed />
               </TabsContent>
 
-              <TabsContent value="users" className="space-y-4">
+              <TabsContent value="users" className="space-y-4 animate-fade-in">
                 <UsersList onChallengeUser={handleChallengeUser} />
               </TabsContent>
             </Tabs>
