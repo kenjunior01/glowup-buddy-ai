@@ -35,11 +35,13 @@ interface User {
   created_at: string | null;
 }
 
+type ProductStatus = 'draft' | 'published' | 'archived';
+
 interface Product {
   id: string;
   title: string;
   price_cents: number;
-  status: string;
+  status: ProductStatus;
   seller_id: string;
   created_at: string | null;
   total_sales: number | null;
@@ -49,6 +51,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [stats, setStats] = useState<Stats>({
     totalUsers: 0,
     totalProducts: 0,
@@ -63,8 +66,42 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
-    fetchAdminData();
+    checkAdminAccess();
   }, []);
+
+  const checkAdminAccess = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/auth');
+        return;
+      }
+
+      // Check if user has admin role
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .single();
+
+      if (!roleData) {
+        toast({
+          title: "Acesso Negado",
+          description: "Você não tem permissão para acessar esta página.",
+          variant: "destructive"
+        });
+        navigate('/dashboard');
+        return;
+      }
+
+      setIsAdmin(true);
+      fetchAdminData();
+    } catch (error) {
+      console.error('Error checking admin access:', error);
+      navigate('/dashboard');
+    }
+  };
 
   const fetchAdminData = async () => {
     try {
@@ -128,7 +165,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleUpdateProductStatus = async (productId: string, newStatus: string) => {
+  const handleUpdateProductStatus = async (productId: string, newStatus: ProductStatus) => {
     try {
       const { error } = await supabase
         .from('products')
