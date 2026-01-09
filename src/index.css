@@ -286,8 +286,12 @@ All colors MUST be HSL.
     padding-top: var(--mobile-safe-area);
   }
 
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
   .story-size {
-    @apply w-16 h-16 md:w-20 md:h-20;
+    @apply w-20 h-20;
   }
 
   .post-card {
@@ -295,11 +299,39 @@ All colors MUST be HSL.
   }
 
   .social-button {
-    @apply gradient-button text-primary-foreground shadow-medium hover:shadow-large transition-all duration-300 scale-press tap-highlight;
+    @apply gradient-button text-primary-foreground shadow-medium hover:shadow-large transition-all duration-300 scale-press tap-highlight rounded-xl;
   }
 
   .achievement-badge {
     @apply gradient-success text-white shadow-glow rounded-full;
+  }
+
+  /* Glass morphism */
+  .glass {
+    @apply bg-card/80 backdrop-blur-xl border border-border/30;
+  }
+
+  /* Text sizes for mobile - larger and more impactful */
+  .text-display {
+    @apply text-3xl font-bold tracking-tight;
+  }
+
+  .text-title {
+    @apply text-xl font-semibold;
+  }
+
+  /* Scrollbar hide utility */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Tap feedback */
+  .tap-scale {
+    @apply transition-transform duration-100 active:scale-95;
   }
 }
 
