@@ -190,76 +190,57 @@ export default function GoalsWithAI({ userId, onDataChange }: GoalsWithAIProps) 
   };
 
   return (
-    <div className="space-y-6">
-      {/* Stats Header */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Target className="w-8 h-8 mx-auto text-primary mb-2" />
-            <p className="text-2xl font-bold">{goals.length}</p>
-            <p className="text-xs text-muted-foreground">Objetivos</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Calendar className="w-8 h-8 mx-auto text-blue-500 mb-2" />
-            <p className="text-2xl font-bold">{plansCount}</p>
-            <p className="text-xs text-muted-foreground">Planos Ativos</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <TrendingUp className="w-8 h-8 mx-auto text-green-500 mb-2" />
-            <p className="text-2xl font-bold">{calculateProgress()}%</p>
-            <p className="text-xs text-muted-foreground">Progresso</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-primary/10 to-purple-500/10 border-primary/20">
-          <CardContent className="p-4">
-            <Button 
-              onClick={generatePlans} 
-              disabled={generatingPlans || goals.length === 0}
-              className="w-full h-full flex flex-col gap-1"
-              variant="ghost"
-            >
-              {generatingPlans ? (
-                <RefreshCw className="w-8 h-8 animate-spin" />
-              ) : (
-                <Sparkles className="w-8 h-8" />
-              )}
-              <span className="text-xs">{generatingPlans ? 'Gerando...' : 'Gerar Planos IA'}</span>
-            </Button>
-          </CardContent>
-        </Card>
+    <div className="space-y-4">
+      {/* Stats Header - Compact for mobile */}
+      <div className="grid grid-cols-4 gap-2">
+        <div className="bg-card rounded-xl p-3 text-center border border-border/50">
+          <span className="text-lg">🎯</span>
+          <p className="text-lg font-bold">{goals.length}</p>
+          <p className="text-[10px] text-muted-foreground">Objetivos</p>
+        </div>
+        <div className="bg-card rounded-xl p-3 text-center border border-border/50">
+          <span className="text-lg">📅</span>
+          <p className="text-lg font-bold">{plansCount}</p>
+          <p className="text-[10px] text-muted-foreground">Planos</p>
+        </div>
+        <div className="bg-card rounded-xl p-3 text-center border border-border/50">
+          <span className="text-lg">📈</span>
+          <p className="text-lg font-bold">{calculateProgress()}%</p>
+          <p className="text-[10px] text-muted-foreground">Progresso</p>
+        </div>
+        <button
+          onClick={generatePlans}
+          disabled={generatingPlans || goals.length === 0}
+          className="bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl p-3 text-center border border-primary/30 tap-scale disabled:opacity-50"
+        >
+          {generatingPlans ? (
+            <RefreshCw className="w-5 h-5 mx-auto animate-spin text-primary" />
+          ) : (
+            <span className="text-lg">✨</span>
+          )}
+          <p className="text-[10px] font-medium mt-1">{generatingPlans ? 'Gerando...' : 'Gerar IA'}</p>
+        </button>
       </div>
 
-      {/* Quick Add Suggestions */}
+      {/* Quick Add Suggestions - Compact */}
       {goals.length < 3 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Lightbulb className="w-4 h-4 text-yellow-500" />
-              Sugestões Rápidas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {aiSuggestions.slice(0, 4).map((suggestion, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleQuickAdd(suggestion)}
-                  disabled={loading}
-                  className="text-xs"
-                >
-                  <span className="mr-1">{suggestion.icon}</span>
-                  {suggestion.text}
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-card rounded-xl p-3 border border-border/50">
+          <p className="text-xs font-medium flex items-center gap-1 mb-2">
+            <span>💡</span> Sugestões Rápidas
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {aiSuggestions.slice(0, 3).map((suggestion, index) => (
+              <button
+                key={index}
+                onClick={() => handleQuickAdd(suggestion)}
+                disabled={loading}
+                className="text-[11px] px-2.5 py-1.5 rounded-full bg-muted/50 hover:bg-muted tap-scale disabled:opacity-50"
+              >
+                {suggestion.icon} {suggestion.text.slice(0, 25)}...
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Add Goal Form */}
