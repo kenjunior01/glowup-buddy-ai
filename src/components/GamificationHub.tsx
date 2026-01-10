@@ -217,188 +217,146 @@ const GamificationHub = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* User Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-          <CardContent className="p-4 text-center">
-            <Crown className="h-8 w-8 mx-auto mb-2 text-primary" />
-            <div className="text-2xl font-bold text-primary">{userStats?.level || 1}</div>
-            <div className="text-sm text-muted-foreground">Nível</div>
-            <Progress value={getProgressToNextLevel()} className="mt-2 h-2" />
-          </CardContent>
-        </Card>
+    <div className="space-y-4">
+      {/* User Stats Overview - Compact grid */}
+      <div className="grid grid-cols-4 gap-2">
+        <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl p-2.5 text-center border border-primary/20">
+          <span className="text-lg">👑</span>
+          <div className="text-lg font-bold text-primary">{userStats?.level || 1}</div>
+          <div className="text-[10px] text-muted-foreground">Nível</div>
+          <Progress value={getProgressToNextLevel()} className="mt-1 h-1" />
+        </div>
 
-        <Card className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20">
-          <CardContent className="p-4 text-center">
-            <Flame className="h-8 w-8 mx-auto mb-2 text-orange-500" />
-            <div className="text-2xl font-bold text-orange-500">{userStats?.current_streak || 0}</div>
-            <div className="text-sm text-muted-foreground">Sequência</div>
-            <div className="text-xs mt-1">Recorde: {userStats?.longest_streak || 0}</div>
-          </CardContent>
-        </Card>
+        <div className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 rounded-xl p-2.5 text-center border border-orange-500/20">
+          <span className="text-lg">🔥</span>
+          <div className="text-lg font-bold text-orange-500">{userStats?.current_streak || 0}</div>
+          <div className="text-[10px] text-muted-foreground">Sequência</div>
+        </div>
 
-        <Card className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 border-yellow-500/20">
-          <CardContent className="p-4 text-center">
-            <Star className="h-8 w-8 mx-auto mb-2 text-yellow-500" />
-            <div className="text-2xl font-bold text-yellow-500">{userStats?.pontos || 0}</div>
-            <div className="text-sm text-muted-foreground">Pontos</div>
-          </CardContent>
-        </Card>
+        <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 rounded-xl p-2.5 text-center border border-yellow-500/20">
+          <span className="text-lg">⭐</span>
+          <div className="text-lg font-bold text-yellow-500">{userStats?.pontos || 0}</div>
+          <div className="text-[10px] text-muted-foreground">Pontos</div>
+        </div>
 
-        <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
-          <CardContent className="p-4 text-center">
-            <Trophy className="h-8 w-8 mx-auto mb-2 text-green-500" />
-            <div className="text-2xl font-bold text-green-500">{getUnlockedAchievements().length}</div>
-            <div className="text-sm text-muted-foreground">Conquistas</div>
-          </CardContent>
-        </Card>
+        <div className="bg-gradient-to-br from-green-500/10 to-green-500/5 rounded-xl p-2.5 text-center border border-green-500/20">
+          <span className="text-lg">🏆</span>
+          <div className="text-lg font-bold text-green-500">{getUnlockedAchievements().length}</div>
+          <div className="text-[10px] text-muted-foreground">Conquistas</div>
+        </div>
       </div>
 
       <Tabs defaultValue="missions" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="missions">Missões</TabsTrigger>
-          <TabsTrigger value="achievements">Conquistas</TabsTrigger>
-          <TabsTrigger value="notifications">Notificações</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 h-10 bg-muted/40 rounded-xl p-1">
+          <TabsTrigger value="missions" className="text-xs rounded-lg">🎯 Missões</TabsTrigger>
+          <TabsTrigger value="achievements" className="text-xs rounded-lg">🏅 Conquistas</TabsTrigger>
+          <TabsTrigger value="notifications" className="text-xs rounded-lg">🔔 Alertas</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="missions" className="space-y-4">
-          {/* Daily Mission */}
+        <TabsContent value="missions" className="space-y-3 mt-3">
+          {/* Daily Mission - Compact */}
           {dailyMission && (
-            <Card className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/20">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <Target className="h-5 w-5 text-blue-500" />
-                    Missão Diária
-                  </h3>
-                  <Badge variant="secondary" className="bg-blue-500/20 text-blue-700">
-                    {dailyMission.reward} pontos
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div>
-                    <h4 className="font-medium">{dailyMission.title}</h4>
-                    <p className="text-sm text-muted-foreground">{dailyMission.description}</p>
-                  </div>
-                  <Button onClick={claimDailyReward} className="w-full hover-scale">
-                    <Gift className="h-4 w-4 mr-2" />
-                    Coletar Recompensa
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl p-3 border border-blue-500/20">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium flex items-center gap-1">
+                  <span>🎯</span> Missão Diária
+                </span>
+                <span className="text-xs font-bold text-blue-600 bg-blue-500/20 px-2 py-0.5 rounded-full">
+                  +{dailyMission.reward} pts
+                </span>
+              </div>
+              <p className="text-sm font-medium mb-1">{dailyMission.title}</p>
+              <p className="text-xs text-muted-foreground mb-3">{dailyMission.description}</p>
+              <Button onClick={claimDailyReward} size="sm" className="w-full h-9 text-xs">
+                <span className="mr-1">🎁</span> Coletar Recompensa
+              </Button>
+            </div>
           )}
 
-          {/* Weekly Missions */}
-          <Card>
-            <CardHeader>
-              <h3 className="font-semibold">Missões Semanais</h3>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {weeklyMissions.slice(0, 3).map((mission) => (
-                  <div key={mission.id} className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
-                    <div>
-                      <h4 className="font-medium text-sm">{mission.title}</h4>
-                      <p className="text-xs text-muted-foreground">{mission.description}</p>
-                    </div>
-                    <Badge variant="outline">
-                      {mission.reward} pts
-                    </Badge>
+          {/* Weekly Missions - Compact */}
+          <div className="bg-card rounded-xl p-3 border border-border/50">
+            <p className="text-xs font-medium mb-2">📋 Missões Semanais</p>
+            <div className="space-y-2">
+              {weeklyMissions.slice(0, 3).map((mission) => (
+                <div key={mission.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate">{mission.title}</p>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="achievements" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <h3 className="font-semibold">Suas Conquistas ({getUnlockedAchievements().length}/{achievements.length})</h3>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {achievements.map((achievement) => {
-                  const isUnlocked = userStats?.conquistas.includes(achievement.id);
-                  return (
-                    <div
-                      key={achievement.id}
-                      className={`p-4 rounded-lg border transition-all ${
-                        isUnlocked
-                          ? 'bg-primary/10 border-primary/30 hover:bg-primary/15'
-                          : 'bg-secondary/20 border-secondary/30 opacity-60'
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={`text-2xl ${isUnlocked ? '' : 'grayscale'}`}>
-                          {achievement.icon}
-                        </div>
-                        <div className="flex-1">
-                          <h4 className={`font-medium text-sm ${isUnlocked ? 'text-foreground' : 'text-muted-foreground'}`}>
-                            {achievement.title}
-                          </h4>
-                          <p className="text-xs text-muted-foreground">{achievement.description}</p>
-                          {isUnlocked && (
-                            <Badge variant="secondary" className="mt-2 text-xs">
-                              <Award className="h-3 w-3 mr-1" />
-                              Desbloqueado!
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="notifications" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <h3 className="font-semibold">Últimas Notificações</h3>
-            </CardHeader>
-            <CardContent>
-              {notifications.length === 0 ? (
-                <div className="text-center py-8">
-                  <Zap className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">Nenhuma notificação ainda</p>
+                  <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full ml-2">
+                    +{mission.reward}
+                  </span>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                        notification.read
-                          ? 'bg-secondary/20 border-secondary/30'
-                          : 'bg-primary/10 border-primary/30'
-                      }`}
-                      onClick={() => markNotificationAsRead(notification.id)}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h4 className="font-medium text-sm">{notification.title}</h4>
-                          <p className="text-xs text-muted-foreground">{notification.message}</p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {new Date(notification.created_at).toLocaleString('pt-BR')}
-                          </p>
-                        </div>
-                        {!notification.read && (
-                          <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-1"></div>
+              ))}
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="achievements" className="mt-3">
+          <div className="bg-card rounded-xl p-3 border border-border/50">
+            <p className="text-xs font-medium mb-3">🏅 Suas Conquistas ({getUnlockedAchievements().length}/{achievements.length})</p>
+            <div className="grid grid-cols-2 gap-2">
+              {achievements.slice(0, 6).map((achievement) => {
+                const isUnlocked = userStats?.conquistas.includes(achievement.id);
+                return (
+                  <div
+                    key={achievement.id}
+                    className={`p-2.5 rounded-lg border transition-all ${
+                      isUnlocked
+                        ? 'bg-primary/10 border-primary/30'
+                        : 'bg-muted/30 border-muted opacity-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xl ${isUnlocked ? '' : 'grayscale'}`}>
+                        {achievement.icon}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium truncate">{achievement.title}</p>
+                        {isUnlocked && (
+                          <span className="text-[10px] text-primary">✓ Desbloqueado</span>
                         )}
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="notifications" className="mt-3">
+          <div className="bg-card rounded-xl p-3 border border-border/50">
+            {notifications.length === 0 ? (
+              <div className="text-center py-6">
+                <span className="text-3xl">🔔</span>
+                <p className="text-xs text-muted-foreground mt-2">Nenhuma notificação</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {notifications.slice(0, 5).map((notification) => (
+                  <div
+                    key={notification.id}
+                    onClick={() => markNotificationAsRead(notification.id)}
+                    className={`p-2.5 rounded-lg border cursor-pointer ${
+                      notification.read
+                        ? 'bg-muted/20 border-muted'
+                        : 'bg-primary/5 border-primary/20'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium">{notification.title}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{notification.message}</p>
+                      </div>
+                      {!notification.read && (
+                        <span className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-1" />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
     </div>

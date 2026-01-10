@@ -1,6 +1,5 @@
 import React from 'react';
-import { TrendingUp, Users, Trophy, Zap, ChevronRight } from 'lucide-react';
-import { Badge } from './ui/badge';
+import { TrendingUp, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface QuickStatsProps {
@@ -16,124 +15,77 @@ interface QuickStatsProps {
 
 export default function QuickStats({ stats }: QuickStatsProps) {
   const statItems = [
-    {
-      icon: TrendingUp,
-      label: 'Nível',
-      value: stats.level || 1,
-      color: 'from-blue-500 to-cyan-500',
-      iconBg: 'bg-blue-500/20',
-      iconColor: 'text-blue-500',
-    },
-    {
-      icon: Zap,
-      label: 'Pontos',
-      value: (stats.points || 0).toLocaleString(),
-      color: 'from-purple-500 to-pink-500',
-      iconBg: 'bg-purple-500/20',
-      iconColor: 'text-purple-500',
-    },
-    {
-      icon: Trophy,
-      label: 'Rank',
-      value: `#${stats.rank || 1}`,
-      color: 'from-yellow-500 to-orange-500',
-      iconBg: 'bg-yellow-500/20',
-      iconColor: 'text-yellow-500',
-    },
-    {
-      icon: Users,
-      label: 'Amigos',
-      value: stats.friends || 0,
-      color: 'from-green-500 to-emerald-500',
-      iconBg: 'bg-green-500/20',
-      iconColor: 'text-green-500',
-    }
+    { emoji: '📈', label: 'Nível', value: stats.level || 1, color: 'from-blue-500 to-cyan-500' },
+    { emoji: '⚡', label: 'Pontos', value: (stats.points || 0).toLocaleString(), color: 'from-purple-500 to-pink-500' },
+    { emoji: '🏆', label: 'Rank', value: `#${stats.rank || 1}`, color: 'from-yellow-500 to-orange-500' },
+    { emoji: '👥', label: 'Amigos', value: stats.friends || 0, color: 'from-green-500 to-emerald-500' },
   ];
 
   return (
-    <div className="space-y-4">
-      {/* Header with achievements badge */}
+    <div className="space-y-3">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">Seu Progresso</h2>
-        <Badge className="bg-gradient-to-r from-primary to-primary-dark text-primary-foreground px-3 py-1 text-sm font-semibold shadow-md">
-          🏆 {stats.achievements || 0} conquistas
-        </Badge>
+        <h2 className="text-base font-bold flex items-center gap-2">
+          <span>📊</span> Seu Progresso
+        </h2>
+        <div className="flex items-center gap-1 text-xs text-primary font-medium bg-primary/10 px-2 py-1 rounded-full">
+          <span>🏅</span> {stats.achievements || 0} conquistas
+        </div>
       </div>
 
-      {/* Stats grid - horizontal scroll on mobile */}
-      <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-        {statItems.map(({ icon: Icon, label, value, color, iconBg, iconColor }, index) => (
+      {/* Stats grid - Horizontal scroll */}
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+        {statItems.map(({ emoji, label, value, color }, index) => (
           <div 
             key={label}
             className={cn(
-              "flex-shrink-0 w-[140px] p-4 rounded-2xl bg-card border border-border/50 shadow-sm",
-              "scale-press tap-highlight transition-all duration-300",
-              "hover:shadow-md hover:border-border"
+              "flex-shrink-0 w-[100px] p-3 rounded-xl bg-card border border-border/50",
+              "tap-scale transition-all duration-200"
             )}
-            style={{ animationDelay: `${index * 50}ms` }}
           >
-            {/* Icon */}
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center mb-3", iconBg)}>
-              <Icon className={cn("w-5 h-5", iconColor)} />
-            </div>
+            {/* Emoji */}
+            <div className="text-xl mb-1">{emoji}</div>
             
-            {/* Value - BIG */}
-            <div className={cn("text-2xl font-bold bg-gradient-to-r bg-clip-text text-transparent", color)}>
+            {/* Value */}
+            <div className={cn("text-lg font-bold bg-gradient-to-r bg-clip-text text-transparent", color)}>
               {value}
             </div>
             
             {/* Label */}
-            <div className="text-sm text-muted-foreground font-medium mt-1">
-              {label}
-            </div>
+            <div className="text-xs text-muted-foreground">{label}</div>
           </div>
         ))}
       </div>
 
-      {/* Progress to next level */}
-      <div className="bg-card rounded-2xl p-4 border border-border/50 shadow-sm">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-              <TrendingUp className="w-4 h-4 text-primary" />
-            </div>
-            <span className="font-semibold">Próximo nível</span>
+      {/* Progress bar - Compact */}
+      <div className="bg-card rounded-xl p-3 border border-border/50">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm">🎯</span>
+            <span className="text-xs font-medium">Próximo nível</span>
           </div>
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <span>Nível {(stats.level || 1) + 1}</span>
-            <ChevronRight className="w-4 h-4" />
-          </div>
+          <span className="text-xs text-muted-foreground">
+            Nv.{(stats.level || 1) + 1} →
+          </span>
         </div>
         
         {/* Progress bar */}
-        <div className="relative h-3 bg-muted rounded-full overflow-hidden">
+        <div className="relative h-2 bg-muted rounded-full overflow-hidden">
           <div 
-            className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary to-primary-dark rounded-full progress-fill"
+            className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary to-accent rounded-full"
             style={{ width: `${Math.min(((stats.points || 0) % 100), 100)}%` }}
           />
-          {/* Shine effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_2s_infinite]" />
         </div>
         
-        {/* XP counter */}
-        <div className="flex justify-between text-xs text-muted-foreground mt-2">
-          <span className="font-medium">{stats.points || 0} XP</span>
+        <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+          <span>{stats.points || 0} XP</span>
           <span>{(stats.level || 1) * 100} XP</span>
         </div>
       </div>
 
       <style>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </div>
   );

@@ -295,9 +295,9 @@ export default function Dashboard() {
     );
   }
 
-  // Mobile Layout - TikTok/Instagram Inspired
+  // Mobile Layout - Clean & Friendly
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background pb-20">
       {/* Streak Celebration Modal */}
       <StreakCelebration 
         streak={currentStreak + 1}
@@ -305,154 +305,122 @@ export default function Dashboard() {
         onClose={() => setShowStreakCelebration(false)}
       />
 
-      {/* Mobile Header - Minimal & Clean */}
-      <div className="sticky top-16 z-30 glass">
-        <div className="flex items-center justify-between px-5 py-4">
-          <div className="animate-fade-in">
-            <h1 className="text-2xl font-bold text-gradient tracking-tight">GlowUp</h1>
+      {/* Mobile Header - Compact */}
+      <div className="sticky top-16 z-30 bg-card/95 backdrop-blur-lg border-b border-border/30">
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">✨</span>
+            <h1 className="text-lg font-bold text-gradient">GlowUp</h1>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Button 
               variant="ghost" 
-              size="icon" 
-              className="w-11 h-11 rounded-xl tap-scale relative hover:bg-muted/50"
+              size="sm"
+              className="w-9 h-9 rounded-lg tap-scale relative"
               onClick={() => navigate('/notifications')}
             >
-              <Bell className="w-6 h-6" />
-              <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
             </Button>
             <Button 
               variant="ghost" 
-              size="icon" 
-              className="w-11 h-11 rounded-xl tap-scale hover:bg-muted/50"
+              size="sm"
+              className="w-9 h-9 rounded-lg tap-scale"
               onClick={() => setActiveView('users')}
             >
-              <Search className={cn(
-                "w-6 h-6 transition-colors",
-                activeView === 'users' && "text-primary"
-              )} />
+              <Search className="w-5 h-5" />
             </Button>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="px-5 space-y-6 pb-8">
+      <div className="px-4 space-y-4 pt-3 pb-6">
         {/* Hero Welcome Card */}
-        <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-          <HeroWelcome 
-            userName={user?.profile?.name || 'Usuário'}
-            currentStreak={currentStreak}
-            level={userStats?.level || 1}
-            points={userStats?.points || 0}
-            onCheckIn={handleCheckIn}
-          />
-        </div>
+        <HeroWelcome 
+          userName={user?.profile?.name || 'Usuário'}
+          currentStreak={currentStreak}
+          level={userStats?.level || 1}
+          points={userStats?.points || 0}
+          onCheckIn={handleCheckIn}
+        />
 
-        {/* Stories Row */}
-        {stories.length > 0 && (
-          <div className="animate-fade-in-up -mx-5 px-5" style={{ animationDelay: '200ms' }}>
-            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-              <StoryRing isAddStory onClick={() => {}} />
-              {stories.map((story, index) => (
-                <div 
-                  key={index}
-                  className="animate-scale-in"
-                  style={{ animationDelay: `${(index + 1) * 100}ms` }}
-                >
-                  <StoryRing user={story} onClick={() => {}} />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Quick Stats */}
+        <QuickStats stats={userStats || {}} />
 
-        {/* Quick Stats - Horizontal Scroll */}
-        <div className="animate-fade-in-up" style={{ animationDelay: '300ms' }}>
-          <QuickStats stats={userStats || {}} />
-        </div>
-
-        {/* Quick Actions Row */}
-        <div className="animate-fade-in-up flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5" style={{ animationDelay: '400ms' }}>
-          <Button 
-            variant="outline" 
-            className="flex-shrink-0 gap-2 h-12 px-4 rounded-xl bg-card border-border/50 hover:bg-muted/50 tap-scale"
+        {/* Quick Actions - Compact chips */}
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+          <button 
             onClick={() => navigate('/chat')}
+            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full bg-primary/10 text-primary text-xs font-medium tap-scale"
           >
-            <MessageCircle className="w-5 h-5 text-primary" />
-            <span className="font-medium">Chat IA</span>
-          </Button>
-          <Button 
-            variant="outline" 
-            className="flex-shrink-0 gap-2 h-12 px-4 rounded-xl bg-card border-border/50 hover:bg-muted/50 tap-scale"
+            <span>💬</span> Chat IA
+          </button>
+          <button 
             onClick={() => setActiveView('challenges')}
+            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full bg-orange-500/10 text-orange-600 text-xs font-medium tap-scale"
           >
-            <Target className="w-5 h-5 text-orange-500" />
-            <span className="font-medium">Desafios</span>
-          </Button>
-          <Button 
-            variant="outline" 
-            className="flex-shrink-0 gap-2 h-12 px-4 rounded-xl bg-card border-border/50 hover:bg-muted/50 tap-scale"
+            <span>🎯</span> Desafios
+          </button>
+          <button 
             onClick={() => setActiveView('plans')}
+            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full bg-purple-500/10 text-purple-600 text-xs font-medium tap-scale"
           >
-            <Sparkles className="w-5 h-5 text-purple-500" />
-            <span className="font-medium">Planos IA</span>
-          </Button>
+            <span>🤖</span> Planos IA
+          </button>
+          <button 
+            onClick={() => navigate('/social')}
+            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full bg-green-500/10 text-green-600 text-xs font-medium tap-scale"
+          >
+            <span>👥</span> Social
+          </button>
         </div>
 
-        {/* Main Tabs */}
-        <div className="animate-fade-in-up" style={{ animationDelay: '500ms' }}>
-          <Tabs value={activeView} onValueChange={(v) => setActiveView(v as any)} className="w-full">
-            <TabsList className="grid w-full grid-cols-5 mb-5 h-14 bg-muted/30 backdrop-blur-sm p-1.5 rounded-2xl">
-              {[
-                { value: 'goals', icon: Target, label: 'Metas' },
-                { value: 'plans', icon: Sparkles, label: 'IA' },
-                { value: 'challenges', icon: Plus, label: 'Desafios' },
-                { value: 'feed', icon: Newspaper, label: 'Feed' },
-                { value: 'users', icon: Users, label: 'Social' },
-              ].map(({ value, icon: Icon, label }) => (
-                <TabsTrigger 
-                  key={value}
-                  value={value} 
-                  className={cn(
-                    "flex flex-col items-center gap-1 h-full rounded-xl transition-all duration-300",
-                    "data-[state=active]:bg-card data-[state=active]:shadow-md",
-                    "data-[state=active]:text-primary"
-                  )}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span className="text-[10px] font-medium">{label}</span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
+        {/* Main Tabs - Simplified */}
+        <Tabs value={activeView} onValueChange={(v) => setActiveView(v as any)} className="w-full">
+          <TabsList className="grid w-full grid-cols-5 mb-4 h-11 bg-muted/40 p-1 rounded-xl">
+            {[
+              { value: 'goals', emoji: '🎯', label: 'Metas' },
+              { value: 'plans', emoji: '✨', label: 'IA' },
+              { value: 'challenges', emoji: '🏆', label: 'Desafios' },
+              { value: 'feed', emoji: '📱', label: 'Feed' },
+              { value: 'users', emoji: '👥', label: 'Social' },
+            ].map(({ value, emoji, label }) => (
+              <TabsTrigger 
+                key={value}
+                value={value} 
+                className={cn(
+                  "flex flex-col items-center gap-0.5 h-full rounded-lg text-[10px] py-1",
+                  "data-[state=active]:bg-card data-[state=active]:shadow-sm"
+                )}
+              >
+                <span className="text-sm">{emoji}</span>
+                <span className="font-medium">{label}</span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-            <TabsContent value="goals" className="space-y-4 animate-fade-in">
-              {user?.id && <GoalsWithAI userId={user.id} onDataChange={fetchUserData} />}
-            </TabsContent>
+          <TabsContent value="goals" className="space-y-3">
+            {user?.id && <GoalsWithAI userId={user.id} onDataChange={fetchUserData} />}
+          </TabsContent>
 
-            <TabsContent value="plans" className="space-y-4 animate-fade-in">
-              {user?.id && <PlansView userId={user.id} onDataChange={fetchUserData} />}
-            </TabsContent>
+          <TabsContent value="plans" className="space-y-3">
+            {user?.id && <PlansView userId={user.id} onDataChange={fetchUserData} />}
+          </TabsContent>
 
-            <TabsContent value="challenges" className="space-y-4 animate-fade-in">
-              <MyChallenges />
-            </TabsContent>
+          <TabsContent value="challenges" className="space-y-3">
+            <MyChallenges />
+          </TabsContent>
 
-            <TabsContent value="feed" className="space-y-4 animate-fade-in">
-              <RealSocialFeed />
-            </TabsContent>
+          <TabsContent value="feed" className="space-y-3">
+            <RealSocialFeed />
+          </TabsContent>
 
-            <TabsContent value="users" className="space-y-4 animate-fade-in">
-              <UsersList onChallengeUser={handleChallengeUser} />
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        {/* Gamification Hub - Compact for mobile */}
-        <div className="animate-fade-in-up" style={{ animationDelay: '600ms' }}>
-          <GamificationHub />
-        </div>
+          <TabsContent value="users" className="space-y-3">
+            <UsersList onChallengeUser={handleChallengeUser} />
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Mobile Bottom Navigation */}
