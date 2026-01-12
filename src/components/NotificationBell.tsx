@@ -123,8 +123,21 @@ export const NotificationBell = () => {
     return `${Math.floor(diffInMinutes / 1440)}d`;
   };
 
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleMarkAsRead = async (notificationId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await markAsRead(notificationId);
+  };
+
+  const handleMarkAllAsRead = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await markAllAsRead();
+    setIsOpen(false);
+  };
+
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen} modal={false}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="relative">
           <Bell className="w-5 h-5" />
@@ -138,14 +151,14 @@ export const NotificationBell = () => {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
+      <DropdownMenuContent align="end" className="w-80 bg-popover border border-border shadow-lg z-[100]">
         <DropdownMenuLabel className="flex items-center justify-between">
           Notificações
           {unreadCount > 0 && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={markAllAsRead}
+              onClick={handleMarkAllAsRead}
               className="text-xs h-auto p-1"
             >
               Marcar todas como lidas
@@ -164,7 +177,12 @@ export const NotificationBell = () => {
               className={`flex flex-col items-start p-3 cursor-pointer ${
                 !notification.read ? 'bg-muted/50' : ''
               }`}
-              onClick={() => !notification.read && markAsRead(notification.id)}
+              onClick={(e) => {
+                if (!notification.read) {
+                  handleMarkAsRead(notification.id, e);
+                }
+                setIsOpen(false);
+              }}
             >
               <div className="flex items-start justify-between w-full">
                 <div className="flex-1">

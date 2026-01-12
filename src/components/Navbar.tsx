@@ -117,99 +117,106 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation - click outside to close */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-border">
-            <div className="flex flex-col space-y-2">
-              {user ? (
-                <>
-                  <Button
-                    variant={location.pathname === "/dashboard" ? "default" : "ghost"}
-                    onClick={() => {
-                      navigate("/dashboard");
-                      setIsMenuOpen(false);
-                    }}
-                    className="justify-start"
-                  >
-                    Dashboard
-                  </Button>
-                  <Button
-                    variant={location.pathname === "/social" ? "default" : "ghost"}
-                    onClick={() => {
-                      navigate("/social");
-                      setIsMenuOpen(false);
-                    }}
-                    className="justify-start"
-                  >
-                    Social
-                  </Button>
-                  <Button
-                    variant={location.pathname === "/challenges" ? "default" : "ghost"}
-                    onClick={() => {
-                      navigate("/challenges");
-                      setIsMenuOpen(false);
-                    }}
-                    className="justify-start"
-                  >
-                    Desafios
-                  </Button>
-                  <Button
-                    variant={location.pathname.startsWith("/marketplace") ? "default" : "ghost"}
-                    onClick={() => {
-                      navigate("/marketplace");
-                      setIsMenuOpen(false);
-                    }}
-                    className="justify-start"
-                  >
-                    <Store className="h-4 w-4 mr-2" />
-                    Marketplace
-                  </Button>
-                  <Button
-                    variant={location.pathname === "/profile" ? "default" : "ghost"}
-                    onClick={() => {
-                      navigate("/profile");
-                      setIsMenuOpen(false);
-                    }}
-                    className="justify-start"
-                  >
-                    Perfil
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    onClick={() => {
-                      handleSignOut();
-                      setIsMenuOpen(false);
-                    }}
-                    className="justify-start"
-                  >
-                    Sair
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    variant={location.pathname === "/auth" ? "default" : "ghost"}
-                    onClick={() => {
-                      navigate("/auth");
-                      setIsMenuOpen(false);
-                    }}
-                    className="justify-start"
-                  >
-                    Entrar
-                  </Button>
-                  <Button
-                    className="gradient-primary text-white justify-start"
-                    onClick={() => {
-                      navigate("/auth");
-                      setIsMenuOpen(false);
-                    }}
-                  >
-                    Começar Grátis
-                  </Button>
-                </>
-              )}
+          <>
+            {/* Overlay to close menu when clicking outside */}
+            <div 
+              className="fixed inset-0 z-40 bg-black/20" 
+              onClick={() => setIsMenuOpen(false)}
+            />
+            <div className="md:hidden py-4 border-t border-border absolute left-0 right-0 top-16 bg-background z-50 shadow-lg">
+              <div className="flex flex-col space-y-2 px-4">
+                {user ? (
+                  <>
+                    <Button
+                      variant={location.pathname === "/dashboard" ? "default" : "ghost"}
+                      onClick={() => {
+                        navigate("/dashboard");
+                        setIsMenuOpen(false);
+                      }}
+                      className="justify-start"
+                    >
+                      Dashboard
+                    </Button>
+                    <Button
+                      variant={location.pathname === "/social" ? "default" : "ghost"}
+                      onClick={() => {
+                        navigate("/social");
+                        setIsMenuOpen(false);
+                      }}
+                      className="justify-start"
+                    >
+                      Social
+                    </Button>
+                    <Button
+                      variant={location.pathname === "/challenges" ? "default" : "ghost"}
+                      onClick={() => {
+                        navigate("/challenges");
+                        setIsMenuOpen(false);
+                      }}
+                      className="justify-start"
+                    >
+                      Desafios
+                    </Button>
+                    <Button
+                      variant={location.pathname.startsWith("/marketplace") ? "default" : "ghost"}
+                      onClick={() => {
+                        navigate("/marketplace");
+                        setIsMenuOpen(false);
+                      }}
+                      className="justify-start"
+                    >
+                      <Store className="h-4 w-4 mr-2" />
+                      Marketplace
+                    </Button>
+                    <Button
+                      variant={location.pathname === "/profile" ? "default" : "ghost"}
+                      onClick={() => {
+                        navigate("/profile");
+                        setIsMenuOpen(false);
+                      }}
+                      className="justify-start"
+                    >
+                      Perfil
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => {
+                        handleSignOut();
+                        setIsMenuOpen(false);
+                      }}
+                      className="justify-start"
+                    >
+                      Sair
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant={location.pathname === "/auth" ? "default" : "ghost"}
+                      onClick={() => {
+                        navigate("/auth");
+                        setIsMenuOpen(false);
+                      }}
+                      className="justify-start"
+                    >
+                      Entrar
+                    </Button>
+                    <Button
+                      className="gradient-primary text-white justify-start"
+                      onClick={() => {
+                        navigate("/auth");
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      Começar Grátis
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          </>
         )}
       </div>
     </nav>
