@@ -24,6 +24,7 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCanceled from "./pages/PaymentCanceled";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import Advertising from "./pages/Advertising";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/payment-canceled" element={<PaymentCanceled />} />
               <Route path="/install" element={<Install />} />
+              <Route path="/advertising" element={<ProtectedRoute><Advertising /></ProtectedRoute>} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />

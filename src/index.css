@@ -374,3 +374,16 @@ All colors MUST be HSL.
     box-shadow: 0 0 0 0 hsl(var(--accent) / 0);
   }
 }
+
+@keyframes ticker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-33.333%);
+  }
+}
+
+.animate-ticker {
+  animation: ticker 30s linear infinite;
+}
