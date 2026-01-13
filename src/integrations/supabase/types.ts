@@ -14,6 +14,114 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_pricing: {
+        Row: {
+          ad_type: Database["public"]["Enums"]["ad_type"]
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          price_per_day_cents: number
+          price_per_month_cents: number
+          price_per_week_cents: number
+          updated_at: string | null
+        }
+        Insert: {
+          ad_type: Database["public"]["Enums"]["ad_type"]
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price_per_day_cents?: number
+          price_per_month_cents?: number
+          price_per_week_cents?: number
+          updated_at?: string | null
+        }
+        Update: {
+          ad_type?: Database["public"]["Enums"]["ad_type"]
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price_per_day_cents?: number
+          price_per_month_cents?: number
+          price_per_week_cents?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      advertisements: {
+        Row: {
+          ad_type: Database["public"]["Enums"]["ad_type"]
+          admin_notes: string | null
+          amount_paid_cents: number | null
+          background_color: string | null
+          clicks_count: number | null
+          content: string
+          created_at: string | null
+          duration_days: number | null
+          expires_at: string | null
+          id: string
+          image_url: string | null
+          link_url: string | null
+          priority: number | null
+          starts_at: string | null
+          status: Database["public"]["Enums"]["ad_status"] | null
+          text_color: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+          views_count: number | null
+        }
+        Insert: {
+          ad_type: Database["public"]["Enums"]["ad_type"]
+          admin_notes?: string | null
+          amount_paid_cents?: number | null
+          background_color?: string | null
+          clicks_count?: number | null
+          content: string
+          created_at?: string | null
+          duration_days?: number | null
+          expires_at?: string | null
+          id?: string
+          image_url?: string | null
+          link_url?: string | null
+          priority?: number | null
+          starts_at?: string | null
+          status?: Database["public"]["Enums"]["ad_status"] | null
+          text_color?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+          views_count?: number | null
+        }
+        Update: {
+          ad_type?: Database["public"]["Enums"]["ad_type"]
+          admin_notes?: string | null
+          amount_paid_cents?: number | null
+          background_color?: string | null
+          clicks_count?: number | null
+          content?: string
+          created_at?: string | null
+          duration_days?: number | null
+          expires_at?: string | null
+          id?: string
+          image_url?: string | null
+          link_url?: string | null
+          priority?: number | null
+          starts_at?: string | null
+          status?: Database["public"]["Enums"]["ad_status"] | null
+          text_color?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+          views_count?: number | null
+        }
+        Relationships: []
+      }
       challenges: {
         Row: {
           challenge_type: string | null
@@ -832,6 +940,8 @@ export type Database = {
       }
     }
     Enums: {
+      ad_status: "pending" | "approved" | "rejected" | "active" | "expired"
+      ad_type: "ticker" | "premium_banner" | "mid_page"
       app_role: "admin" | "moderator" | "user"
       product_status: "draft" | "published" | "archived"
       product_type: "ebook" | "mentoria" | "curso"
@@ -963,6 +1073,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      ad_status: ["pending", "approved", "rejected", "active", "expired"],
+      ad_type: ["ticker", "premium_banner", "mid_page"],
       app_role: ["admin", "moderator", "user"],
       product_status: ["draft", "published", "archived"],
       product_type: ["ebook", "mentoria", "curso"],
