@@ -12,6 +12,8 @@ import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { formatNumber, calculateLevel, getRank, SCORE_ACTIONS } from '@/lib/scoring';
@@ -23,7 +25,10 @@ import {
   Sparkles, Crown, Zap, Star, Gift, RefreshCw,
   UserPlus, Edit, Award, Activity, Clock, 
   ArrowUpRight, ArrowDownRight, Flame, Bell,
-  FileText, Database, Lock, Unlock, MoreVertical
+  FileText, Database, Lock, Unlock, MoreVertical,
+  CreditCard, Heart, UserCheck, Mail, AlertCircle,
+  Download, Upload, Server, Key, Globe, LogOut,
+  Wallet, Receipt, UserX, MessageSquare
 } from 'lucide-react';
 
 interface Stats {
@@ -37,6 +42,9 @@ interface Stats {
   totalGoals: number;
   totalPlans: number;
   pendingProducts: number;
+  totalFriendships: number;
+  totalNotifications: number;
+  totalStreaks: number;
 }
 
 interface User {
@@ -73,6 +81,33 @@ interface Challenge {
   created_at: string | null;
 }
 
+interface Purchase {
+  id: string;
+  buyer_id: string;
+  product_id: string;
+  amount_cents: number;
+  status: string;
+  created_at: string | null;
+  product?: { title: string };
+}
+
+interface Goal {
+  id: string;
+  user_id: string;
+  goal_description: string;
+  status: string | null;
+  goal_type: string | null;
+  created_at: string | null;
+}
+
+interface Friendship {
+  id: string;
+  user_id: string;
+  friend_id: string;
+  status: string | null;
+  created_at: string | null;
+}
+
 interface RecentActivity {
   type: 'user' | 'product' | 'challenge' | 'purchase';
   title: string;
@@ -81,6 +116,7 @@ interface RecentActivity {
   icon: React.ReactNode;
   color: string;
 }
+
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -97,8 +133,14 @@ export default function AdminDashboard() {
     totalMessages: 0,
     totalGoals: 0,
     totalPlans: 0,
-    pendingProducts: 0
+    pendingProducts: 0,
+    totalFriendships: 0,
+    totalNotifications: 0,
+    totalStreaks: 0
   });
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [friendships, setFriendships] = useState<Friendship[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
@@ -163,14 +205,20 @@ export default function AdminDashboard() {
         { count: userCount },
         { count: productCount },
         { count: challengeCount },
-        { data: purchases, count: purchaseCount },
+        { data: purchasesData, count: purchaseCount },
         { count: messageCount },
         { count: goalCount },
         { count: planCount },
         { count: pendingCount },
+        { count: friendshipCount },
+        { count: notificationCount },
+        { count: streakCount },
         { data: recentUsers },
         { data: allProducts },
-        { data: allChallenges }
+        { data: allChallenges },
+        { data: allPurchases },
+        { data: allGoals },
+        { data: allFriendships }
       ] = await Promise.all([
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
         supabase.from('products').select('*', { count: 'exact', head: true }),
@@ -180,12 +228,18 @@ export default function AdminDashboard() {
         supabase.from('goals').select('*', { count: 'exact', head: true }),
         supabase.from('plans').select('*', { count: 'exact', head: true }),
         supabase.from('products').select('*', { count: 'exact', head: true }).eq('status', 'draft'),
+        supabase.from('friendships').select('*', { count: 'exact', head: true }),
+        supabase.from('notifications').select('*', { count: 'exact', head: true }),
+        supabase.from('streaks').select('*', { count: 'exact', head: true }),
         supabase.from('profiles').select('id, display_name, avatar_url, level, pontos, experience_points, created_at, total_challenges_completed').order('created_at', { ascending: false }).limit(50),
         supabase.from('products').select('id, title, price_cents, status, seller_id, created_at, total_sales, product_type').order('created_at', { ascending: false }).limit(50),
-        supabase.from('challenges').select('id, title, status, creator_id, target_user_id, reward_points, created_at').order('created_at', { ascending: false }).limit(30)
+        supabase.from('challenges').select('id, title, status, creator_id, target_user_id, reward_points, created_at').order('created_at', { ascending: false }).limit(30),
+        supabase.from('purchases').select('id, buyer_id, product_id, amount_cents, status, created_at').order('created_at', { ascending: false }).limit(30),
+        supabase.from('goals').select('id, user_id, goal_description, status, goal_type, created_at').order('created_at', { ascending: false }).limit(30),
+        supabase.from('friendships').select('id, user_id, friend_id, status, created_at').order('created_at', { ascending: false }).limit(30)
       ]);
 
-      const totalRevenue = purchases?.reduce((sum, p) => sum + (p.amount_cents || 0), 0) || 0;
+      const totalRevenue = purchasesData?.reduce((sum, p) => sum + (p.amount_cents || 0), 0) || 0;
 
       setStats({
         totalUsers: userCount || 0,
@@ -197,12 +251,18 @@ export default function AdminDashboard() {
         totalMessages: messageCount || 0,
         totalGoals: goalCount || 0,
         totalPlans: planCount || 0,
-        pendingProducts: pendingCount || 0
+        pendingProducts: pendingCount || 0,
+        totalFriendships: friendshipCount || 0,
+        totalNotifications: notificationCount || 0,
+        totalStreaks: streakCount || 0
       });
 
       setUsers(recentUsers || []);
       setProducts(allProducts || []);
       setChallenges(allChallenges || []);
+      setPurchases(allPurchases || []);
+      setGoals(allGoals || []);
+      setFriendships(allFriendships || []);
 
       // Build recent activities
       const activities: RecentActivity[] = [];
@@ -226,7 +286,17 @@ export default function AdminDashboard() {
           color: 'text-green-500'
         });
       });
-      setRecentActivities(activities.slice(0, 10));
+      allPurchases?.slice(0, 3).forEach(p => {
+        activities.push({
+          type: 'purchase',
+          title: `Venda: R$ ${(p.amount_cents / 100).toFixed(2)}`,
+          subtitle: `Status: ${p.status}`,
+          time: p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '',
+          icon: <CreditCard className="w-4 h-4" />,
+          color: 'text-purple-500'
+        });
+      });
+      setRecentActivities(activities.slice(0, 15));
 
     } catch (error) {
       console.error('Error fetching admin data:', error);
@@ -454,8 +524,17 @@ export default function AdminDashboard() {
               <Bell className="h-4 w-4" />
               <span className="hidden sm:inline">Broadcast</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
-              Voltar
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={async () => {
+                await supabase.auth.signOut();
+                navigate('/admin/login');
+              }}
+              className="gap-2 text-destructive hover:text-destructive"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Sair</span>
             </Button>
           </div>
         </div>
@@ -490,12 +569,16 @@ export default function AdminDashboard() {
         </div>
 
         {/* Secondary Stats */}
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
           {[
             { label: 'Mensagens', value: stats.totalMessages, emoji: '💬' },
             { label: 'Metas', value: stats.totalGoals, emoji: '🎯' },
             { label: 'Planos', value: stats.totalPlans, emoji: '📋' },
             { label: 'Ativos', value: stats.activeUsers, emoji: '🟢' },
+            { label: 'Amizades', value: stats.totalFriendships, emoji: '🤝' },
+            { label: 'Notificações', value: stats.totalNotifications, emoji: '🔔' },
+            { label: 'Streaks', value: stats.totalStreaks, emoji: '🔥' },
+            { label: 'Pendentes', value: stats.pendingProducts, emoji: '⏳' },
           ].map((stat, i) => (
             <div key={i} className="p-3 rounded-xl bg-card/50 border border-border/50 text-center">
               <span className="text-lg">{stat.emoji}</span>
@@ -509,7 +592,7 @@ export default function AdminDashboard() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="w-full justify-start overflow-x-auto flex-nowrap bg-card/50 p-1">
             <TabsTrigger value="overview" className="gap-2">
-              <Activity className="h-4 w-4" /> Visão Geral
+              <Activity className="h-4 w-4" /> Geral
             </TabsTrigger>
             <TabsTrigger value="users" className="gap-2">
               <Users className="h-4 w-4" /> Usuários
@@ -520,8 +603,14 @@ export default function AdminDashboard() {
             <TabsTrigger value="challenges" className="gap-2">
               <Trophy className="h-4 w-4" /> Desafios
             </TabsTrigger>
+            <TabsTrigger value="purchases" className="gap-2">
+              <CreditCard className="h-4 w-4" /> Vendas
+            </TabsTrigger>
+            <TabsTrigger value="goals" className="gap-2">
+              <Target className="h-4 w-4" /> Metas
+            </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2">
-              <Settings className="h-4 w-4" /> Config
+              <Settings className="h-4 w-4" /> Sistema
             </TabsTrigger>
           </TabsList>
 
@@ -952,6 +1041,114 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Purchases Tab */}
+          <TabsContent value="purchases">
+            <Card className="bg-card/50">
+              <CardHeader>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <CardTitle className="flex items-center gap-2">
+                    <CreditCard className="h-5 w-5" />
+                    Gerenciar Vendas ({purchases.length})
+                  </CardTitle>
+                  <Badge variant="secondary" className="gap-1">
+                    <DollarSign className="h-3 w-3" />
+                    Receita: R$ {formatNumber(stats.totalRevenue / 100)}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[400px]">
+                  <div className="space-y-2">
+                    {purchases.map(purchase => {
+                      const buyer = users.find(u => u.id === purchase.buyer_id);
+                      return (
+                        <div key={purchase.id} className="flex items-center gap-4 p-3 rounded-xl border bg-card/50 hover:bg-muted/30 transition-colors">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center">
+                            <Receipt className="h-5 w-5 text-green-500" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">
+                              R$ {(purchase.amount_cents / 100).toFixed(2)}
+                            </p>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <span>Comprador: {buyer?.display_name || purchase.buyer_id.slice(0, 8)}...</span>
+                              <span>•</span>
+                              <span>{purchase.created_at ? new Date(purchase.created_at).toLocaleDateString('pt-BR') : ''}</span>
+                            </div>
+                          </div>
+                          <Badge 
+                            variant={purchase.status === 'completed' ? 'default' : 
+                                    purchase.status === 'pending' ? 'secondary' : 'destructive'}
+                          >
+                            {purchase.status === 'completed' ? '✅ Concluída' : 
+                             purchase.status === 'pending' ? '⏳ Pendente' : '❌ ' + purchase.status}
+                          </Badge>
+                        </div>
+                      );
+                    })}
+                    {purchases.length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Wallet className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                        <p>Nenhuma venda encontrada</p>
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Goals Tab */}
+          <TabsContent value="goals">
+            <Card className="bg-card/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5" />
+                  Gerenciar Metas ({goals.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[400px]">
+                  <div className="space-y-2">
+                    {goals.map(goal => {
+                      const owner = users.find(u => u.id === goal.user_id);
+                      return (
+                        <div key={goal.id} className="flex items-center gap-4 p-3 rounded-xl border bg-card/50 hover:bg-muted/30 transition-colors">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center">
+                            <Target className="h-5 w-5 text-blue-500" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{goal.goal_description}</p>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <span>Usuário: {owner?.display_name || goal.user_id.slice(0, 8)}...</span>
+                              <span>•</span>
+                              <span>{goal.goal_type || 'Geral'}</span>
+                              <span>•</span>
+                              <span>{goal.created_at ? new Date(goal.created_at).toLocaleDateString('pt-BR') : ''}</span>
+                            </div>
+                          </div>
+                          <Badge 
+                            variant={goal.status === 'completed' ? 'default' : 
+                                    goal.status === 'active' ? 'secondary' : 'outline'}
+                          >
+                            {goal.status === 'completed' ? '✅ Concluída' : 
+                             goal.status === 'active' ? '🎯 Ativa' : goal.status || 'Pendente'}
+                          </Badge>
+                        </div>
+                      );
+                    })}
+                    {goals.length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Target className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                        <p>Nenhuma meta encontrada</p>
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
