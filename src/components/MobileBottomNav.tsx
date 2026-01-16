@@ -11,7 +11,7 @@ export default function MobileBottomNav() {
     { icon: Home, label: 'Home', path: '/dashboard', emoji: '🏠' },
     { icon: Users, label: 'Social', path: '/social', emoji: '👥' },
     { icon: null, label: 'Criar', path: '/challenges', isCenter: true, emoji: '✨' },
-    { icon: Store, label: 'Loja', path: '/marketplace', emoji: '🛍️' },
+    { icon: Store, label: 'Loja', path: '/advertising', emoji: '📢' },
     { icon: User, label: 'Perfil', path: '/profile', emoji: '👤' },
   ];
 

@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import RealSocialFeed from "@/components/RealSocialFeed";
 import ChallengeModal from "@/components/ChallengeModal";
 import UsersList from "@/components/UsersList";
+import { TickerTape } from "@/components/ads/TickerTape";
+import { PremiumBanner } from "@/components/ads/PremiumBanner";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -37,6 +39,12 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
+      {/* Ticker Tape Ads */}
+      <TickerTape />
+      
+      {/* Premium Banner */}
+      <PremiumBanner />
+      
       {/* Hero Section */}
       <section className="relative py-20 px-4 text-center overflow-hidden">
         <div className="absolute inset-0 gradient-primary opacity-90"></div>
