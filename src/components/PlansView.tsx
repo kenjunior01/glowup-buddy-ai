@@ -218,30 +218,64 @@ const PlansView = ({ userId, onDataChange }: PlansViewProps) => {
       .single();
 
     try {
-      // Call our Edge Function to generate plans
-      const { data, error } = await supabase.functions.invoke('generate-plans', {
-        body: {
-          userId,
-          goals,
-          profile
-        }
-      });
+      // Call our Edge Function to generate plans with retry handling
+      const maxRetries = 3;
+      let lastError: any = null;
+      
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          const { data, error } = await supabase.functions.invoke('generate-plans', {
+            body: {
+              userId,
+              goals,
+              profile
+            }
+          });
 
-      if (error) {
-        throw error;
+          if (error) {
+            // Check for retryable errors
+            if (error.message?.includes('503') || error.message?.includes('rate') || error.message?.includes('timeout')) {
+              lastError = error;
+              if (attempt < maxRetries - 1) {
+                toast({
+                  title: `Tentativa ${attempt + 1} de ${maxRetries}...`,
+                  description: "Servidor ocupado, tentando novamente...",
+                });
+                await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+                continue;
+              }
+            }
+            throw error;
+          }
+
+          toast({
+            title: "Planos gerados com sucesso! ✨",
+            description: "Seus novos planos personalizados estão prontos.",
+          });
+          fetchPlans();
+          onDataChange?.();
+          setGeneratingPlans(false);
+          return;
+        } catch (err) {
+          lastError = err;
+          if (attempt < maxRetries - 1) {
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+          }
+        }
       }
 
-      toast({
-        title: "Planos gerados com sucesso!",
-        description: "Seus novos planos personalizados estão prontos.",
-      });
-      fetchPlans();
-      onDataChange?.();
+      throw lastError;
     } catch (error: any) {
       console.error("Error generating plans:", error);
+      
+      const errorMessage = error?.message || error?.context?.body?.error || "Tente novamente em alguns instantes.";
+      const isRetryable = errorMessage.includes('rate') || errorMessage.includes('503') || errorMessage.includes('ocupado');
+      
       toast({
         title: "Erro ao gerar planos",
-        description: "Tente novamente em alguns instantes.",
+        description: isRetryable 
+          ? "Serviço temporariamente ocupado. Aguarde alguns segundos e tente novamente."
+          : errorMessage,
         variant: "destructive",
       });
     }

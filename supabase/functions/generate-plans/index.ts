@@ -3,23 +3,10 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
-// Allowed origins for CORS - restrict to known domains
-const allowedOrigins = [
-  'https://lovable.dev',
-  'https://preview.lovable.dev',
-  Deno.env.get('FRONTEND_URL') ?? '',
-].filter(Boolean);
-
-function getCorsHeaders(req: Request) {
-  const origin = req.headers.get('origin') ?? '';
-  const allowedOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0] || 'https://lovable.dev';
-  
-  return {
-    'Access-Control-Allow-Origin': allowedOrigin,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Credentials': 'true',
-  };
-}
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 // Input validation schema
 const plansSchema = z.object({
@@ -38,9 +25,64 @@ const plansSchema = z.object({
   }).optional().nullable(),
 });
 
-serve(async (req) => {
-  const corsHeaders = getCorsHeaders(req);
+// Retry configuration
+const MAX_RETRIES = 3;
+const INITIAL_DELAY_MS = 1000;
+
+async function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function fetchWithRetry(
+  url: string, 
+  options: RequestInit, 
+  retries = MAX_RETRIES
+): Promise<Response> {
+  let lastError: Error | null = null;
   
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      
+      // Don't retry on client errors (except rate limiting)
+      if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+        return response;
+      }
+      
+      // Retry on rate limiting with exponential backoff
+      if (response.status === 429) {
+        if (attempt < retries) {
+          const delay = INITIAL_DELAY_MS * Math.pow(2, attempt);
+          console.log(`Rate limited, retrying in ${delay}ms (attempt ${attempt + 1}/${retries})`);
+          await sleep(delay);
+          continue;
+        }
+      }
+      
+      // Retry on server errors
+      if (response.status >= 500 && attempt < retries) {
+        const delay = INITIAL_DELAY_MS * Math.pow(2, attempt);
+        console.log(`Server error ${response.status}, retrying in ${delay}ms (attempt ${attempt + 1}/${retries})`);
+        await sleep(delay);
+        continue;
+      }
+      
+      return response;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      
+      if (attempt < retries) {
+        const delay = INITIAL_DELAY_MS * Math.pow(2, attempt);
+        console.log(`Network error, retrying in ${delay}ms (attempt ${attempt + 1}/${retries}):`, error);
+        await sleep(delay);
+      }
+    }
+  }
+  
+  throw lastError || new Error("Failed after all retries");
+}
+
+serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -62,7 +104,10 @@ serve(async (req) => {
     if (authError || !user) {
       console.error('Authentication error:', authError);
       return new Response(
-        JSON.stringify({ error: 'Não autorizado. Faça login novamente.' }),
+        JSON.stringify({ 
+          error: 'Não autorizado. Faça login novamente.',
+          code: 'AUTH_ERROR'
+        }),
         { 
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -79,7 +124,11 @@ serve(async (req) => {
     if (!validationResult.success) {
       console.error('Validation error:', validationResult.error.issues);
       return new Response(
-        JSON.stringify({ error: 'Dados inválidos', details: validationResult.error.issues }),
+        JSON.stringify({ 
+          error: 'Dados inválidos. Verifique seus objetivos e tente novamente.',
+          code: 'VALIDATION_ERROR',
+          details: validationResult.error.issues 
+        }),
         { 
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -92,7 +141,10 @@ serve(async (req) => {
     // 3. VALIDAÇÃO DE AUTORIZAÇÃO
     if (requestedUserId && requestedUserId !== user.id) {
       return new Response(
-        JSON.stringify({ error: 'Acesso negado' }),
+        JSON.stringify({ 
+          error: 'Acesso negado',
+          code: 'FORBIDDEN'
+        }),
         { 
           status: 403,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -107,9 +159,12 @@ serve(async (req) => {
     if (!lovableApiKey) {
       console.error('LOVABLE_API_KEY not configured');
       return new Response(
-        JSON.stringify({ error: 'API de IA não configurada. Contate o suporte.' }),
+        JSON.stringify({ 
+          error: 'Serviço de IA temporariamente indisponível. Tente novamente em alguns minutos.',
+          code: 'AI_NOT_CONFIGURED'
+        }),
         { 
-          status: 500,
+          status: 503,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
@@ -131,7 +186,7 @@ Mentalidade: ${profile?.mentalidade || 'Não informado'}
     console.log('Generating plans for user:', userId);
     console.log('Goals:', goalsText);
 
-    // Generate plans using Lovable AI
+    // Generate plans using Lovable AI with retry logic
     const plans = await generatePlansWithAI(lovableApiKey, userProfile, goalsText);
 
     console.log('Generated plans:', JSON.stringify(plans, null, 2));
@@ -191,17 +246,31 @@ Mentalidade: ${profile?.mentalidade || 'Não informado'}
     console.log('Plans saved successfully');
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Planos gerados com sucesso!' }),
+      JSON.stringify({ 
+        success: true, 
+        message: 'Planos gerados com sucesso!',
+        plans_count: plans.length
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
     console.error('Error in generate-plans function:', error);
+    
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    const isRetryable = errorMessage.includes('rate') || errorMessage.includes('timeout') || errorMessage.includes('network');
+    
     return new Response(
-      JSON.stringify({ error: 'An error occurred while generating plans' }),
+      JSON.stringify({ 
+        error: isRetryable 
+          ? 'Serviço temporariamente ocupado. Tente novamente em alguns segundos.'
+          : 'Erro ao gerar planos. Verifique seus objetivos e tente novamente.',
+        code: 'GENERATION_ERROR',
+        retryable: isRetryable
+      }),
       { 
-        status: 500,
-        headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
+        status: isRetryable ? 503 : 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }
@@ -217,13 +286,7 @@ INSTRUÇÕES IMPORTANTES:
 - Use linguagem motivadora, positiva e empática
 - Considere o perfil, idade, ocupação e rotina do usuário
 - Atividades devem ser realistas e mensuráveis
-
-FORMATO DE RESPOSTA - Responda APENAS com JSON válido:
-{
-  "daily": ["atividade 1", "atividade 2", "atividade 3"],
-  "weekly": ["atividade 1", "atividade 2", "atividade 3"],
-  "monthly": ["atividade 1", "atividade 2", "atividade 3"]
-}`;
+- Inclua emojis para tornar mais visual`;
 
   const userPrompt = `Crie planos de transformação pessoal personalizados para este usuário:
 
@@ -233,12 +296,12 @@ ${userProfile}
 OBJETIVOS DO USUÁRIO:
 ${goalsText}
 
-Gere um plano diário (para fazer todo dia), um plano semanal (tarefas da semana) e um plano mensal (metas do mês). Responda APENAS com o JSON.`;
+Gere um plano diário (para fazer todo dia), um plano semanal (tarefas da semana) e um plano mensal (metas do mês).`;
 
   try {
-    console.log('Calling Lovable AI Gateway...');
+    console.log('Calling Lovable AI Gateway with retry logic...');
     
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetchWithRetry('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -250,6 +313,38 @@ Gere um plano diário (para fazer todo dia), um plano semanal (tarefas da semana
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "create_plans",
+              description: "Cria planos de transformação pessoal",
+              parameters: {
+                type: "object",
+                properties: {
+                  daily: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Lista de atividades diárias"
+                  },
+                  weekly: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Lista de atividades semanais"
+                  },
+                  monthly: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Lista de metas mensais"
+                  }
+                },
+                required: ["daily", "weekly", "monthly"],
+                additionalProperties: false
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "create_plans" } }
       }),
     });
 
@@ -258,7 +353,7 @@ Gere um plano diário (para fazer todo dia), um plano semanal (tarefas da semana
       console.error('Lovable AI error response:', response.status, errorText);
       
       if (response.status === 429) {
-        throw new Error('Limite de requisições atingido. Tente novamente em alguns minutos.');
+        throw new Error('Limite de requisições atingido. Aguarde alguns minutos e tente novamente.');
       } else if (response.status === 402) {
         throw new Error('Créditos de IA insuficientes. Adicione créditos no workspace Lovable.');
       } else {
@@ -267,49 +362,56 @@ Gere um plano diário (para fazer todo dia), um plano semanal (tarefas da semana
     }
 
     const data = await response.json();
-    console.log('AI response received:', JSON.stringify(data, null, 2));
+    console.log('AI response received');
     
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      console.error('Invalid AI response structure:', data);
-      throw new Error('Resposta inválida da IA');
+    // Extract from tool call
+    let planContent = null;
+    
+    if (data.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments) {
+      try {
+        planContent = JSON.parse(data.choices[0].message.tool_calls[0].function.arguments);
+      } catch (e) {
+        console.error('Error parsing tool call arguments:', e);
+      }
     }
     
-    const aiResponse = data.choices[0].message.content;
-    console.log('AI content:', aiResponse);
-    
-    // Parse JSON from response
-    const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      console.error('No JSON found in response:', aiResponse);
-      throw new Error('Formato de resposta inválido');
+    // Fallback to content parsing if tool call didn't work
+    if (!planContent && data.choices?.[0]?.message?.content) {
+      const aiResponse = data.choices[0].message.content;
+      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          planContent = JSON.parse(jsonMatch[0]);
+        } catch (e) {
+          console.error('Error parsing content JSON:', e);
+        }
+      }
     }
-    
-    const jsonString = jsonMatch[0];
-    const planContent = JSON.parse(jsonString);
     
     // Validate structure
-    if (!planContent.daily || !planContent.weekly || !planContent.monthly) {
-      console.error('Missing plan types in response:', planContent);
-      throw new Error('Estrutura de planos incompleta');
+    if (planContent?.daily && planContent?.weekly && planContent?.monthly) {
+      return [
+        { type: 'daily', content: planContent.daily },
+        { type: 'weekly', content: planContent.weekly },
+        { type: 'monthly', content: planContent.monthly }
+      ];
     }
     
-    return [
-      { type: 'daily', content: planContent.daily },
-      { type: 'weekly', content: planContent.weekly },
-      { type: 'monthly', content: planContent.monthly }
-    ];
+    console.error('Invalid plan structure, using fallback');
+    throw new Error('Estrutura de planos incompleta');
     
   } catch (error) {
     console.error('Error calling AI, using fallback plans:', error);
     
-    // Return default plans as fallback
+    // Return enhanced default plans as fallback
     return [
       { 
         type: 'daily', 
         content: [
-          "🌅 Acordar e fazer 5 minutos de alongamento",
-          "💧 Beber 2 litros de água ao longo do dia",
-          "📝 Revisar seus objetivos por 5 minutos",
+          "🌅 Acordar e fazer 5 minutos de alongamento para começar o dia",
+          "💧 Beber pelo menos 2 litros de água ao longo do dia",
+          "📝 Revisar seus objetivos por 5 minutos pela manhã",
+          "🚶 Caminhar por 15 minutos durante o dia",
           "🧘 Praticar 10 minutos de respiração consciente antes de dormir"
         ]
       },
@@ -317,18 +419,20 @@ Gere um plano diário (para fazer todo dia), um plano semanal (tarefas da semana
         type: 'weekly', 
         content: [
           "🏃 Fazer 3 sessões de exercício físico de 30 minutos",
-          "📚 Dedicar 2 horas para desenvolvimento pessoal",
-          "👥 Conectar com um amigo ou familiar",
-          "🎯 Revisar progresso e ajustar metas"
+          "📚 Dedicar 2 horas para desenvolvimento pessoal ou leitura",
+          "👥 Conectar com um amigo ou familiar importante",
+          "🎯 Revisar seu progresso semanal e ajustar metas",
+          "🧹 Organizar seu espaço de trabalho ou casa"
         ]
       },
       { 
         type: 'monthly', 
         content: [
-          "📊 Avaliar progresso dos últimos 30 dias",
+          "📊 Avaliar seu progresso dos últimos 30 dias",
           "🎯 Definir uma meta desafiadora para o próximo mês",
-          "🎉 Celebrar suas conquistas do mês",
-          "💡 Aprender uma nova habilidade relacionada aos seus objetivos"
+          "🎉 Celebrar suas conquistas, por menores que sejam",
+          "💡 Aprender uma nova habilidade relacionada aos seus objetivos",
+          "🔄 Ajustar sua rotina baseado no que funcionou e o que não funcionou"
         ]
       }
     ];

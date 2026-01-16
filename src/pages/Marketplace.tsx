@@ -9,6 +9,8 @@ import { TopCreators } from "@/components/TopCreators";
 import { PopularProducts } from "@/components/PopularProducts";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import { TickerTape } from "@/components/ads/TickerTape";
+import { MidPageAd } from "@/components/ads/MidPageAd";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Store, TrendingUp, Sparkles, Tag, ShoppingBag, BookOpen, Video, Users } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -115,6 +117,9 @@ const Marketplace = () => {
 
   return (
     <div className={`min-h-screen bg-background ${isMobile ? 'pb-20' : ''}`}>
+      {/* Ticker Tape Ad */}
+      <TickerTape />
+      
       <div className="sticky top-0 z-40 bg-card/80 backdrop-blur-xl border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -237,25 +242,53 @@ const Marketplace = () => {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProducts.map((product, index) => (
-                  <div 
-                    key={product.id} 
-                    className="animate-fade-in"
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    <ProductCard
-                      id={product.id}
-                      title={product.title}
-                      description={product.description || ''}
-                      price={product.price_cents / 100}
-                      type={product.product_type}
-                      imageUrl={product.cover_image_url}
-                      rating={product.rating_avg ?? undefined}
-                      reviewCount={product.rating_count ?? undefined}
-                    />
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredProducts.slice(0, 6).map((product, index) => (
+                    <div 
+                      key={product.id} 
+                      className="animate-fade-in"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <ProductCard
+                        id={product.id}
+                        title={product.title}
+                        description={product.description || ''}
+                        price={product.price_cents / 100}
+                        type={product.product_type}
+                        imageUrl={product.cover_image_url}
+                        rating={product.rating_avg ?? undefined}
+                        reviewCount={product.rating_count ?? undefined}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Mid-page Ad after first 6 products */}
+                {filteredProducts.length > 6 && <MidPageAd />}
+
+                {filteredProducts.length > 6 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredProducts.slice(6).map((product, index) => (
+                      <div 
+                        key={product.id} 
+                        className="animate-fade-in"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <ProductCard
+                          id={product.id}
+                          title={product.title}
+                          description={product.description || ''}
+                          price={product.price_cents / 100}
+                          type={product.product_type}
+                          imageUrl={product.cover_image_url}
+                          rating={product.rating_avg ?? undefined}
+                          reviewCount={product.rating_count ?? undefined}
+                        />
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
             )}
           </main>
