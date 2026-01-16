@@ -16,6 +16,8 @@ import { Users, TrendingUp, Trophy, Camera, Sparkles, Heart, MessageCircle, Zap,
 import MobileBottomNav from '@/components/MobileBottomNav';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { TickerTape } from '@/components/ads/TickerTape';
+import { MidPageAd } from '@/components/ads/MidPageAd';
 
 export default function Social() {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
@@ -110,6 +112,9 @@ export default function Social() {
 
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
+      {/* Ticker Tape */}
+      <TickerTape />
+      
       {/* Header melhorado */}
       <div className="sticky top-0 z-40 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 backdrop-blur-xl border-b border-border/50 mobile-safe">
         <div className="max-w-7xl mx-auto p-4">
@@ -205,6 +210,10 @@ export default function Social() {
                     ))}
                   </div>
                 )}
+                
+                {/* Mid-page Ad */}
+                <MidPageAd position={0} />
+                
                 <RealSocialFeed />
               </TabsContent>
 

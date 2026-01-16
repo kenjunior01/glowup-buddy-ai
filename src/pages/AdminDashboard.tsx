@@ -28,8 +28,9 @@ import {
   FileText, Database, Lock, Unlock, MoreVertical,
   CreditCard, Heart, UserCheck, Mail, AlertCircle,
   Download, Upload, Server, Key, Globe, LogOut,
-  Wallet, Receipt, UserX, MessageSquare
+  Wallet, Receipt, UserX, MessageSquare, Megaphone
 } from 'lucide-react';
+import { AdminAdsManager } from '@/components/ads/AdminAdsManager';
 
 interface Stats {
   totalUsers: number;
@@ -611,6 +612,9 @@ export default function AdminDashboard() {
             </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2">
               <Settings className="h-4 w-4" /> Sistema
+            </TabsTrigger>
+            <TabsTrigger value="ads" className="gap-2">
+              <Megaphone className="h-4 w-4" /> Anúncios
             </TabsTrigger>
           </TabsList>
 
@@ -1303,6 +1307,13 @@ export default function AdminDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Ads Tab Content - Added at the end before closing div */}
+      {activeTab === 'ads' && (
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <AdminAdsManager />
+        </div>
+      )}
     </div>
   );
 }

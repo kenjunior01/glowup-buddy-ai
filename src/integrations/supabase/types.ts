@@ -354,6 +354,42 @@ export type Database = {
         }
         Relationships: []
       }
+      journal_entries: {
+        Row: {
+          ai_analysis: string | null
+          content: string
+          created_at: string
+          id: string
+          mood_score: number | null
+          pillar: string | null
+          tags: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_analysis?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          mood_score?: number | null
+          pillar?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_analysis?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          mood_score?: number | null
+          pillar?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       mentoria_sessions: {
         Row: {
           created_at: string | null
@@ -636,8 +672,11 @@ export type Database = {
           mentalidade: string | null
           name: string | null
           ocupacao: string | null
+          onboarding_completed: boolean | null
+          onboarding_preferences: Json | null
           pontos: number | null
           rotina: string | null
+          selected_pillars: string[] | null
           total_challenges_completed: number | null
           updated_at: string | null
         }
@@ -655,8 +694,11 @@ export type Database = {
           mentalidade?: string | null
           name?: string | null
           ocupacao?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_preferences?: Json | null
           pontos?: number | null
           rotina?: string | null
+          selected_pillars?: string[] | null
           total_challenges_completed?: number | null
           updated_at?: string | null
         }
@@ -674,8 +716,11 @@ export type Database = {
           mentalidade?: string | null
           name?: string | null
           ocupacao?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_preferences?: Json | null
           pontos?: number | null
           rotina?: string | null
+          selected_pillars?: string[] | null
           total_challenges_completed?: number | null
           updated_at?: string | null
         }
