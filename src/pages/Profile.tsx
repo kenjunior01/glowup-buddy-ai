@@ -12,6 +12,8 @@ import MobileBottomNav from '@/components/MobileBottomNav';
 import { ProfileAchievements } from '@/components/ProfileAchievements';
 import SuggestedUsers from '@/components/SuggestedUsers';
 import TrendingChallenges from '@/components/TrendingChallenges';
+import JournalEntry from '@/components/JournalEntry';
+import GamificationHelp from '@/components/GamificationHelp';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,7 +30,8 @@ import {
   Settings,
   Award,
   Sparkles,
-  TrendingUp
+  TrendingUp,
+  BookOpen
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -164,15 +167,18 @@ export default function Profile() {
               <User className="w-6 h-6" />
               Meu Perfil
             </h1>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSignOut}
-              className="text-destructive hover:text-destructive"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Sair
-            </Button>
+            <div className="flex items-center gap-2">
+              <GamificationHelp />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSignOut}
+                className="text-destructive hover:text-destructive"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sair
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -254,7 +260,7 @@ export default function Profile() {
             </div>
 
             <Tabs defaultValue="goals" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 bg-muted/50 backdrop-blur-sm">
+              <TabsList className="grid w-full grid-cols-4 md:grid-cols-7 bg-muted/50 backdrop-blur-sm">
                 <TabsTrigger value="goals" className="flex items-center gap-1">
                   <Target className="w-4 h-4" />
                   <span className="hidden md:inline">Objetivos</span>
@@ -262,6 +268,10 @@ export default function Profile() {
                 <TabsTrigger value="plans" className="flex items-center gap-1">
                   <Sparkles className="w-4 h-4" />
                   <span className="hidden md:inline">Planos IA</span>
+                </TabsTrigger>
+                <TabsTrigger value="journal" className="flex items-center gap-1">
+                  <BookOpen className="w-4 h-4" />
+                  <span className="hidden md:inline">Reflexões</span>
                 </TabsTrigger>
                 <TabsTrigger value="missions" className="flex items-center gap-1">
                   <Award className="w-4 h-4" />
@@ -287,6 +297,10 @@ export default function Profile() {
 
               <TabsContent value="plans" className="space-y-4 mt-4 animate-fade-in">
                 <PlansView userId={profile?.id || ''} onDataChange={fetchUserStats} />
+              </TabsContent>
+
+              <TabsContent value="journal" className="space-y-4 mt-4 animate-fade-in">
+                <JournalEntry userId={profile?.id || ''} />
               </TabsContent>
 
               <TabsContent value="missions" className="space-y-4 mt-4 animate-fade-in">

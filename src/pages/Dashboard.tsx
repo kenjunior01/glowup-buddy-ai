@@ -17,6 +17,9 @@ import QuickActions from '@/components/QuickActions';
 import HeroWelcome from '@/components/HeroWelcome';
 import QuickReactions from '@/components/QuickReactions';
 import StreakCelebration from '@/components/StreakCelebration';
+import OnboardingWizard from '@/components/OnboardingWizard';
+import GamificationHelp from '@/components/GamificationHelp';
+import { TickerTape } from '@/components/ads/TickerTape';
 import { Bell, Search, Plus, Target, Sparkles, Users, Newspaper, MessageCircle, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -38,6 +41,8 @@ export default function Dashboard() {
   const [selectedUserName, setSelectedUserName] = useState<string>('');
   const [activeView, setActiveView] = useState<'feed' | 'users' | 'challenges' | 'goals' | 'plans'>('goals');
   const [showStreakCelebration, setShowStreakCelebration] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingCompleted, setOnboardingCompleted] = useState(true);
 
   const [stories, setStories] = useState<any[]>([]);
 
@@ -69,6 +74,13 @@ export default function Dashboard() {
 
         const userProfile = profile || {};
         const userStreak = streak || { current_streak: 0, longest_streak: 0 };
+
+        // Check if onboarding is completed
+        const hasCompletedOnboarding = (userProfile as any)?.onboarding_completed === true;
+        setOnboardingCompleted(hasCompletedOnboarding);
+        if (!hasCompletedOnboarding) {
+          setShowOnboarding(true);
+        }
 
         setUser({
           ...session.user,
@@ -142,6 +154,21 @@ export default function Dashboard() {
   if (!isMobile) {
     return (
       <div className="min-h-screen bg-background">
+        {/* Onboarding Wizard */}
+        {showOnboarding && user?.id && (
+          <OnboardingWizard 
+            userId={user.id} 
+            onComplete={() => {
+              setShowOnboarding(false);
+              setOnboardingCompleted(true);
+              fetchUserData();
+            }} 
+          />
+        )}
+
+        {/* Ticker Tape */}
+        <TickerTape />
+
         {/* Header */}
         <div className="sticky top-16 z-30 bg-card/95 backdrop-blur-lg border-b border-border">
           <div className="max-w-7xl mx-auto flex items-center justify-between p-4">
@@ -153,6 +180,7 @@ export default function Dashboard() {
             </div>
             
             <div className="flex items-center space-x-2">
+              <GamificationHelp />
               <Button 
                 variant="outline" 
                 size="sm"
@@ -298,6 +326,18 @@ export default function Dashboard() {
   // Mobile Layout - Clean & Friendly
   return (
     <div className="min-h-screen bg-background pb-20">
+      {/* Onboarding Wizard */}
+      {showOnboarding && user?.id && (
+        <OnboardingWizard 
+          userId={user.id} 
+          onComplete={() => {
+            setShowOnboarding(false);
+            setOnboardingCompleted(true);
+            fetchUserData();
+          }} 
+        />
+      )}
+
       {/* Streak Celebration Modal */}
       <StreakCelebration 
         streak={currentStreak + 1}
