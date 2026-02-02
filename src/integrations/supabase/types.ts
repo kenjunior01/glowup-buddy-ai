@@ -124,6 +124,9 @@ export type Database = {
       }
       challenges: {
         Row: {
+          buddy_accepted: boolean | null
+          buddy_completed: boolean | null
+          buddy_id: string | null
           challenge_type: string | null
           challenger_id: string | null
           completed_at: string | null
@@ -132,6 +135,7 @@ export type Database = {
           description: string | null
           expires_at: string | null
           id: string
+          is_buddy_challenge: boolean | null
           reward_points: number | null
           status: string | null
           target_user_id: string | null
@@ -139,6 +143,9 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          buddy_accepted?: boolean | null
+          buddy_completed?: boolean | null
+          buddy_id?: string | null
           challenge_type?: string | null
           challenger_id?: string | null
           completed_at?: string | null
@@ -147,6 +154,7 @@ export type Database = {
           description?: string | null
           expires_at?: string | null
           id?: string
+          is_buddy_challenge?: boolean | null
           reward_points?: number | null
           status?: string | null
           target_user_id?: string | null
@@ -154,6 +162,9 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          buddy_accepted?: boolean | null
+          buddy_completed?: boolean | null
+          buddy_id?: string | null
           challenge_type?: string | null
           challenger_id?: string | null
           completed_at?: string | null
@@ -162,6 +173,7 @@ export type Database = {
           description?: string | null
           expires_at?: string | null
           id?: string
+          is_buddy_challenge?: boolean | null
           reward_points?: number | null
           status?: string | null
           target_user_id?: string | null
@@ -467,6 +479,39 @@ export type Database = {
           read_at?: string | null
           receiver_id?: string | null
           sender_id?: string
+        }
+        Relationships: []
+      }
+      mood_logs: {
+        Row: {
+          created_at: string | null
+          date: string | null
+          energy_level: number | null
+          id: string
+          mood_label: string
+          mood_score: number
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date?: string | null
+          energy_level?: number | null
+          id?: string
+          mood_label: string
+          mood_score: number
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          date?: string | null
+          energy_level?: number | null
+          id?: string
+          mood_label?: string
+          mood_score?: number
+          notes?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -902,8 +947,11 @@ export type Database = {
         Row: {
           created_at: string | null
           current_streak: number | null
+          freeze_tokens: number | null
+          freeze_tokens_used: number | null
           id: string
           last_activity_date: string | null
+          last_freeze_date: string | null
           longest_streak: number | null
           updated_at: string | null
           user_id: string
@@ -911,8 +959,11 @@ export type Database = {
         Insert: {
           created_at?: string | null
           current_streak?: number | null
+          freeze_tokens?: number | null
+          freeze_tokens_used?: number | null
           id?: string
           last_activity_date?: string | null
+          last_freeze_date?: string | null
           longest_streak?: number | null
           updated_at?: string | null
           user_id: string
@@ -920,8 +971,11 @@ export type Database = {
         Update: {
           created_at?: string | null
           current_streak?: number | null
+          freeze_tokens?: number | null
+          freeze_tokens_used?: number | null
           id?: string
           last_activity_date?: string | null
+          last_freeze_date?: string | null
           longest_streak?: number | null
           updated_at?: string | null
           user_id?: string
@@ -946,6 +1000,54 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      weekly_summaries: {
+        Row: {
+          ai_insights: string | null
+          challenges_completed: number | null
+          created_at: string | null
+          highlights: Json | null
+          id: string
+          mood_average: number | null
+          next_week_goals: Json | null
+          points_earned: number | null
+          streak_days: number | null
+          tasks_completed: number | null
+          user_id: string
+          week_end: string
+          week_start: string
+        }
+        Insert: {
+          ai_insights?: string | null
+          challenges_completed?: number | null
+          created_at?: string | null
+          highlights?: Json | null
+          id?: string
+          mood_average?: number | null
+          next_week_goals?: Json | null
+          points_earned?: number | null
+          streak_days?: number | null
+          tasks_completed?: number | null
+          user_id: string
+          week_end: string
+          week_start: string
+        }
+        Update: {
+          ai_insights?: string | null
+          challenges_completed?: number | null
+          created_at?: string | null
+          highlights?: Json | null
+          id?: string
+          mood_average?: number | null
+          next_week_goals?: Json | null
+          points_earned?: number | null
+          streak_days?: number | null
+          tasks_completed?: number | null
+          user_id?: string
+          week_end?: string
+          week_start?: string
         }
         Relationships: []
       }

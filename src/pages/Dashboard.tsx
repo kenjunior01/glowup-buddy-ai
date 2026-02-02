@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import GamificationHub from '@/components/GamificationHub';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import StoryRing from '@/components/StoryRing';
-import StreakCounter from '@/components/StreakCounter';
+import StreakProtection from '@/components/StreakProtection';
 import QuickStats from '@/components/QuickStats';
 import RealSocialFeed from '@/components/RealSocialFeed';
 import UsersList from '@/components/UsersList';
@@ -19,8 +19,11 @@ import QuickReactions from '@/components/QuickReactions';
 import StreakCelebration from '@/components/StreakCelebration';
 import OnboardingWizard from '@/components/OnboardingWizard';
 import GamificationHelp from '@/components/GamificationHelp';
+import MoodTracker from '@/components/MoodTracker';
+import SundayReset from '@/components/SundayReset';
+import BuddyChallenge from '@/components/BuddyChallenge';
 import { TickerTape } from '@/components/ads/TickerTape';
-import { Bell, Search, Plus, Target, Sparkles, Users, Newspaper, MessageCircle, ChevronRight } from 'lucide-react';
+import { Bell, Search, Plus, Target, Sparkles, Users, Newspaper, MessageCircle, ChevronRight, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -39,7 +42,7 @@ export default function Dashboard() {
   const [showChallengeModal, setShowChallengeModal] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [selectedUserName, setSelectedUserName] = useState<string>('');
-  const [activeView, setActiveView] = useState<'feed' | 'users' | 'challenges' | 'goals' | 'plans'>('goals');
+  const [activeView, setActiveView] = useState<'feed' | 'users' | 'challenges' | 'goals' | 'plans' | 'buddy'>('goals');
   const [showStreakCelebration, setShowStreakCelebration] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingCompleted, setOnboardingCompleted] = useState(true);
@@ -241,15 +244,20 @@ export default function Dashboard() {
               <div className="space-y-6">
                 <QuickStats stats={userStats || {}} />
 
-                <StreakCounter
+                {/* Mood Tracker */}
+                {user?.id && <MoodTracker userId={user.id} onMoodLogged={fetchUserData} />}
+
+                <StreakProtection
+                  userId={user?.id || ''}
                   currentStreak={currentStreak}
                   longestStreak={userStats?.longest_streak || 0}
                   todayCompleted={false}
                   onCheckIn={handleCheckIn}
+                  onStreakUpdate={fetchUserData}
                 />
 
                 <Tabs value={activeView} onValueChange={(v) => setActiveView(v as any)} className="w-full">
-                  <TabsList className="grid w-full grid-cols-5 mb-4">
+                  <TabsList className="grid w-full grid-cols-6 mb-4">
                     <TabsTrigger value="goals" className="flex items-center gap-1">
                       <Target className="w-4 h-4" />
                       Objetivos
@@ -261,6 +269,10 @@ export default function Dashboard() {
                     <TabsTrigger value="challenges" className="flex items-center gap-1">
                       <Plus className="w-4 h-4" />
                       Desafios
+                    </TabsTrigger>
+                    <TabsTrigger value="buddy" className="flex items-center gap-1">
+                      <Heart className="w-4 h-4" />
+                      Dupla
                     </TabsTrigger>
                     <TabsTrigger value="feed" className="flex items-center gap-1">
                       <Newspaper className="w-4 h-4" />
@@ -284,6 +296,10 @@ export default function Dashboard() {
                     <MyChallenges />
                   </TabsContent>
 
+                  <TabsContent value="buddy" className="space-y-4">
+                    {user?.id && <BuddyChallenge userId={user.id} onChallengeCreated={fetchUserData} />}
+                  </TabsContent>
+
                   <TabsContent value="feed" className="space-y-4">
                     <RealSocialFeed />
                   </TabsContent>
@@ -298,17 +314,11 @@ export default function Dashboard() {
             {/* Right Sidebar */}
             <aside className="col-span-3 space-y-4">
               <GamificationHub />
+              
+              {/* Sunday Reset */}
+              {user?.id && <SundayReset userId={user.id} />}
+              
               <TrendingChallenges />
-
-              <Card className="bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
-                <CardContent className="pt-4 text-center">
-                  <Sparkles className="h-8 w-8 mx-auto text-primary mb-2" />
-                  <h3 className="font-semibold text-sm mb-1">Dica do Dia</h3>
-                  <p className="text-xs text-muted-foreground">
-                    Complete desafios diários para manter seu streak e ganhar mais pontos! 🔥
-                  </p>
-                </CardContent>
-              </Card>
             </aside>
           </div>
         </div>
@@ -419,11 +429,12 @@ export default function Dashboard() {
 
         {/* Main Tabs - Simplified */}
         <Tabs value={activeView} onValueChange={(v) => setActiveView(v as any)} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-4 h-11 bg-muted/40 p-1 rounded-xl">
+          <TabsList className="grid w-full grid-cols-6 mb-4 h-11 bg-muted/40 p-1 rounded-xl">
             {[
               { value: 'goals', emoji: '🎯', label: 'Metas' },
               { value: 'plans', emoji: '✨', label: 'IA' },
               { value: 'challenges', emoji: '🏆', label: 'Desafios' },
+              { value: 'buddy', emoji: '💕', label: 'Dupla' },
               { value: 'feed', emoji: '📱', label: 'Feed' },
               { value: 'users', emoji: '👥', label: 'Social' },
             ].map(({ value, emoji, label }) => (
@@ -442,6 +453,7 @@ export default function Dashboard() {
           </TabsList>
 
           <TabsContent value="goals" className="space-y-3">
+            {user?.id && <MoodTracker userId={user.id} onMoodLogged={fetchUserData} />}
             {user?.id && <GoalsWithAI userId={user.id} onDataChange={fetchUserData} />}
           </TabsContent>
 
@@ -451,6 +463,10 @@ export default function Dashboard() {
 
           <TabsContent value="challenges" className="space-y-3">
             <MyChallenges />
+          </TabsContent>
+
+          <TabsContent value="buddy" className="space-y-3">
+            {user?.id && <BuddyChallenge userId={user.id} onChallengeCreated={fetchUserData} />}
           </TabsContent>
 
           <TabsContent value="feed" className="space-y-3">
