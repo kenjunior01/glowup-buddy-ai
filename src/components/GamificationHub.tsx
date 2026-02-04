@@ -21,6 +21,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { achievements, getAchievementById } from '@/lib/achievements';
 import { weeklyMissions, getRandomMission } from '@/lib/missions';
+import { useCelebration } from '@/components/CelebrationSystem';
+import { calculateLevel } from '@/lib/scoring';
 
 interface UserStats {
   level: number;
@@ -47,7 +49,9 @@ const GamificationHub = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [dailyMission, setDailyMission] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [previousLevel, setPreviousLevel] = useState<number>(1);
   const { toast } = useToast();
+  const { celebrate } = useCelebration();
 
   useEffect(() => {
     getCurrentUser();
@@ -151,13 +155,21 @@ const GamificationHub = () => {
     if (!currentUserId || !dailyMission) return;
 
     const rewardPoints = dailyMission.reward;
+    const currentXP = userStats?.experience_points || 0;
+    const currentLevel = userStats?.level || 1;
+    const newXP = currentXP + rewardPoints;
     
     try {
+      // Calculate if level up will occur
+      const levelInfo = calculateLevel(newXP);
+      const willLevelUp = levelInfo.level > currentLevel;
+
       const { error } = await supabase
         .from('profiles')
         .update({ 
           pontos: (userStats?.pontos || 0) + rewardPoints,
-          experience_points: (userStats?.experience_points || 0) + rewardPoints
+          experience_points: newXP,
+          level: levelInfo.level
         })
         .eq('id', currentUserId);
 
@@ -167,14 +179,26 @@ const GamificationHub = () => {
           description: `Você ganhou ${rewardPoints} pontos!`,
         });
         
+        // Trigger level up celebration if leveled up
+        if (willLevelUp) {
+          celebrate({
+            type: 'level_up',
+            value: levelInfo.level,
+            title: `Nível ${levelInfo.level}! ${levelInfo.emoji}`,
+            subtitle: `Você evoluiu para ${levelInfo.title}!`
+          });
+        }
+        
         // Create notification
         await supabase
           .from('notifications')
           .insert({
             user_id: currentUserId,
-            title: "Recompensa Diária! 🎁",
-            message: `Você coletou ${rewardPoints} pontos da missão diária!`,
-            type: "reward"
+            title: willLevelUp ? `🎉 Level Up! Nível ${levelInfo.level}` : "Recompensa Diária! 🎁",
+            message: willLevelUp 
+              ? `Parabéns! Você agora é ${levelInfo.title}! ${levelInfo.emoji}`
+              : `Você coletou ${rewardPoints} pontos da missão diária!`,
+            type: willLevelUp ? "level_up" : "reward"
           });
         
         fetchUserStats();
