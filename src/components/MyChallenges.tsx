@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ChallengeCoach from '@/components/ChallengeCoach';
+import { useCelebration } from '@/components/CelebrationSystem';
 
 interface Challenge {
   id: string;
@@ -35,6 +36,7 @@ export default function MyChallenges() {
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const { toast } = useToast();
+  const { celebrate } = useCelebration();
 
   useEffect(() => {
     fetchChallenges();
@@ -147,10 +149,12 @@ export default function MyChallenges() {
       }
 
       if (data) {
-        toast({
-          title: "Parabéns! 🏆",
-          description: `Você completou o desafio e ganhou ${selectedChallenge.reward_points} pontos!`,
-          className: "gradient-success text-white"
+        // Trigger celebration!
+        celebrate({
+          type: 'challenge_complete',
+          title: 'DESAFIO COMPLETO!',
+          subtitle: selectedChallenge.title,
+          points: selectedChallenge.reward_points
         });
         
         setShowCompleteModal(false);
