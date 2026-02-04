@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import LoadingSpinner from "@/components/LoadingSpinner";
-
+import { CelebrationProvider } from "@/components/CelebrationSystem";
 // Lazy load pages for code-splitting
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
@@ -42,11 +42,12 @@ const PageLoader = () => (
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <div className="min-h-screen">
-          <Navbar />
+      <CelebrationProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <div className="min-h-screen">
+            <Navbar />
           <main className="pt-16">
             <Suspense fallback={<PageLoader />}>
               <Routes>
@@ -72,10 +73,11 @@ const App = () => (
                 <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </Suspense>
-          </main>
-        </div>
-      </BrowserRouter>
+              </Suspense>
+            </main>
+          </div>
+        </BrowserRouter>
+      </CelebrationProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

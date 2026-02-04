@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
+import { useCelebration } from '@/components/CelebrationSystem';
 import { 
   Flame, Snowflake, Shield, Trophy, 
   AlertTriangle, Loader2, Gift, Sparkles 
@@ -41,6 +42,7 @@ export default function StreakProtection({
   const [loading, setLoading] = useState(false);
   const [showFreezeDialog, setShowFreezeDialog] = useState(false);
   const { toast } = useToast();
+  const { celebrate } = useCelebration();
 
   useEffect(() => {
     fetchStreakData();
@@ -131,10 +133,14 @@ export default function StreakProtection({
 
       if (!error) {
         setFreezeTokens(prev => prev + 1);
-        toast({
-          title: "Gelo Conquistado! 🎁",
-          description: "Você ganhou 1 gelo por manter 7 dias de sequência!",
-          className: "bg-cyan-500 text-white"
+        
+        // Celebrate streak milestone!
+        celebrate({
+          type: 'streak',
+          value: currentStreak,
+          title: 'SEQUÊNCIA INCRÍVEL!',
+          subtitle: `${currentStreak} dias seguidos + 1 gelo de bônus!`,
+          points: currentStreak * 10
         });
       }
     }

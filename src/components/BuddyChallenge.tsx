@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
+import { useCelebration } from '@/components/CelebrationSystem';
 import { 
   Users, Trophy, Target, Clock, CheckCircle2, 
   XCircle, Loader2, UserPlus, Sparkles, Heart
@@ -56,6 +57,7 @@ export default function BuddyChallenge({ userId, onChallengeCreated }: BuddyChal
   const [creating, setCreating] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { toast } = useToast();
+  const { celebrate } = useCelebration();
 
   // Form state
   const [selectedBuddy, setSelectedBuddy] = useState<string>('');
@@ -229,7 +231,7 @@ export default function BuddyChallenge({ userId, onChallengeCreated }: BuddyChal
 
       const { data: challenge } = await supabase
         .from('challenges')
-        .select('buddy_completed, status')
+        .select('buddy_completed, status, title, reward_points')
         .eq('id', challengeId)
         .single();
 
@@ -243,10 +245,12 @@ export default function BuddyChallenge({ userId, onChallengeCreated }: BuddyChal
       // Check if both completed
       if ((isBuddy && challenge?.status === 'completed') || 
           (!isBuddy && challenge?.buddy_completed)) {
-        toast({
-          title: "Desafio Completo! 🎉",
-          description: "Vocês dois concluíram o desafio juntos! Parabéns!",
-          className: "gradient-primary text-white"
+        // Trigger buddy celebration!
+        celebrate({
+          type: 'buddy_win',
+          title: 'DUPLA CAMPEÃ!',
+          subtitle: challenge?.title || 'Vocês conseguiram juntos!',
+          points: (challenge?.reward_points || 100) * 2
         });
       } else {
         toast({
