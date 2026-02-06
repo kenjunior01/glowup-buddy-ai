@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { UserPlus, Sparkles, Trophy, TrendingUp, Loader2 } from 'lucide-react';
+import { UserPlus, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface SuggestedUser {
@@ -34,16 +32,14 @@ export default function SuggestedUsers() {
       
       setCurrentUserId(session.user.id);
 
-      // Get users the current user is already friends with
       const { data: friendships } = await supabase
         .from('friendships')
         .select('friend_id')
         .eq('user_id', session.user.id);
 
       const friendIds = friendships?.map(f => f.friend_id) || [];
-      friendIds.push(session.user.id); // Exclude self
+      friendIds.push(session.user.id);
 
-      // Get top users by points/level that aren't friends
       const { data: suggestedData } = await supabase
         .rpc('get_leaderboard', { limit_count: 10 });
 
@@ -109,65 +105,47 @@ export default function SuggestedUsers() {
 
   if (loading) {
     return (
-      <Card className="animate-pulse">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            Sugestões para você
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-muted" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 bg-muted rounded w-24" />
-                <div className="h-3 bg-muted rounded w-16" />
-              </div>
+      <div className="bento-card p-4 space-y-3">
+        <h3 className="text-sm font-semibold text-foreground">Sugestões</h3>
+        {[1, 2, 3].map(i => (
+          <div key={i} className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-muted animate-pulse" />
+            <div className="flex-1 space-y-1.5">
+              <div className="h-3 bg-muted rounded w-20 animate-pulse" />
+              <div className="h-2.5 bg-muted rounded w-14 animate-pulse" />
             </div>
-          ))}
-        </CardContent>
-      </Card>
+          </div>
+        ))}
+      </div>
     );
   }
 
   if (users.length === 0) return null;
 
   return (
-    <Card className="border-primary/20">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" />
-          Sugestões para você
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
+    <div className="bento-card p-4 space-y-3">
+      <h3 className="text-sm font-semibold text-foreground">Sugestões</h3>
+      <div className="space-y-2.5">
         {users.map((user) => (
-          <div key={user.id} className="flex items-center gap-3 group">
-            <Avatar className="h-10 w-10 ring-2 ring-primary/20 group-hover:ring-primary/50 transition-all">
+          <div key={user.id} className="flex items-center gap-3">
+            <Avatar className="h-9 w-9">
               <AvatarImage src={user.avatar_url || undefined} />
-              <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-white text-xs">
+              <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
                 {user.display_name?.slice(0, 2).toUpperCase() || '??'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm truncate">
+              <p className="font-medium text-sm text-foreground truncate">
                 {user.display_name || 'Usuário'}
               </p>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
-                  Nv. {user.level || 1}
-                </Badge>
-                <span className="flex items-center gap-0.5">
-                  <Trophy className="h-3 w-3" />
-                  {user.total_challenges_completed || 0}
-                </span>
-              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Nv. {user.level || 1} • {user.total_challenges_completed || 0} desafios
+              </p>
             </div>
             <Button
               size="sm"
               variant="ghost"
-              className="h-8 w-8 p-0 hover:bg-primary hover:text-primary-foreground transition-all"
+              className="h-8 w-8 p-0 hover:bg-primary/10 hover:text-primary"
               onClick={() => sendFriendRequest(user.id, user.display_name || 'Usuário')}
               disabled={pendingRequests.has(user.id)}
             >
@@ -179,7 +157,7 @@ export default function SuggestedUsers() {
             </Button>
           </div>
         ))}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
