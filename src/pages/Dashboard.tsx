@@ -146,8 +146,8 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 gradient-primary rounded-full animate-pulse-soft" />
-          <p className="text-muted-foreground animate-pulse-soft">Carregando...</p>
+          <div className="w-12 h-12 rounded-full bg-primary/20 animate-pulse" />
+          <p className="text-sm text-muted-foreground">Carregando...</p>
         </div>
       </div>
     );
@@ -172,21 +172,22 @@ export default function Dashboard() {
         {/* Ticker Tape */}
         <TickerTape />
 
-        {/* Header */}
-        <div className="sticky top-16 z-30 bg-card/95 backdrop-blur-lg border-b border-border">
-          <div className="max-w-7xl mx-auto flex items-center justify-between p-4">
+        {/* Header - Clean Glow Style */}
+        <div className="sticky top-16 z-30 bg-background/80 backdrop-blur-md border-b border-border/40">
+          <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
             <div>
-              <h1 className="text-2xl font-bold text-gradient">Dashboard</h1>
+              <h1 className="text-xl font-semibold text-foreground">Dashboard</h1>
               <p className="text-sm text-muted-foreground">
-                Olá, {user?.profile?.name || 'Usuário'}! 👋
+                Olá, {user?.profile?.name || 'Usuário'}!
               </p>
             </div>
             
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <GamificationHelp />
               <Button 
                 variant="outline" 
                 size="sm"
+                className="border-border/60 hover:bg-muted/50"
                 onClick={() => navigate('/chat')}
               >
                 <MessageCircle className="w-4 h-4 mr-2" />
@@ -195,45 +196,42 @@ export default function Dashboard() {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="relative"
+                className="relative hover:bg-muted/50"
                 onClick={() => navigate('/notifications')}
               >
-                <Bell className="w-5 h-5" />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-accent rounded-full notification-pulse"></div>
+                <Bell className="w-5 h-5 text-muted-foreground" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" />
               </Button>
             </div>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="grid grid-cols-12 gap-6">
-            {/* Left Sidebar */}
-            <aside className="col-span-3 space-y-4">
-              <Card className="overflow-hidden">
-                <CardHeader className="pb-3 bg-gradient-to-r from-primary/10 to-accent/10">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-lg">
-                      {user?.profile?.name?.charAt(0).toUpperCase() || '?'}
-                    </div>
-                    <div>
-                      <CardTitle className="text-base">{user?.profile?.name || 'Usuário'}</CardTitle>
-                      <p className="text-xs text-muted-foreground">Nível {userStats?.level || 1}</p>
-                    </div>
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="grid grid-cols-12 gap-8">
+            {/* Left Sidebar - Clean Glow */}
+            <aside className="col-span-3 space-y-6">
+              {/* Profile Card - Bento Style */}
+              <div className="bento-card p-5">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-lg">
+                    {user?.profile?.name?.charAt(0).toUpperCase() || '?'}
                   </div>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <div className="grid grid-cols-2 gap-3 text-center">
-                    <div className="p-2 rounded-lg bg-muted/50">
-                      <p className="text-lg font-bold text-primary">{userStats?.points || 0}</p>
-                      <p className="text-[10px] text-muted-foreground">Pontos</p>
-                    </div>
-                    <div className="p-2 rounded-lg bg-muted/50">
-                      <p className="text-lg font-bold text-accent">{currentStreak}</p>
-                      <p className="text-[10px] text-muted-foreground">Streak</p>
-                    </div>
+                  <div>
+                    <p className="font-medium text-foreground">{user?.profile?.name || 'Usuário'}</p>
+                    <p className="text-xs text-muted-foreground">Nível {userStats?.level || 1}</p>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="text-center p-3 rounded-lg bg-muted/30">
+                    <p className="text-lg font-bold text-foreground">{userStats?.points || 0}</p>
+                    <p className="text-[10px] text-muted-foreground">Pontos</p>
+                  </div>
+                  <div className="text-center p-3 rounded-lg bg-muted/30">
+                    <p className="text-lg font-bold text-foreground">{currentStreak}</p>
+                    <p className="text-[10px] text-muted-foreground">Streak</p>
+                  </div>
+                </div>
+              </div>
 
               <QuickActions />
               <SuggestedUsers />
@@ -333,7 +331,7 @@ export default function Dashboard() {
     );
   }
 
-  // Mobile Layout - Clean & Friendly
+  // Mobile Layout - Clean Glow Style
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Onboarding Wizard */}
@@ -355,38 +353,35 @@ export default function Dashboard() {
         onClose={() => setShowStreakCelebration(false)}
       />
 
-      {/* Mobile Header - Compact */}
-      <div className="sticky top-16 z-30 bg-card/95 backdrop-blur-lg border-b border-border/30">
+      {/* Mobile Header - Clean Glow */}
+      <div className="sticky top-16 z-30 bg-background/80 backdrop-blur-md border-b border-border/40">
         <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">✨</span>
-            <h1 className="text-lg font-bold text-gradient">GlowUp</h1>
-          </div>
+          <h1 className="text-lg font-semibold text-foreground">GlowUp</h1>
           
           <div className="flex items-center gap-1">
             <Button 
               variant="ghost" 
               size="sm"
-              className="w-9 h-9 rounded-lg tap-scale relative"
+              className="w-9 h-9 rounded-lg relative hover:bg-muted/50"
               onClick={() => navigate('/notifications')}
             >
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+              <Bell className="w-5 h-5 text-muted-foreground" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" />
             </Button>
             <Button 
               variant="ghost" 
               size="sm"
-              className="w-9 h-9 rounded-lg tap-scale"
+              className="w-9 h-9 rounded-lg hover:bg-muted/50"
               onClick={() => setActiveView('users')}
             >
-              <Search className="w-5 h-5" />
+              <Search className="w-5 h-5 text-muted-foreground" />
             </Button>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="px-4 space-y-4 pt-3 pb-6">
+      <div className="px-4 space-y-5 pt-4 pb-6">
         {/* Hero Welcome Card */}
         <HeroWelcome 
           userName={user?.profile?.name || 'Usuário'}
@@ -399,29 +394,29 @@ export default function Dashboard() {
         {/* Quick Stats */}
         <QuickStats stats={userStats || {}} />
 
-        {/* Quick Actions - Compact chips */}
+        {/* Quick Actions - Clean Chips */}
         <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
           <button 
             onClick={() => navigate('/chat')}
-            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full bg-primary/10 text-primary text-xs font-medium tap-scale"
+            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full bg-primary/10 text-primary text-xs font-medium"
           >
             <span>💬</span> Chat IA
           </button>
           <button 
             onClick={() => setActiveView('challenges')}
-            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full bg-orange-500/10 text-orange-600 text-xs font-medium tap-scale"
+            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full bg-accent/10 text-accent text-xs font-medium"
           >
             <span>🎯</span> Desafios
           </button>
           <button 
             onClick={() => setActiveView('plans')}
-            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full bg-purple-500/10 text-purple-600 text-xs font-medium tap-scale"
+            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full bg-secondary text-secondary-foreground text-xs font-medium"
           >
             <span>🤖</span> Planos IA
           </button>
           <button 
             onClick={() => navigate('/social')}
-            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full bg-green-500/10 text-green-600 text-xs font-medium tap-scale"
+            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full bg-muted text-muted-foreground text-xs font-medium"
           >
             <span>👥</span> Social
           </button>
