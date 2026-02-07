@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -9,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCelebration } from '@/components/CelebrationSystem';
 import { 
   Users, Trophy, Target, Clock, CheckCircle2, 
-  XCircle, Loader2, UserPlus, Sparkles, Heart
+  Loader2, UserPlus, Heart, Plus, ArrowRight
 } from 'lucide-react';
 import {
   Dialog,
@@ -21,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 interface BuddyChallengeProps {
   userId: string;
@@ -273,65 +273,68 @@ export default function BuddyChallenge({ userId, onChallengeCreated }: BuddyChal
   );
 
   return (
-    <Card className="overflow-hidden border-pink-500/20">
-      <CardHeader className="pb-3 bg-gradient-to-r from-pink-500/10 to-purple-500/10">
+    <div className="space-y-4">
+      {/* Header Card - Clean Glow */}
+      <div className="bento-card p-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Users className="w-5 h-5 text-pink-500" />
-            Desafios em Dupla
-          </CardTitle>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+              <Users className="w-4 h-4 text-accent" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Desafios em Dupla</h3>
+              <p className="text-[10px] text-muted-foreground">Complete desafios com amigos!</p>
+            </div>
+          </div>
           <Button
             size="sm"
             onClick={() => setShowCreateDialog(true)}
-            className="bg-pink-500 hover:bg-pink-600 text-white"
+            className="bg-accent hover:bg-accent/90 text-accent-foreground"
           >
-            <UserPlus className="w-4 h-4 mr-1" />
+            <Plus className="w-4 h-4 mr-1" />
             Novo
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Complete desafios junto com seus amigos!
-        </p>
-      </CardHeader>
+      </div>
 
-      <CardContent className="pt-4 space-y-4">
+      {/* Content */}
+      <div className="space-y-3">
         {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-pink-500" />
+          <div className="bento-card p-8 flex items-center justify-center">
+            <Loader2 className="w-6 h-6 animate-spin text-accent" />
           </div>
         ) : (
           <>
             {/* Pending Challenges */}
             {pendingChallenges.length > 0 && (
               <div className="space-y-2">
-                <h4 className="text-sm font-medium flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-yellow-500" />
-                  Aguardando Resposta
-                </h4>
+                <div className="flex items-center gap-2 px-1">
+                  <Clock className="w-4 h-4 text-primary" />
+                  <span className="text-xs font-medium text-muted-foreground">Aguardando Resposta</span>
+                </div>
                 {pendingChallenges.map(challenge => (
-                  <div key={challenge.id} className="p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="font-medium text-sm">{challenge.title}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{challenge.description}</p>
+                  <div key={challenge.id} className="bento-card p-4 ring-1 ring-primary/20">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm text-foreground">{challenge.title}</p>
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{challenge.description}</p>
                       </div>
                       {challenge.buddy_id === userId && (
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleAcceptBuddyChallenge(challenge.id)}
-                            className="border-green-500 text-green-600 hover:bg-green-500/10"
-                          >
-                            <CheckCircle2 className="w-4 h-4" />
-                          </Button>
-                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleAcceptBuddyChallenge(challenge.id)}
+                          className="shrink-0 border-primary text-primary hover:bg-primary/10"
+                        >
+                          <CheckCircle2 className="w-4 h-4" />
+                        </Button>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Badge variant="secondary" className="text-[10px]">
-                        {challenge.reward_points} pontos cada
-                      </Badge>
+                    <div className="flex items-center gap-2 mt-3">
+                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10">
+                        <Trophy className="w-3 h-3 text-primary" />
+                        <span className="text-[10px] font-medium text-primary">{challenge.reward_points} pts cada</span>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -341,10 +344,10 @@ export default function BuddyChallenge({ userId, onChallengeCreated }: BuddyChal
             {/* Active Challenges */}
             {activeChallenges.length > 0 && (
               <div className="space-y-2">
-                <h4 className="text-sm font-medium flex items-center gap-2">
-                  <Target className="w-4 h-4 text-green-500" />
-                  Desafios Ativos
-                </h4>
+                <div className="flex items-center gap-2 px-1">
+                  <Target className="w-4 h-4 text-primary" />
+                  <span className="text-xs font-medium text-muted-foreground">Desafios Ativos</span>
+                </div>
                 {activeChallenges.map(challenge => {
                   const isBuddy = challenge.buddy_id === userId;
                   const myCompleted = isBuddy ? challenge.buddy_completed : challenge.status === 'completed';
@@ -352,41 +355,57 @@ export default function BuddyChallenge({ userId, onChallengeCreated }: BuddyChal
                   const progress = (myCompleted ? 50 : 0) + (partnerCompleted ? 50 : 0);
 
                   return (
-                    <div key={challenge.id} className="p-3 bg-muted/50 rounded-lg border">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">{challenge.title}</p>
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{challenge.description}</p>
+                    <div key={challenge.id} className="bento-card overflow-hidden">
+                      <div className="p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm text-foreground">{challenge.title}</p>
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{challenge.description}</p>
+                          </div>
+                          {challenge.buddy_profile && (
+                            <Avatar className="w-10 h-10 border-2 border-accent shrink-0">
+                              <AvatarImage src={challenge.buddy_profile.avatar_url} />
+                              <AvatarFallback className="bg-accent/10 text-accent text-sm">
+                                {challenge.buddy_profile.display_name?.charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                          )}
                         </div>
-                        {challenge.buddy_profile && (
-                          <Avatar className="w-8 h-8 border-2 border-pink-500">
-                            <AvatarImage src={challenge.buddy_profile.avatar_url} />
-                            <AvatarFallback>{challenge.buddy_profile.display_name?.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                        )}
-                      </div>
-                      
-                      <div className="mt-3 space-y-2">
-                        <Progress value={progress} className="h-2" />
-                        <div className="flex justify-between text-[10px]">
-                          <span className={myCompleted ? 'text-green-500' : 'text-muted-foreground'}>
-                            {myCompleted ? '✅ Você completou' : '⏳ Sua vez'}
-                          </span>
-                          <span className={partnerCompleted ? 'text-green-500' : 'text-muted-foreground'}>
-                            {partnerCompleted ? '✅ Parceiro completou' : '⏳ Aguardando parceiro'}
-                          </span>
+                        
+                        <div className="mt-4 space-y-2">
+                          <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                            <span>Progresso da dupla</span>
+                            <span className="font-medium text-foreground">{progress}%</span>
+                          </div>
+                          <Progress value={progress} className="h-1.5" />
+                          <div className="flex justify-between text-[10px] pt-1">
+                            <span className={cn(
+                              "flex items-center gap-1",
+                              myCompleted ? "text-primary" : "text-muted-foreground"
+                            )}>
+                              {myCompleted ? "✅" : "⏳"} Você
+                            </span>
+                            <span className={cn(
+                              "flex items-center gap-1",
+                              partnerCompleted ? "text-primary" : "text-muted-foreground"
+                            )}>
+                              Parceiro {partnerCompleted ? "✅" : "⏳"}
+                            </span>
+                          </div>
                         </div>
                       </div>
 
                       {!myCompleted && (
-                        <Button
-                          size="sm"
+                        <button
                           onClick={() => handleCompleteBuddyPart(challenge.id, isBuddy)}
-                          className="w-full mt-3 bg-green-500 hover:bg-green-600 text-white"
+                          className="w-full px-4 py-3 flex items-center justify-between bg-primary/5 hover:bg-primary/10 transition-colors border-t border-border/40"
                         >
-                          <CheckCircle2 className="w-4 h-4 mr-2" />
-                          Marcar como Completo
-                        </Button>
+                          <span className="text-xs font-medium text-primary flex items-center gap-2">
+                            <CheckCircle2 className="w-4 h-4" />
+                            Marcar como Completo
+                          </span>
+                          <ArrowRight className="w-4 h-4 text-primary" />
+                        </button>
                       )}
                     </div>
                   );
@@ -396,22 +415,30 @@ export default function BuddyChallenge({ userId, onChallengeCreated }: BuddyChal
 
             {/* Empty State */}
             {buddyChallenges.length === 0 && (
-              <div className="text-center py-8">
-                <Heart className="w-12 h-12 mx-auto text-pink-500/50 mb-3" />
-                <p className="text-sm font-medium">Nenhum desafio em dupla</p>
-                <p className="text-xs text-muted-foreground">Crie um desafio com um amigo!</p>
+              <div className="bento-card p-8">
+                <div className="flex flex-col items-center justify-center text-center">
+                  <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mb-3">
+                    <Heart className="w-6 h-6 text-accent/50" />
+                  </div>
+                  <p className="text-sm font-medium text-foreground mb-1">Nenhum desafio em dupla</p>
+                  <p className="text-xs text-muted-foreground max-w-[200px]">
+                    Crie um desafio com um amigo e ganhem pontos juntos!
+                  </p>
+                </div>
               </div>
             )}
           </>
         )}
-      </CardContent>
+      </div>
 
-      {/* Create Dialog */}
+      {/* Create Dialog - Clean Glow Style */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-pink-500" />
+            <DialogTitle className="flex items-center gap-2 text-foreground">
+              <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                <Users className="w-4 h-4 text-accent" />
+              </div>
               Criar Desafio em Dupla
             </DialogTitle>
           </DialogHeader>
@@ -419,10 +446,10 @@ export default function BuddyChallenge({ userId, onChallengeCreated }: BuddyChal
           <div className="space-y-4 pt-4">
             {/* Select Buddy */}
             <div className="space-y-2">
-              <Label>Escolha seu Parceiro</Label>
+              <Label className="text-sm font-medium text-foreground">Escolha seu Parceiro</Label>
               {friends.length > 0 ? (
                 <Select value={selectedBuddy} onValueChange={setSelectedBuddy}>
-                  <SelectTrigger>
+                  <SelectTrigger className="border-border/60">
                     <SelectValue placeholder="Selecione um amigo" />
                   </SelectTrigger>
                   <SelectContent>
@@ -431,9 +458,11 @@ export default function BuddyChallenge({ userId, onChallengeCreated }: BuddyChal
                         <div className="flex items-center gap-2">
                           <Avatar className="w-6 h-6">
                             <AvatarImage src={friend.avatar_url} />
-                            <AvatarFallback>{friend.display_name?.charAt(0)}</AvatarFallback>
+                            <AvatarFallback className="bg-accent/10 text-accent text-[10px]">
+                              {friend.display_name?.charAt(0)}
+                            </AvatarFallback>
                           </Avatar>
-                          <span>{friend.display_name}</span>
+                          <span className="text-sm">{friend.display_name}</span>
                           <Badge variant="secondary" className="text-[10px]">Nv {friend.level}</Badge>
                         </div>
                       </SelectItem>
@@ -441,39 +470,41 @@ export default function BuddyChallenge({ userId, onChallengeCreated }: BuddyChal
                   </SelectContent>
                 </Select>
               ) : (
-                <p className="text-sm text-muted-foreground p-3 bg-muted rounded-lg">
+                <div className="p-3 bg-muted/40 rounded-lg text-sm text-muted-foreground">
                   Adicione amigos primeiro para criar desafios em dupla
-                </p>
+                </div>
               )}
             </div>
 
             {/* Title */}
             <div className="space-y-2">
-              <Label>Título do Desafio</Label>
+              <Label className="text-sm font-medium text-foreground">Título do Desafio</Label>
               <Input
                 placeholder="Ex: Meditar 10 min por dia juntos"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                className="border-border/60"
               />
             </div>
 
             {/* Description */}
             <div className="space-y-2">
-              <Label>Descrição</Label>
+              <Label className="text-sm font-medium text-foreground">Descrição</Label>
               <Textarea
                 placeholder="Descreva o desafio..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={2}
+                className="border-border/60"
               />
             </div>
 
             {/* Points and Duration */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Pontos (cada)</Label>
+                <Label className="text-sm font-medium text-foreground">Pontos (cada)</Label>
                 <Select value={rewardPoints} onValueChange={setRewardPoints}>
-                  <SelectTrigger>
+                  <SelectTrigger className="border-border/60">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -485,9 +516,9 @@ export default function BuddyChallenge({ userId, onChallengeCreated }: BuddyChal
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Duração</Label>
+                <Label className="text-sm font-medium text-foreground">Duração</Label>
                 <Select value={expiresDays} onValueChange={setExpiresDays}>
-                  <SelectTrigger>
+                  <SelectTrigger className="border-border/60">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -503,18 +534,18 @@ export default function BuddyChallenge({ userId, onChallengeCreated }: BuddyChal
             <Button
               onClick={handleCreateBuddyChallenge}
               disabled={creating || !selectedBuddy || !title.trim() || friends.length === 0}
-              className="w-full bg-pink-500 hover:bg-pink-600"
+              className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
             >
               {creating ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : (
-                <Sparkles className="w-4 h-4 mr-2" />
+                <UserPlus className="w-4 h-4 mr-2" />
               )}
               Criar Desafio em Dupla
             </Button>
           </div>
         </DialogContent>
       </Dialog>
-    </Card>
+    </div>
   );
 }
