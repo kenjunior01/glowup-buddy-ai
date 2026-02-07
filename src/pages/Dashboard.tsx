@@ -22,8 +22,10 @@ import GamificationHelp from '@/components/GamificationHelp';
 import MoodTracker from '@/components/MoodTracker';
 import SundayReset from '@/components/SundayReset';
 import BuddyChallenge from '@/components/BuddyChallenge';
+import FocusTimer from '@/components/FocusTimer';
+import ActiveChallengesClean from '@/components/ActiveChallengesClean';
 import { TickerTape } from '@/components/ads/TickerTape';
-import { Bell, Search, Plus, Target, Sparkles, Users, Newspaper, MessageCircle, ChevronRight, Heart } from 'lucide-react';
+import { Bell, Search, Plus, Target, Sparkles, Users, Newspaper, MessageCircle, ChevronRight, Heart, Timer } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -42,7 +44,7 @@ export default function Dashboard() {
   const [showChallengeModal, setShowChallengeModal] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [selectedUserName, setSelectedUserName] = useState<string>('');
-  const [activeView, setActiveView] = useState<'feed' | 'users' | 'challenges' | 'goals' | 'plans' | 'buddy'>('goals');
+  const [activeView, setActiveView] = useState<'feed' | 'users' | 'challenges' | 'goals' | 'plans' | 'buddy' | 'focus'>('goals');
   const [showStreakCelebration, setShowStreakCelebration] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingCompleted, setOnboardingCompleted] = useState(true);
@@ -255,30 +257,30 @@ export default function Dashboard() {
                 />
 
                 <Tabs value={activeView} onValueChange={(v) => setActiveView(v as any)} className="w-full">
-                  <TabsList className="grid w-full grid-cols-6 mb-4">
-                    <TabsTrigger value="goals" className="flex items-center gap-1">
+                  <TabsList className="grid w-full grid-cols-6 mb-4 h-11 bg-muted/40 p-1 rounded-xl">
+                    <TabsTrigger value="goals" className="flex items-center gap-1 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
                       <Target className="w-4 h-4" />
-                      Objetivos
+                      <span className="hidden lg:inline">Objetivos</span>
                     </TabsTrigger>
-                    <TabsTrigger value="plans" className="flex items-center gap-1">
+                    <TabsTrigger value="plans" className="flex items-center gap-1 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
                       <Sparkles className="w-4 h-4" />
-                      Planos IA
+                      <span className="hidden lg:inline">Planos IA</span>
                     </TabsTrigger>
-                    <TabsTrigger value="challenges" className="flex items-center gap-1">
-                      <Plus className="w-4 h-4" />
-                      Desafios
+                    <TabsTrigger value="challenges" className="flex items-center gap-1 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                      <Target className="w-4 h-4" />
+                      <span className="hidden lg:inline">Desafios</span>
                     </TabsTrigger>
-                    <TabsTrigger value="buddy" className="flex items-center gap-1">
+                    <TabsTrigger value="buddy" className="flex items-center gap-1 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
                       <Heart className="w-4 h-4" />
-                      Dupla
+                      <span className="hidden lg:inline">Dupla</span>
                     </TabsTrigger>
-                    <TabsTrigger value="feed" className="flex items-center gap-1">
+                    <TabsTrigger value="feed" className="flex items-center gap-1 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
                       <Newspaper className="w-4 h-4" />
-                      Feed
+                      <span className="hidden lg:inline">Feed</span>
                     </TabsTrigger>
-                    <TabsTrigger value="users" className="flex items-center gap-1">
+                    <TabsTrigger value="users" className="flex items-center gap-1 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
                       <Users className="w-4 h-4" />
-                      Usuários
+                      <span className="hidden lg:inline">Usuários</span>
                     </TabsTrigger>
                   </TabsList>
 
@@ -291,7 +293,7 @@ export default function Dashboard() {
                   </TabsContent>
 
                   <TabsContent value="challenges" className="space-y-4">
-                    <MyChallenges />
+                    <ActiveChallengesClean />
                   </TabsContent>
 
                   <TabsContent value="buddy" className="space-y-4">
@@ -311,6 +313,9 @@ export default function Dashboard() {
 
             {/* Right Sidebar */}
             <aside className="col-span-3 space-y-4">
+              {/* Focus Timer */}
+              <FocusTimer />
+              
               <GamificationHub />
               
               {/* Sunday Reset */}
@@ -427,7 +432,7 @@ export default function Dashboard() {
           <TabsList className="grid w-full grid-cols-6 mb-4 h-11 bg-muted/40 p-1 rounded-xl">
             {[
               { value: 'goals', emoji: '🎯', label: 'Metas' },
-              { value: 'plans', emoji: '✨', label: 'IA' },
+              { value: 'focus', emoji: '⏱️', label: 'Foco' },
               { value: 'challenges', emoji: '🏆', label: 'Desafios' },
               { value: 'buddy', emoji: '💕', label: 'Dupla' },
               { value: 'feed', emoji: '📱', label: 'Feed' },
@@ -452,12 +457,13 @@ export default function Dashboard() {
             {user?.id && <GoalsWithAI userId={user.id} onDataChange={fetchUserData} />}
           </TabsContent>
 
-          <TabsContent value="plans" className="space-y-3">
+          <TabsContent value="focus" className="space-y-3">
+            <FocusTimer />
             {user?.id && <PlansView userId={user.id} onDataChange={fetchUserData} />}
           </TabsContent>
 
           <TabsContent value="challenges" className="space-y-3">
-            <MyChallenges />
+            <ActiveChallengesClean />
           </TabsContent>
 
           <TabsContent value="buddy" className="space-y-3">
