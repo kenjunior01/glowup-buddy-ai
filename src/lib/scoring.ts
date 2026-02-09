@@ -100,6 +100,22 @@ export const SCORE_ACTIONS: Record<string, ScoreAction> = {
     emoji: '⭐'
   },
   
+  // Focus Timer
+  FOCUS_SESSION: {
+    type: 'focus_session',
+    basePoints: 25,
+    xpReward: 50,
+    description: 'Sessão de foco completa',
+    emoji: '🎯'
+  },
+  FOCUS_STREAK_4: {
+    type: 'focus_streak_4',
+    basePoints: 50,
+    xpReward: 100,
+    description: '4 sessões consecutivas',
+    emoji: '⚡'
+  },
+  
   // Streaks
   STREAK_BONUS_3: {
     type: 'streak_3',
