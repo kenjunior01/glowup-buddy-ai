@@ -55,24 +55,9 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { productId, priceId } = await req.json();
-    logStep("Request body", { productId, priceId });
-
-    if (!productId || !priceId) {
-      throw new Error("productId and priceId are required");
-    }
-
-    // Get product details from Supabase
-    const { data: product, error: productError } = await supabaseClient
-      .from('products')
-      .select('*')
-      .eq('id', productId)
-      .single();
-
-    if (productError || !product) {
-      throw new Error("Product not found");
-    }
-    logStep("Product found", { title: product.title, price: product.price_cents });
+    const body = await req.json();
+    const { productId, priceId, mode } = body;
+    logStep("Request body", { productId, priceId, mode });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
@@ -86,16 +71,44 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://preview.lovable.dev";
 
-    // Create checkout session
+    // Subscription mode
+    if (mode === 'subscription') {
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        customer_email: customerId ? undefined : user.email,
+        line_items: [{ price: 'price_1SzDRHCHoNOpXJefkg371EH7', quantity: 1 }],
+        mode: "subscription",
+        success_url: `${origin}/premium?success=true`,
+        cancel_url: `${origin}/premium?canceled=true`,
+      });
+
+      logStep("Subscription session created", { sessionId: session.id });
+      return new Response(JSON.stringify({ url: session.url, sessionId: session.id }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    // Payment mode (marketplace)
+    if (!productId || !priceId) {
+      throw new Error("productId and priceId are required");
+    }
+
+    const { data: product, error: productError } = await supabaseClient
+      .from('products')
+      .select('*')
+      .eq('id', productId)
+      .single();
+
+    if (productError || !product) {
+      throw new Error("Product not found");
+    }
+    logStep("Product found", { title: product.title, price: product.price_cents });
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
+      line_items: [{ price: priceId, quantity: 1 }],
       mode: "payment",
       success_url: `${origin}/my-purchases?success=true&product=${productId}`,
       cancel_url: `${origin}/marketplace/${productId}?canceled=true`,
