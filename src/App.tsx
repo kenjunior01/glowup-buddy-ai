@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { CelebrationProvider } from "@/components/CelebrationSystem";
+import { SubscriptionProvider } from "@/hooks/useSubscription";
 // Lazy load pages for code-splitting
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
@@ -29,6 +30,8 @@ const PaymentCanceled = lazy(() => import("./pages/PaymentCanceled"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const Advertising = lazy(() => import("./pages/Advertising"));
+const Premium = lazy(() => import("./pages/Premium"));
+const PartnerCoupons = lazy(() => import("./pages/PartnerCoupons"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -43,6 +46,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <CelebrationProvider>
+        <SubscriptionProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -69,6 +73,8 @@ const App = () => (
                 <Route path="/payment-canceled" element={<PaymentCanceled />} />
                 <Route path="/install" element={<Install />} />
                 <Route path="/advertising" element={<ProtectedRoute><Advertising /></ProtectedRoute>} />
+                <Route path="/premium" element={<Premium />} />
+                <Route path="/coupons" element={<ProtectedRoute><PartnerCoupons /></ProtectedRoute>} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
@@ -77,6 +83,7 @@ const App = () => (
             </main>
           </div>
         </BrowserRouter>
+        </SubscriptionProvider>
       </CelebrationProvider>
     </TooltipProvider>
   </QueryClientProvider>

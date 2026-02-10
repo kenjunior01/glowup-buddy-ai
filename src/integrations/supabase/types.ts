@@ -182,6 +182,35 @@ export type Database = {
         }
         Relationships: []
       }
+      coupon_redemptions: {
+        Row: {
+          coupon_id: string
+          id: string
+          redeemed_at: string | null
+          user_id: string
+        }
+        Insert: {
+          coupon_id: string
+          id?: string
+          redeemed_at?: string | null
+          user_id: string
+        }
+        Update: {
+          coupon_id?: string
+          id?: string
+          redeemed_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_redemptions_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "partner_coupons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_lessons: {
         Row: {
           content: string | null
@@ -545,6 +574,66 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_coupons: {
+        Row: {
+          category: string | null
+          coupon_code: string
+          created_at: string | null
+          current_redemptions: number | null
+          description: string
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          external_url: string | null
+          id: string
+          is_active: boolean | null
+          is_premium_only: boolean | null
+          max_redemptions: number | null
+          partner_logo_url: string | null
+          partner_name: string
+          starts_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          coupon_code: string
+          created_at?: string | null
+          current_redemptions?: number | null
+          description: string
+          discount_type: string
+          discount_value: number
+          expires_at?: string | null
+          external_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_premium_only?: boolean | null
+          max_redemptions?: number | null
+          partner_logo_url?: string | null
+          partner_name: string
+          starts_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          coupon_code?: string
+          created_at?: string | null
+          current_redemptions?: number | null
+          description?: string
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          external_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_premium_only?: boolean | null
+          max_redemptions?: number | null
+          partner_logo_url?: string | null
+          partner_name?: string
+          starts_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       plans: {
         Row: {
           active: boolean | null
@@ -722,6 +811,8 @@ export type Database = {
           pontos: number | null
           rotina: string | null
           selected_pillars: string[] | null
+          subscription_end: string | null
+          subscription_tier: string | null
           total_challenges_completed: number | null
           updated_at: string | null
         }
@@ -744,6 +835,8 @@ export type Database = {
           pontos?: number | null
           rotina?: string | null
           selected_pillars?: string[] | null
+          subscription_end?: string | null
+          subscription_tier?: string | null
           total_challenges_completed?: number | null
           updated_at?: string | null
         }
@@ -766,6 +859,8 @@ export type Database = {
           pontos?: number | null
           rotina?: string | null
           selected_pillars?: string[] | null
+          subscription_end?: string | null
+          subscription_tier?: string | null
           total_challenges_completed?: number | null
           updated_at?: string | null
         }
