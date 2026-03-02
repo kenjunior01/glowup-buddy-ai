@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Menu, X, Store, Megaphone } from "lucide-react";
+import { Sparkles, Menu, X, Store, Megaphone, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "@/components/NotificationBell";
 import type { User } from "@supabase/supabase-js";
@@ -82,6 +82,19 @@ const Navbar = () => {
                 >
                   <Megaphone className="h-4 w-4 mr-1" />
                   Anúncios
+                </Button>
+                <Button
+                  variant={location.pathname === "/premium" ? "default" : "ghost"}
+                  onClick={() => navigate("/premium")}
+                >
+                  <Crown className="h-4 w-4 mr-1" />
+                  Premium
+                </Button>
+                <Button
+                  variant={location.pathname === "/coupons" ? "default" : "ghost"}
+                  onClick={() => navigate("/coupons")}
+                >
+                  Cupons
                 </Button>
                 <Button
                   variant={location.pathname === "/profile" ? "default" : "ghost"}
