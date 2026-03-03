@@ -1,6 +1,4 @@
-import React from 'react';
 import { cn } from '@/lib/utils';
-import { Progress } from '@/components/ui/progress';
 
 interface QuickStatsProps {
   stats: {
@@ -16,51 +14,55 @@ interface QuickStatsProps {
 export default function QuickStats({ stats }: QuickStatsProps) {
   const statItems = [
     { emoji: '📈', label: 'Nível', value: stats.level || 1 },
-    { emoji: '⚡', label: 'Pontos', value: (stats.points || 0).toLocaleString() },
+    { emoji: '⚡', label: 'XP', value: (stats.points || 0).toLocaleString() },
     { emoji: '🏆', label: 'Rank', value: `#${stats.rank || 1}` },
     { emoji: '👥', label: 'Amigos', value: stats.friends || 0 },
   ];
 
-  const progressPercent = Math.min(((stats.points || 0) % 100), 100);
+  const xpForNext = (stats.level || 1) * 100;
+  const currentXP = (stats.points || 0) % 100;
+  const progressPercent = (currentXP / 100) * 100;
 
   return (
     <div className="space-y-4">
-      {/* Header - Clean */}
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-foreground">Seu Progresso</h2>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary">
           {stats.achievements || 0} conquistas
         </span>
       </div>
 
-      {/* Stats Grid - Bento Style */}
-      <div className="grid grid-cols-4 gap-3">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-4 gap-2">
         {statItems.map(({ emoji, label, value }) => (
           <div 
             key={label}
-            className="bento-card p-3 text-center"
+            className="cyber-card p-3 text-center !rounded-xl !p-2.5"
           >
-            <span className="text-lg block mb-1">{emoji}</span>
-            <p className="text-base font-bold text-foreground">{value}</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">{label}</p>
+            <span className="text-base block mb-0.5">{emoji}</span>
+            <p className="text-sm font-bold text-foreground xp-counter">{value}</p>
+            <p className="text-[9px] text-muted-foreground mt-0.5">{label}</p>
           </div>
         ))}
       </div>
 
-      {/* Progress to Next Level - Clean Card */}
+      {/* XP Bar */}
       <div className="bento-card p-4">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-medium text-foreground">Próximo nível</span>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-[10px] text-muted-foreground">
             Nv. {(stats.level || 1) + 1}
           </span>
         </div>
-        
-        <Progress value={progressPercent} className="h-2" />
-        
-        <div className="flex justify-between text-[10px] text-muted-foreground mt-2">
+        <div className="xp-bar h-2.5">
+          <div
+            className="xp-bar-fill progress-fill"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
+        <div className="flex justify-between text-[10px] text-muted-foreground mt-1.5">
           <span>{stats.points || 0} XP</span>
-          <span>{(stats.level || 1) * 100} XP</span>
+          <span>{xpForNext} XP</span>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
-import React from 'react';
-import { Flame, Trophy, ChevronRight, Zap } from 'lucide-react';
+import { Flame, Trophy, ChevronRight, Zap, Sparkles } from 'lucide-react';
 import { Button } from './ui/button';
+import { cn } from '@/lib/utils';
 
 interface HeroWelcomeProps {
   userName: string;
@@ -21,59 +21,69 @@ export default function HeroWelcome({
   const timeOfDay = new Date().getHours();
   const greeting = timeOfDay < 12 ? 'Bom dia' : timeOfDay < 18 ? 'Boa tarde' : 'Boa noite';
 
+  const xpForNext = level * 100;
+  const currentXP = points % 100;
+  const xpPercent = (currentXP / 100) * 100;
+
   return (
-    <div className="bento-card">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <p className="text-sm text-muted-foreground mb-1">{greeting}</p>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            {firstName}
-          </h1>
+    <div className="cyber-card overflow-hidden">
+      {/* Gradient mesh background */}
+      <div className="absolute inset-0 gradient-mesh opacity-40 pointer-events-none" />
+      
+      <div className="relative">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <p className="text-xs text-muted-foreground mb-0.5">{greeting}</p>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              {firstName} <span className="inline-block animate-fade-in">👋</span>
+            </h1>
+          </div>
+          <div className="w-10 h-10 rounded-xl gradient-cyber flex items-center justify-center shadow-glow">
+            <Sparkles className="w-5 h-5 text-white" />
+          </div>
         </div>
-        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-          <span className="text-xl">👋</span>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-3 gap-3 mb-5">
+          <div className="bg-secondary/50 rounded-xl p-3 text-center tap-scale">
+            <Flame className="w-4 h-4 text-warning mx-auto mb-1" />
+            <p className="text-lg font-bold text-foreground xp-counter">{currentStreak}</p>
+            <p className="text-[10px] text-muted-foreground">Sequência</p>
+          </div>
+          <div className="bg-secondary/50 rounded-xl p-3 text-center tap-scale">
+            <Trophy className="w-4 h-4 text-warning mx-auto mb-1" />
+            <p className="text-lg font-bold text-foreground xp-counter">{level}</p>
+            <p className="text-[10px] text-muted-foreground">Nível</p>
+          </div>
+          <div className="bg-secondary/50 rounded-xl p-3 text-center tap-scale">
+            <Zap className="w-4 h-4 text-primary mx-auto mb-1" />
+            <p className="text-lg font-bold text-foreground xp-counter">{points}</p>
+            <p className="text-[10px] text-muted-foreground">XP Total</p>
+          </div>
         </div>
+
+        {/* XP to next level */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
+            <span>Nível {level + 1}</span>
+            <span>{currentXP}/{100} XP</span>
+          </div>
+          <div className="xp-bar h-2">
+            <div className="xp-bar-fill progress-fill" style={{ width: `${xpPercent}%` }} />
+          </div>
+        </div>
+
+        {/* CTA */}
+        <Button 
+          onClick={onCheckIn}
+          className="w-full gradient-primary text-primary-foreground font-medium h-11 rounded-xl shadow-glow tap-scale"
+        >
+          <Zap className="w-4 h-4 mr-2" />
+          Check-in diário
+          <ChevronRight className="w-4 h-4 ml-2" />
+        </Button>
       </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        {/* Streak */}
-        <div className="bg-secondary/50 rounded-xl p-3 text-center">
-          <div className="flex items-center justify-center gap-1.5 mb-1">
-            <Flame className="w-4 h-4 text-warning" />
-          </div>
-          <p className="text-lg font-bold text-foreground">{currentStreak}</p>
-          <p className="text-xs text-muted-foreground">Sequência</p>
-        </div>
-
-        {/* Level */}
-        <div className="bg-secondary/50 rounded-xl p-3 text-center">
-          <div className="flex items-center justify-center gap-1.5 mb-1">
-            <Trophy className="w-4 h-4 text-warning" />
-          </div>
-          <p className="text-lg font-bold text-foreground">{level}</p>
-          <p className="text-xs text-muted-foreground">Nível</p>
-        </div>
-
-        {/* Points */}
-        <div className="bg-secondary/50 rounded-xl p-3 text-center">
-          <div className="flex items-center justify-center gap-1.5 mb-1">
-            <Zap className="w-4 h-4 text-primary" />
-          </div>
-          <p className="text-lg font-bold text-foreground">{points}</p>
-          <p className="text-xs text-muted-foreground">Pontos</p>
-        </div>
-      </div>
-
-      {/* CTA Button */}
-      <Button 
-        onClick={onCheckIn}
-        className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium h-12 rounded-xl shadow-soft tap-scale transition-all duration-200"
-      >
-        <span>Check-in diário</span>
-        <ChevronRight className="w-4 h-4 ml-2" />
-      </Button>
     </div>
   );
 }
