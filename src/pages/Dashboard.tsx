@@ -17,7 +17,7 @@ import QuickActions from '@/components/QuickActions';
 import HeroWelcome from '@/components/HeroWelcome';
 import QuickReactions from '@/components/QuickReactions';
 import StreakCelebration from '@/components/StreakCelebration';
-import OnboardingWizard from '@/components/OnboardingWizard';
+import ConversationalOnboarding from '@/components/ConversationalOnboarding';
 import GamificationHelp from '@/components/GamificationHelp';
 import MoodTracker from '@/components/MoodTracker';
 import SundayReset from '@/components/SundayReset';
@@ -161,7 +161,7 @@ export default function Dashboard() {
       <div className="min-h-screen bg-background">
         {/* Onboarding Wizard */}
         {showOnboarding && user?.id && (
-          <OnboardingWizard 
+          <ConversationalOnboarding 
             userId={user.id} 
             onComplete={() => {
               setShowOnboarding(false);
@@ -341,7 +341,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background pb-20">
       {/* Onboarding Wizard */}
       {showOnboarding && user?.id && (
-        <OnboardingWizard 
+        <ConversationalOnboarding 
           userId={user.id} 
           onComplete={() => {
             setShowOnboarding(false);
