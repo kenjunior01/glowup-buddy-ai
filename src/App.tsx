@@ -32,6 +32,7 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const Advertising = lazy(() => import("./pages/Advertising"));
 const Premium = lazy(() => import("./pages/Premium"));
 const PartnerCoupons = lazy(() => import("./pages/PartnerCoupons"));
+const Looksmaxxing = lazy(() => import("./pages/Looksmaxxing"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -75,6 +76,7 @@ const App = () => (
                 <Route path="/advertising" element={<ProtectedRoute><Advertising /></ProtectedRoute>} />
                 <Route path="/premium" element={<Premium />} />
                 <Route path="/coupons" element={<ProtectedRoute><PartnerCoupons /></ProtectedRoute>} />
+                <Route path="/looksmaxxing" element={<ProtectedRoute><Looksmaxxing /></ProtectedRoute>} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
