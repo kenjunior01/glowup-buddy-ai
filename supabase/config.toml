@@ -38,3 +38,9 @@ verify_jwt = false
 
 [functions.stripe-webhook]
 verify_jwt = false
+
+[functions.looksmaxxing-analysis]
+verify_jwt = false
+
+[functions.mentor-chat]
+verify_jwt = false

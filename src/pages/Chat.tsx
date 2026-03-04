@@ -130,31 +130,31 @@ export default function ChatPage() {
             </Card>
           ) : (
             <div className="space-y-2">
-              {/* AI Assistant Button */}
+              {/* Mestre GlowUp - Mentor IA */}
               <Button
                 variant={selectedFriend?.id === 'ai-assistant' ? "secondary" : "ghost"}
-                className="w-full justify-start p-3 h-auto bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30"
+                className="w-full justify-start p-3 h-auto bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/20 hover:from-primary/10 hover:to-accent/10"
                 onClick={() => setSelectedFriend({
                   id: 'ai-assistant',
-                  name: 'Assistente IA GlowUp',
-                  last_message: 'Seu coach pessoal motivacional',
+                  name: 'Mestre GlowUp',
+                  last_message: 'Seu mentor de elite em transformação',
                   isAI: true
                 })}
               >
                 <div className="flex items-center gap-3 w-full">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                    <Bot className="w-5 h-5 text-white" />
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md">
+                    <span className="text-lg">🧙‍♂️</span>
                   </div>
                   <div className="flex-1 text-left">
                     <div className="flex items-center gap-2">
-                      <p className="font-medium">Assistente IA GlowUp</p>
-                      <Badge variant="secondary" className="text-xs gap-1">
+                      <p className="font-medium">Mestre GlowUp</p>
+                      <Badge variant="secondary" className="text-[10px] gap-1 bg-primary/10 text-primary border-primary/20">
                         <Sparkles className="w-3 h-3" />
-                        IA
+                        Mentor IA
                       </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      Seu coach pessoal motivacional
+                    <p className="text-xs text-muted-foreground">
+                      Coach estoico de alta performance
                     </p>
                   </div>
                 </div>

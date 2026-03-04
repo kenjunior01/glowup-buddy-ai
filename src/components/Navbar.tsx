@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Menu, X, Store, Megaphone, Crown } from "lucide-react";
+import { Sparkles, Menu, X, Store, Crown, Diamond } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "@/components/NotificationBell";
 import type { User } from "@supabase/supabase-js";
@@ -70,18 +70,11 @@ const Navbar = () => {
                   Desafios
                 </Button>
                 <Button
-                  variant={location.pathname.startsWith("/marketplace") ? "default" : "ghost"}
-                  onClick={() => navigate("/marketplace")}
+                  variant={location.pathname === "/looksmaxxing" ? "default" : "ghost"}
+                  onClick={() => navigate("/looksmaxxing")}
                 >
-                  <Store className="h-4 w-4 mr-1" />
-                  Marketplace
-                </Button>
-                <Button
-                  variant={location.pathname === "/advertising" ? "default" : "ghost"}
-                  onClick={() => navigate("/advertising")}
-                >
-                  <Megaphone className="h-4 w-4 mr-1" />
-                  Anúncios
+                  <Diamond className="h-4 w-4 mr-1" />
+                  Scan
                 </Button>
                 <Button
                   variant={location.pathname === "/premium" ? "default" : "ghost"}
@@ -89,12 +82,6 @@ const Navbar = () => {
                 >
                   <Crown className="h-4 w-4 mr-1" />
                   Premium
-                </Button>
-                <Button
-                  variant={location.pathname === "/coupons" ? "default" : "ghost"}
-                  onClick={() => navigate("/coupons")}
-                >
-                  Cupons
                 </Button>
                 <Button
                   variant={location.pathname === "/profile" ? "default" : "ghost"}
@@ -180,15 +167,15 @@ const Navbar = () => {
                       Desafios
                     </Button>
                     <Button
-                      variant={location.pathname.startsWith("/marketplace") ? "default" : "ghost"}
+                      variant={location.pathname === "/looksmaxxing" ? "default" : "ghost"}
                       onClick={() => {
-                        navigate("/marketplace");
+                        navigate("/looksmaxxing");
                         setIsMenuOpen(false);
                       }}
                       className="justify-start"
                     >
-                      <Store className="h-4 w-4 mr-2" />
-                      Marketplace
+                      <Diamond className="h-4 w-4 mr-2" />
+                      Scan AI
                     </Button>
                     <Button
                       variant={location.pathname === "/profile" ? "default" : "ghost"}

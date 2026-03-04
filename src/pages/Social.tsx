@@ -9,10 +9,11 @@ import SuggestedUsers from '@/components/SuggestedUsers';
 import TrendingChallenges from '@/components/TrendingChallenges';
 import { OnlineUsers } from '@/components/OnlineUsers';
 import { EnhancedLeaderboard } from '@/components/EnhancedLeaderboard';
+import TribesSystem from '@/components/TribesSystem';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, TrendingUp, Trophy, Camera, Sparkles, Heart, MessageCircle, Zap, Crown, Star } from 'lucide-react';
+import { Users, TrendingUp, Trophy, Camera, Sparkles, Heart, MessageCircle, Zap, Crown, Star, Swords } from 'lucide-react';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
@@ -26,7 +27,7 @@ export default function Social() {
   const [userName, setUserName] = useState<string>('');
   const [userAvatar, setUserAvatar] = useState<string>('');
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
-  const [activeTab, setActiveTab] = useState('feed');
+  const [activeTab, setActiveTab] = useState('tribes');
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -77,11 +78,11 @@ export default function Social() {
   };
 
   const tabItems = [
+    { id: 'tribes', label: 'Tribos', emoji: '⚔️', icon: Swords },
     { id: 'feed', label: 'Feed', emoji: '📱', icon: MessageCircle },
     { id: 'stories', label: 'Stories', emoji: '📸', icon: Camera },
     { id: 'friends', label: 'Amigos', emoji: '👥', icon: Heart, badge: pendingRequestsCount },
     { id: 'ranking', label: 'Ranking', emoji: '🏆', icon: Trophy },
-    { id: 'users', label: 'Buscar', emoji: '🔍', icon: Users },
   ];
 
   if (loading) {
@@ -194,6 +195,19 @@ export default function Social() {
                   );
                 })}
               </TabsList>
+
+              <TabsContent value="tribes" className="space-y-4 animate-fade-in mt-4">
+                {userId ? (
+                  <TribesSystem userId={userId} />
+                ) : (
+                  <Card className="border-dashed">
+                    <CardContent className="py-12 text-center">
+                      <Swords className="w-12 h-12 mx-auto mb-3 text-muted-foreground opacity-50" />
+                      <p className="text-muted-foreground">Faça login para ver as tribos ⚔️</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
 
               <TabsContent value="feed" className="space-y-4 animate-fade-in mt-4">
                 {/* Quick action chips para mobile */}
