@@ -1,495 +1,317 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import GamificationHub from '@/components/GamificationHub';
 import MobileBottomNav from '@/components/MobileBottomNav';
-import StoryRing from '@/components/StoryRing';
-import StreakProtection from '@/components/StreakProtection';
-import QuickStats from '@/components/QuickStats';
-import RealSocialFeed from '@/components/RealSocialFeed';
-import UsersList from '@/components/UsersList';
-import ChallengeModal from '@/components/ChallengeModal';
-import MyChallenges from '@/components/MyChallenges';
-import GoalsWithAI from '@/components/GoalsWithAI';
-import PlansView from '@/components/PlansView';
-import SuggestedUsers from '@/components/SuggestedUsers';
-import TrendingChallenges from '@/components/TrendingChallenges';
-import QuickActions from '@/components/QuickActions';
-import HeroWelcome from '@/components/HeroWelcome';
-import QuickReactions from '@/components/QuickReactions';
-import StreakCelebration from '@/components/StreakCelebration';
 import ConversationalOnboarding from '@/components/ConversationalOnboarding';
-import GamificationHelp from '@/components/GamificationHelp';
-import MoodTracker from '@/components/MoodTracker';
-import SundayReset from '@/components/SundayReset';
-import BuddyChallenge from '@/components/BuddyChallenge';
-import FocusTimer from '@/components/FocusTimer';
-import ActiveChallengesClean from '@/components/ActiveChallengesClean';
-import { TickerTape } from '@/components/ads/TickerTape';
-import { Bell, Search, Plus, Target, Sparkles, Users, Newspaper, MessageCircle, ChevronRight, Heart, Timer } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { Check, Flame, ChevronRight, Sparkles, Trophy } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { Confetti } from '@/components/Confetti';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [user, setUser] = useState<any>(null);
-  const [userStats, setUserStats] = useState<any>(null);
-  const [currentStreak, setCurrentStreak] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [showChallengeModal, setShowChallengeModal] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<string>('');
-  const [selectedUserName, setSelectedUserName] = useState<string>('');
-  const [activeView, setActiveView] = useState<'feed' | 'users' | 'challenges' | 'goals' | 'plans' | 'buddy' | 'focus'>('goals');
-  const [showStreakCelebration, setShowStreakCelebration] = useState(false);
+  const [quest, setQuest] = useState<any>(null);
+  const [streak, setStreak] = useState({ current: 0, longest: 0 });
+  const [transformationScore, setTransformationScore] = useState(0);
+  const [completing, setCompleting] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [onboardingCompleted, setOnboardingCompleted] = useState(true);
-
-  const [stories, setStories] = useState<any[]>([]);
+  const [questCompleted, setQuestCompleted] = useState(false);
 
   useEffect(() => {
-    fetchUserData();
+    fetchAll();
   }, []);
 
-  const fetchUserData = async () => {
+  const fetchAll = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
+      if (!session?.user) return;
+      const uid = session.user.id;
 
-        const { data: streak } = await supabase
-          .from('streaks')
-          .select('current_streak, longest_streak')
-          .eq('user_id', session.user.id)
-          .single();
+      // Parallel fetches
+      const [profileRes, streakRes, questRes, scoreRes] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', uid).single(),
+        supabase.from('streaks').select('current_streak, longest_streak').eq('user_id', uid).single(),
+        supabase.from('daily_quests').select('*').eq('user_id', uid).eq('quest_date', new Date().toISOString().split('T')[0]).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+        supabase.from('transformation_scores').select('*').eq('user_id', uid).maybeSingle(),
+      ]);
 
-        const { count: friendsCount } = await supabase
-          .from('friendships')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', session.user.id)
-          .eq('status', 'accepted');
-
-        const userProfile = profile || {};
-        const userStreak = streak || { current_streak: 0, longest_streak: 0 };
-
-        // Check if onboarding is completed
-        const hasCompletedOnboarding = (userProfile as any)?.onboarding_completed === true;
-        setOnboardingCompleted(hasCompletedOnboarding);
-        if (!hasCompletedOnboarding) {
-          setShowOnboarding(true);
-        }
-
-        setUser({
-          ...session.user,
-          profile: userProfile
-        });
-
-        const { data: allUsers } = await supabase
-          .from('profiles')
-          .select('pontos')
-          .order('pontos', { ascending: false });
-        
-        const userRank = allUsers ? allUsers.findIndex(u => (u.pontos || 0) <= ((userProfile as any)?.pontos || 0)) + 1 : 1;
-        
-        const weeklyGrowth = Math.floor(((userProfile as any)?.pontos || 0) / 10) % 100;
-
-        setUserStats({
-          level: (userProfile as any)?.level || 1,
-          points: (userProfile as any)?.pontos || 0,
-          rank: userRank,
-          friends: friendsCount || 0,
-          achievements: ((userProfile as any)?.conquistas as any[])?.length || 0,
-          weeklyGrowth: Math.min(weeklyGrowth, 99),
-          longest_streak: userStreak.longest_streak
-        });
-
-        setCurrentStreak(userStreak.current_streak);
+      const profile = profileRes.data || {};
+      if (!(profile as any)?.onboarding_completed) {
+        setShowOnboarding(true);
       }
-    } catch (error) {
-      console.error('Error fetching user data:', error);
+
+      setUser({ ...session.user, profile });
+      setStreak({
+        current: streakRes.data?.current_streak || 0,
+        longest: streakRes.data?.longest_streak || 0,
+      });
+
+      if (questRes.data) {
+        setQuest(questRes.data);
+        setQuestCompleted(questRes.data.completed);
+      } else {
+        // Generate a quest
+        await generateQuest(uid, (profile as any)?.selected_pillars);
+      }
+
+      setTransformationScore(scoreRes.data?.score || 0);
+    } catch (e) {
+      console.error('Dashboard fetch error:', e);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCheckIn = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return;
+  const generateQuest = async (userId: string, pillars?: string[]) => {
+    const questBank = [
+      { text: '30 minutos de treino matinal 💪', type: 'fitness', pillar: 'corpo' },
+      { text: 'Meditar por 10 minutos em silêncio 🧘', type: 'mindfulness', pillar: 'mente' },
+      { text: 'Ler 20 páginas de um livro 📖', type: 'knowledge', pillar: 'mente' },
+      { text: 'Beber 2 litros de água hoje 💧', type: 'health', pillar: 'corpo' },
+      { text: 'Fazer skincare completo manhã e noite ✨', type: 'skincare', pillar: 'aparência' },
+      { text: 'Caminhar 30 min ao ar livre 🌿', type: 'fitness', pillar: 'corpo' },
+      { text: 'Escrever 3 coisas pelas quais é grato 🙏', type: 'mindfulness', pillar: 'mente' },
+      { text: 'Dormir antes das 23h hoje 🌙', type: 'health', pillar: 'corpo' },
+      { text: 'Fazer 50 flexões ao longo do dia 🔥', type: 'fitness', pillar: 'corpo' },
+      { text: 'Zero telas 1h antes de dormir 📵', type: 'discipline', pillar: 'mente' },
+      { text: 'Tomar banho gelado de 2 minutos 🧊', type: 'discipline', pillar: 'corpo' },
+      { text: 'Organizar seu quarto/mesa de trabalho 🧹', type: 'discipline', pillar: 'ambiente' },
+      { text: 'Praticar postura correta o dia todo 🏛️', type: 'posture', pillar: 'aparência' },
+      { text: 'Estudar algo novo por 30 minutos 🎓', type: 'knowledge', pillar: 'mente' },
+    ];
 
-      await supabase.functions.invoke('update-user-streak', {
-        body: {}
-      });
+    const todayQuest = questBank[Math.floor(Math.random() * questBank.length)];
 
-      // Show celebration
-      setShowStreakCelebration(true);
+    const { data, error } = await supabase.from('daily_quests').insert({
+      user_id: userId,
+      quest_text: todayQuest.text,
+      quest_type: todayQuest.type,
+      pillar: todayQuest.pillar,
+      quest_date: new Date().toISOString().split('T')[0],
+    }).select().single();
 
-      fetchUserData();
-    } catch (error) {
-      console.error('Error updating streak:', error);
+    if (data) {
+      setQuest(data);
+      setQuestCompleted(false);
     }
   };
 
-  const handleChallengeUser = (userId: string, userName: string) => {
-    setSelectedUserId(userId);
-    setSelectedUserName(userName);
-    setShowChallengeModal(true);
+  const completeQuest = async () => {
+    if (!quest || completing || questCompleted) return;
+    setCompleting(true);
+
+    try {
+      // Vibrate
+      if (navigator.vibrate) navigator.vibrate([50, 30, 100]);
+
+      // Mark quest complete
+      await supabase.from('daily_quests').update({
+        completed: true,
+        completed_at: new Date().toISOString(),
+      }).eq('id', quest.id);
+
+      // Update streak
+      await supabase.functions.invoke('update-user-streak', { body: {} });
+
+      // Update transformation score
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: currentScore } = await supabase
+          .from('transformation_scores')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+
+        const newTotal = (currentScore?.quests_completed_total || 0) + 1;
+        const newScore = Math.min(100, Math.floor(newTotal * 1.5));
+
+        if (currentScore) {
+          await supabase.from('transformation_scores').update({
+            score: newScore,
+            previous_score: currentScore.score,
+            quests_completed_total: newTotal,
+            updated_at: new Date().toISOString(),
+          }).eq('user_id', session.user.id);
+        } else {
+          await supabase.from('transformation_scores').insert({
+            user_id: session.user.id,
+            score: newScore,
+            previous_score: 0,
+            quests_completed_total: newTotal,
+          });
+        }
+
+        setTransformationScore(newScore);
+      }
+
+      // Show celebration
+      setQuestCompleted(true);
+      setShowConfetti(true);
+      setStreak(prev => ({ ...prev, current: prev.current + 1 }));
+
+      setTimeout(() => setShowConfetti(false), 4000);
+    } catch (e) {
+      console.error('Error completing quest:', e);
+    } finally {
+      setCompleting(false);
+    }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-primary/20 animate-pulse" />
-          <p className="text-sm text-muted-foreground">Carregando...</p>
+          <div className="w-16 h-16 rounded-2xl bg-primary/20 animate-pulse flex items-center justify-center">
+            <Sparkles className="w-8 h-8 text-primary/40" />
+          </div>
+          <p className="text-sm text-muted-foreground">Preparando sua quest...</p>
         </div>
       </div>
     );
   }
 
-  // Desktop Layout with sidebars
-  if (!isMobile) {
-    return (
-      <div className="min-h-screen bg-background">
-        {/* Onboarding Wizard */}
-        {showOnboarding && user?.id && (
-          <ConversationalOnboarding 
-            userId={user.id} 
-            onComplete={() => {
-              setShowOnboarding(false);
-              setOnboardingCompleted(true);
-              fetchUserData();
-            }} 
-          />
-        )}
+  const scorePercent = transformationScore;
+  const userName = (user?.profile as any)?.display_name || (user?.profile as any)?.name || 'Guerreiro';
 
-        {/* Ticker Tape */}
-        <TickerTape />
-
-        {/* Header - Clean Glow Style */}
-        <div className="sticky top-16 z-30 bg-background/80 backdrop-blur-md border-b border-border/40">
-          <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
-            <div>
-              <h1 className="text-xl font-semibold text-foreground">Dashboard</h1>
-              <p className="text-sm text-muted-foreground">
-                Olá, {user?.profile?.name || 'Usuário'}!
-              </p>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <GamificationHelp />
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="border-border/60 hover:bg-muted/50"
-                onClick={() => navigate('/chat')}
-              >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Chat IA
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="relative hover:bg-muted/50"
-                onClick={() => navigate('/notifications')}
-              >
-                <Bell className="w-5 h-5 text-muted-foreground" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" />
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="grid grid-cols-12 gap-8">
-            {/* Left Sidebar - Clean Glow */}
-            <aside className="col-span-3 space-y-6">
-              {/* Profile Card - Bento Style */}
-              <div className="bento-card p-5">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-lg">
-                    {user?.profile?.name?.charAt(0).toUpperCase() || '?'}
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">{user?.profile?.name || 'Usuário'}</p>
-                    <p className="text-xs text-muted-foreground">Nível {userStats?.level || 1}</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="text-center p-3 rounded-lg bg-muted/30">
-                    <p className="text-lg font-bold text-foreground">{userStats?.points || 0}</p>
-                    <p className="text-[10px] text-muted-foreground">Pontos</p>
-                  </div>
-                  <div className="text-center p-3 rounded-lg bg-muted/30">
-                    <p className="text-lg font-bold text-foreground">{currentStreak}</p>
-                    <p className="text-[10px] text-muted-foreground">Streak</p>
-                  </div>
-                </div>
-              </div>
-
-              <QuickActions />
-              <SuggestedUsers />
-            </aside>
-
-            {/* Main Content */}
-            <main className="col-span-6">
-              <div className="space-y-6">
-                <QuickStats stats={userStats || {}} />
-
-                {/* Mood Tracker */}
-                {user?.id && <MoodTracker userId={user.id} onMoodLogged={fetchUserData} />}
-
-                <StreakProtection
-                  userId={user?.id || ''}
-                  currentStreak={currentStreak}
-                  longestStreak={userStats?.longest_streak || 0}
-                  todayCompleted={false}
-                  onCheckIn={handleCheckIn}
-                  onStreakUpdate={fetchUserData}
-                />
-
-                <Tabs value={activeView} onValueChange={(v) => setActiveView(v as any)} className="w-full">
-                  <TabsList className="grid w-full grid-cols-6 mb-4 h-11 bg-muted/40 p-1 rounded-xl">
-                    <TabsTrigger value="goals" className="flex items-center gap-1 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
-                      <Target className="w-4 h-4" />
-                      <span className="hidden lg:inline">Objetivos</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="plans" className="flex items-center gap-1 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
-                      <Sparkles className="w-4 h-4" />
-                      <span className="hidden lg:inline">Planos IA</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="challenges" className="flex items-center gap-1 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
-                      <Target className="w-4 h-4" />
-                      <span className="hidden lg:inline">Desafios</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="buddy" className="flex items-center gap-1 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
-                      <Heart className="w-4 h-4" />
-                      <span className="hidden lg:inline">Dupla</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="feed" className="flex items-center gap-1 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
-                      <Newspaper className="w-4 h-4" />
-                      <span className="hidden lg:inline">Feed</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="users" className="flex items-center gap-1 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
-                      <Users className="w-4 h-4" />
-                      <span className="hidden lg:inline">Usuários</span>
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="goals" className="space-y-4">
-                    {user?.id && <GoalsWithAI userId={user.id} onDataChange={fetchUserData} />}
-                  </TabsContent>
-
-                  <TabsContent value="plans" className="space-y-4">
-                    {user?.id && <PlansView userId={user.id} onDataChange={fetchUserData} />}
-                  </TabsContent>
-
-                  <TabsContent value="challenges" className="space-y-4">
-                    <ActiveChallengesClean />
-                  </TabsContent>
-
-                  <TabsContent value="buddy" className="space-y-4">
-                    {user?.id && <BuddyChallenge userId={user.id} onChallengeCreated={fetchUserData} />}
-                  </TabsContent>
-
-                  <TabsContent value="feed" className="space-y-4">
-                    <RealSocialFeed />
-                  </TabsContent>
-
-                  <TabsContent value="users" className="space-y-4">
-                    <UsersList onChallengeUser={handleChallengeUser} />
-                  </TabsContent>
-                </Tabs>
-              </div>
-            </main>
-
-            {/* Right Sidebar */}
-            <aside className="col-span-3 space-y-4">
-              {/* Focus Timer */}
-              <FocusTimer />
-              
-              <GamificationHub />
-              
-              {/* Sunday Reset */}
-              {user?.id && <SundayReset userId={user.id} />}
-              
-              <TrendingChallenges />
-            </aside>
-          </div>
-        </div>
-
-        <ChallengeModal
-          isOpen={showChallengeModal}
-          onClose={() => setShowChallengeModal(false)}
-          targetUserId={selectedUserId}
-          targetUserName={selectedUserName}
-        />
-      </div>
-    );
-  }
-
-  // Mobile Layout - Clean Glow Style
   return (
-    <div className="min-h-screen bg-background pb-20">
-      {/* Onboarding Wizard */}
+    <div className="min-h-screen bg-background pb-24">
+      {showConfetti && <Confetti isActive={showConfetti} />}
+
+      {/* Onboarding */}
       {showOnboarding && user?.id && (
-        <ConversationalOnboarding 
-          userId={user.id} 
+        <ConversationalOnboarding
+          userId={user.id}
           onComplete={() => {
             setShowOnboarding(false);
-            setOnboardingCompleted(true);
-            fetchUserData();
-          }} 
+            fetchAll();
+          }}
         />
       )}
 
-      {/* Streak Celebration Modal */}
-      <StreakCelebration 
-        streak={currentStreak + 1}
-        isVisible={showStreakCelebration}
-        onClose={() => setShowStreakCelebration(false)}
-      />
-
-      {/* Mobile Header - Clean Glow */}
-      <div className="sticky top-16 z-30 bg-background/80 backdrop-blur-md border-b border-border/40">
-        <div className="flex items-center justify-between px-4 py-3">
-          <h1 className="text-lg font-semibold text-foreground">GlowUp</h1>
-          
-          <div className="flex items-center gap-1">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className="w-9 h-9 rounded-lg relative hover:bg-muted/50"
-              onClick={() => navigate('/notifications')}
-            >
-              <Bell className="w-5 h-5 text-muted-foreground" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className="w-9 h-9 rounded-lg hover:bg-muted/50"
-              onClick={() => setActiveView('users')}
-            >
-              <Search className="w-5 h-5 text-muted-foreground" />
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="px-4 space-y-5 pt-4 pb-6">
-        {/* Hero Welcome Card */}
-        <HeroWelcome 
-          userName={user?.profile?.name || 'Usuário'}
-          currentStreak={currentStreak}
-          level={userStats?.level || 1}
-          points={userStats?.points || 0}
-          onCheckIn={handleCheckIn}
-        />
-
-        {/* Quick Stats */}
-        <QuickStats stats={userStats || {}} />
-
-        {/* Quick Actions - Clean Chips */}
-        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
-          <button 
-            onClick={() => navigate('/chat')}
-            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full bg-primary/10 text-primary text-xs font-medium"
-          >
-            <span>💬</span> Chat IA
-          </button>
-          <button 
-            onClick={() => setActiveView('challenges')}
-            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full bg-accent/10 text-accent text-xs font-medium"
-          >
-            <span>🎯</span> Desafios
-          </button>
-          <button 
-            onClick={() => setActiveView('plans')}
-            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full bg-secondary text-secondary-foreground text-xs font-medium"
-          >
-            <span>🤖</span> Planos IA
-          </button>
-          <button 
-            onClick={() => navigate('/social')}
-            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full bg-muted text-muted-foreground text-xs font-medium"
-          >
-            <span>👥</span> Social
-          </button>
+      {/* ===== SINGLE SCREEN: Today's Quest ===== */}
+      <div className={cn(
+        "flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] px-6 py-8",
+        !isMobile && "max-w-lg mx-auto"
+      )}>
+        {/* Streak Badge */}
+        <div className={cn(
+          "flex items-center gap-2 px-4 py-2 rounded-full mb-8 transition-all duration-500",
+          streak.current > 0
+            ? "bg-orange-500/10 text-orange-500"
+            : "bg-muted text-muted-foreground"
+        )}>
+          <Flame className={cn("w-5 h-5", streak.current > 0 && "animate-pulse")} />
+          <span className="text-lg font-bold font-mono tracking-wider">{streak.current}</span>
+          <span className="text-sm font-medium">dias de streak</span>
         </div>
 
-        {/* Main Tabs - Simplified */}
-        <Tabs value={activeView} onValueChange={(v) => setActiveView(v as any)} className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-4 h-11 bg-muted/40 p-1 rounded-xl">
-            {[
-              { value: 'goals', emoji: '🎯', label: 'Metas' },
-              { value: 'focus', emoji: '⏱️', label: 'Foco' },
-              { value: 'challenges', emoji: '🏆', label: 'Desafios' },
-              { value: 'buddy', emoji: '💕', label: 'Dupla' },
-              { value: 'feed', emoji: '📱', label: 'Feed' },
-              { value: 'users', emoji: '👥', label: 'Social' },
-            ].map(({ value, emoji, label }) => (
-              <TabsTrigger 
-                key={value}
-                value={value} 
+        {/* Quest Card */}
+        <div className={cn(
+          "w-full rounded-3xl p-8 text-center transition-all duration-700 relative overflow-hidden",
+          questCompleted
+            ? "bg-gradient-to-br from-green-500/10 to-emerald-500/5 border-2 border-green-500/30"
+            : "bg-card border border-border shadow-lg"
+        )}>
+          {/* Glow effect */}
+          {!questCompleted && (
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+          )}
+
+          <div className="relative z-10">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-medium mb-2">
+              {questCompleted ? '✅ Quest Completa!' : "🎯 Quest de Hoje"}
+            </p>
+
+            <h2 className={cn(
+              "text-2xl font-bold leading-tight mb-8 transition-all",
+              questCompleted ? "text-green-600 dark:text-green-400" : "text-foreground"
+            )}>
+              {quest?.quest_text || 'Carregando...'}
+            </h2>
+
+            {/* Complete Button */}
+            {!questCompleted ? (
+              <Button
+                onClick={completeQuest}
+                disabled={completing}
+                size="lg"
                 className={cn(
-                  "flex flex-col items-center gap-0.5 h-full rounded-lg text-[10px] py-1",
-                  "data-[state=active]:bg-card data-[state=active]:shadow-sm"
+                  "w-full h-14 rounded-2xl text-lg font-bold tracking-wide transition-all duration-300",
+                  "bg-[var(--gradient-primary)] bg-gradient-to-r from-primary to-purple-500",
+                  "hover:shadow-[var(--shadow-glow)] hover:scale-[1.02]",
+                  "active:scale-95",
+                  completing && "opacity-70"
                 )}
               >
-                <span className="text-sm">{emoji}</span>
-                <span className="font-medium">{label}</span>
-              </TabsTrigger>
-            ))}
-          </TabsList>
+                {completing ? (
+                  <span className="animate-pulse">Completando...</span>
+                ) : (
+                  <>
+                    <Check className="w-5 h-5 mr-2" />
+                    COMPLETAR QUEST
+                  </>
+                )}
+              </Button>
+            ) : (
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center animate-bounce">
+                  <Trophy className="w-8 h-8 text-green-500" />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Volte amanhã às 8h para a próxima quest!
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
 
-          <TabsContent value="goals" className="space-y-3">
-            {user?.id && <MoodTracker userId={user.id} onMoodLogged={fetchUserData} />}
-            {user?.id && <GoalsWithAI userId={user.id} onDataChange={fetchUserData} />}
-          </TabsContent>
+        {/* Transformation Score */}
+        <div className="w-full mt-8">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-muted-foreground">Transformação</span>
+            <span className="text-sm font-bold text-foreground">{scorePercent}%</span>
+          </div>
+          <div className="w-full h-3 rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-1000 ease-out"
+              style={{ width: `${scorePercent}%` }}
+            />
+          </div>
+        </div>
 
-          <TabsContent value="focus" className="space-y-3">
-            <FocusTimer />
-            {user?.id && <PlansView userId={user.id} onDataChange={fetchUserData} />}
-          </TabsContent>
+        {/* Quick Links */}
+        <div className="w-full mt-8 space-y-3">
+          <button
+            onClick={() => navigate('/progress')}
+            className="w-full flex items-center justify-between p-4 rounded-2xl bg-card border border-border/50 hover:bg-muted/50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xl">📊</span>
+              <span className="text-sm font-medium text-foreground">Ver meu progresso</span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </button>
 
-          <TabsContent value="challenges" className="space-y-3">
-            <ActiveChallengesClean />
-          </TabsContent>
-
-          <TabsContent value="buddy" className="space-y-3">
-            {user?.id && <BuddyChallenge userId={user.id} onChallengeCreated={fetchUserData} />}
-          </TabsContent>
-
-          <TabsContent value="feed" className="space-y-3">
-            <RealSocialFeed />
-          </TabsContent>
-
-          <TabsContent value="users" className="space-y-3">
-            <UsersList onChallengeUser={handleChallengeUser} />
-          </TabsContent>
-        </Tabs>
+          <button
+            onClick={() => navigate('/premium')}
+            className="w-full flex items-center justify-between p-4 rounded-2xl bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xl">💎</span>
+              <span className="text-sm font-medium text-primary">Desbloquear quests ilimitadas</span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-primary/60" />
+          </button>
+        </div>
       </div>
 
-      {/* Mobile Bottom Navigation */}
+      {/* Bottom Nav */}
       <MobileBottomNav />
-
-      {/* Challenge Modal */}
-      <ChallengeModal
-        isOpen={showChallengeModal}
-        onClose={() => setShowChallengeModal(false)}
-        targetUserId={selectedUserId}
-        targetUserName={selectedUserName}
-      />
     </div>
   );
 }
