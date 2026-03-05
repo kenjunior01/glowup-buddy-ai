@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Menu, X, Store, Crown, Diamond } from "lucide-react";
+import { Sparkles, Menu, X, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { NotificationBell } from "@/components/NotificationBell";
 import type { User } from "@supabase/supabase-js";
 
 const Navbar = () => {
@@ -13,19 +12,15 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
-    // Check current session
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user || null);
     };
-
     checkUser();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user || null);
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
@@ -41,40 +36,33 @@ const Navbar = () => {
           {/* Logo */}
           <div 
             className="flex items-center space-x-2 cursor-pointer"
-            onClick={() => navigate("/")}
+            onClick={() => navigate(user ? "/dashboard" : "/")}
           >
             <Sparkles className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold text-gradient">GlowUp AI</span>
+            <span className="text-xl font-bold text-gradient">GlowUp</span>
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
+          {/* Desktop Navigation — Simplified */}
+          <div className="hidden md:flex items-center space-x-4">
             {user ? (
               <>
                 <Button
                   variant={location.pathname === "/dashboard" ? "default" : "ghost"}
                   onClick={() => navigate("/dashboard")}
                 >
-                  Dashboard
+                  Hoje
                 </Button>
                 <Button
-                  variant={location.pathname === "/social" ? "default" : "ghost"}
-                  onClick={() => navigate("/social")}
+                  variant={location.pathname === "/progress" ? "default" : "ghost"}
+                  onClick={() => navigate("/progress")}
                 >
-                  Social
+                  Progresso
                 </Button>
                 <Button
-                  variant={location.pathname === "/challenges" ? "default" : "ghost"}
-                  onClick={() => navigate("/challenges")}
+                  variant={location.pathname === "/profile" ? "default" : "ghost"}
+                  onClick={() => navigate("/profile")}
                 >
-                  Desafios
-                </Button>
-                <Button
-                  variant={location.pathname === "/looksmaxxing" ? "default" : "ghost"}
-                  onClick={() => navigate("/looksmaxxing")}
-                >
-                  <Diamond className="h-4 w-4 mr-1" />
-                  Scan
+                  Perfil
                 </Button>
                 <Button
                   variant={location.pathname === "/premium" ? "default" : "ghost"}
@@ -83,13 +71,6 @@ const Navbar = () => {
                   <Crown className="h-4 w-4 mr-1" />
                   Premium
                 </Button>
-                <Button
-                  variant={location.pathname === "/profile" ? "default" : "ghost"}
-                  onClick={() => navigate("/profile")}
-                >
-                  Perfil
-                </Button>
-                <NotificationBell />
                 <Button variant="ghost" onClick={handleSignOut}>
                   Sair
                 </Button>
@@ -103,7 +84,7 @@ const Navbar = () => {
                   Entrar
                 </Button>
                 <Button
-                  className="gradient-primary text-white"
+                  className="gradient-primary text-primary-foreground"
                   onClick={() => navigate("/auth")}
                 >
                   Começar Grátis
@@ -124,75 +105,34 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Navigation - click outside to close */}
         {isMenuOpen && (
           <>
-            {/* Overlay to close menu when clicking outside */}
             <div 
-              className="fixed inset-0 z-40 bg-black/20" 
+              className="fixed inset-0 z-40 bg-background/50 backdrop-blur-sm" 
               onClick={() => setIsMenuOpen(false)}
             />
             <div className="md:hidden py-4 border-t border-border absolute left-0 right-0 top-16 bg-background z-50 shadow-lg">
               <div className="flex flex-col space-y-2 px-4">
                 {user ? (
                   <>
-                    <Button
-                      variant={location.pathname === "/dashboard" ? "default" : "ghost"}
-                      onClick={() => {
-                        navigate("/dashboard");
-                        setIsMenuOpen(false);
-                      }}
-                      className="justify-start"
-                    >
-                      Dashboard
-                    </Button>
-                    <Button
-                      variant={location.pathname === "/social" ? "default" : "ghost"}
-                      onClick={() => {
-                        navigate("/social");
-                        setIsMenuOpen(false);
-                      }}
-                      className="justify-start"
-                    >
-                      Social
-                    </Button>
-                    <Button
-                      variant={location.pathname === "/challenges" ? "default" : "ghost"}
-                      onClick={() => {
-                        navigate("/challenges");
-                        setIsMenuOpen(false);
-                      }}
-                      className="justify-start"
-                    >
-                      Desafios
-                    </Button>
-                    <Button
-                      variant={location.pathname === "/looksmaxxing" ? "default" : "ghost"}
-                      onClick={() => {
-                        navigate("/looksmaxxing");
-                        setIsMenuOpen(false);
-                      }}
-                      className="justify-start"
-                    >
-                      <Diamond className="h-4 w-4 mr-2" />
-                      Scan AI
-                    </Button>
-                    <Button
-                      variant={location.pathname === "/profile" ? "default" : "ghost"}
-                      onClick={() => {
-                        navigate("/profile");
-                        setIsMenuOpen(false);
-                      }}
-                      className="justify-start"
-                    >
-                      Perfil
-                    </Button>
+                    {[
+                      { path: '/dashboard', label: 'Hoje' },
+                      { path: '/progress', label: 'Progresso' },
+                      { path: '/profile', label: 'Perfil' },
+                      { path: '/premium', label: '💎 Premium' },
+                    ].map(item => (
+                      <Button
+                        key={item.path}
+                        variant={location.pathname === item.path ? "default" : "ghost"}
+                        onClick={() => { navigate(item.path); setIsMenuOpen(false); }}
+                        className="justify-start"
+                      >
+                        {item.label}
+                      </Button>
+                    ))}
                     <Button 
                       variant="ghost" 
-                      onClick={() => {
-                        handleSignOut();
-                        setIsMenuOpen(false);
-                      }}
+                      onClick={() => { handleSignOut(); setIsMenuOpen(false); }}
                       className="justify-start"
                     >
                       Sair
@@ -201,21 +141,15 @@ const Navbar = () => {
                 ) : (
                   <>
                     <Button
-                      variant={location.pathname === "/auth" ? "default" : "ghost"}
-                      onClick={() => {
-                        navigate("/auth");
-                        setIsMenuOpen(false);
-                      }}
+                      variant="ghost"
+                      onClick={() => { navigate("/auth"); setIsMenuOpen(false); }}
                       className="justify-start"
                     >
                       Entrar
                     </Button>
                     <Button
-                      className="gradient-primary text-white justify-start"
-                      onClick={() => {
-                        navigate("/auth");
-                        setIsMenuOpen(false);
-                      }}
+                      className="gradient-primary text-primary-foreground justify-start"
+                      onClick={() => { navigate("/auth"); setIsMenuOpen(false); }}
                     >
                       Começar Grátis
                     </Button>

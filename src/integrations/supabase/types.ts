@@ -335,6 +335,42 @@ export type Database = {
           },
         ]
       }
+      daily_quests: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          pillar: string | null
+          quest_date: string
+          quest_text: string
+          quest_type: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          pillar?: string | null
+          quest_date?: string
+          quest_text: string
+          quest_type?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          pillar?: string | null
+          quest_date?: string
+          quest_text?: string
+          quest_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       friendships: {
         Row: {
           created_at: string | null
@@ -1073,6 +1109,36 @@ export type Database = {
           last_freeze_date?: string | null
           longest_streak?: number | null
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transformation_scores: {
+        Row: {
+          created_at: string
+          id: string
+          previous_score: number
+          quests_completed_total: number
+          score: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          previous_score?: number
+          quests_completed_total?: number
+          score?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          previous_score?: number
+          quests_completed_total?: number
+          score?: number
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
