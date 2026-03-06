@@ -68,6 +68,22 @@ export default function Dashboard() {
   };
 
   const generateQuest = async (userId: string, pillars?: string[]) => {
+    try {
+      // Try AI-generated quest first
+      const { data, error } = await supabase.functions.invoke('generate-daily-quest');
+      
+      if (!error && data?.quest) {
+        setQuest(data.quest);
+        setQuestCompleted(false);
+        return;
+      }
+      
+      console.warn('AI quest generation failed, using fallback:', error);
+    } catch (e) {
+      console.warn('AI quest fallback:', e);
+    }
+
+    // Fallback: random quest bank
     const questBank = [
       { text: '30 minutos de treino matinal 💪', type: 'fitness', pillar: 'corpo' },
       { text: 'Meditar por 10 minutos em silêncio 🧘', type: 'mindfulness', pillar: 'mente' },
@@ -77,17 +93,13 @@ export default function Dashboard() {
       { text: 'Caminhar 30 min ao ar livre 🌿', type: 'fitness', pillar: 'corpo' },
       { text: 'Escrever 3 coisas pelas quais é grato 🙏', type: 'mindfulness', pillar: 'mente' },
       { text: 'Dormir antes das 23h hoje 🌙', type: 'health', pillar: 'corpo' },
-      { text: 'Fazer 50 flexões ao longo do dia 🔥', type: 'fitness', pillar: 'corpo' },
       { text: 'Zero telas 1h antes de dormir 📵', type: 'discipline', pillar: 'mente' },
       { text: 'Tomar banho gelado de 2 minutos 🧊', type: 'discipline', pillar: 'corpo' },
-      { text: 'Organizar seu quarto/mesa de trabalho 🧹', type: 'discipline', pillar: 'ambiente' },
-      { text: 'Praticar postura correta o dia todo 🏛️', type: 'posture', pillar: 'aparência' },
-      { text: 'Estudar algo novo por 30 minutos 🎓', type: 'knowledge', pillar: 'mente' },
     ];
 
     const todayQuest = questBank[Math.floor(Math.random() * questBank.length)];
 
-    const { data, error } = await supabase.from('daily_quests').insert({
+    const { data: questData } = await supabase.from('daily_quests').insert({
       user_id: userId,
       quest_text: todayQuest.text,
       quest_type: todayQuest.type,
@@ -95,8 +107,8 @@ export default function Dashboard() {
       quest_date: new Date().toISOString().split('T')[0],
     }).select().single();
 
-    if (data) {
-      setQuest(data);
+    if (questData) {
+      setQuest(questData);
       setQuestCompleted(false);
     }
   };
