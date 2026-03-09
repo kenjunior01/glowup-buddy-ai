@@ -264,6 +264,25 @@ export default function Dashboard() {
           <span className="text-sm font-bold font-mono text-yellow-500">{glowCoins}</span>
         </div>
 
+        {/* Conscience Voice */}
+        {conscienceMsg && (
+          <div className={cn(
+            "w-full rounded-2xl p-4 mb-4 border transition-all",
+            conscienceSeverity === 'aggressive' && "bg-destructive/10 border-destructive/30",
+            conscienceSeverity === 'medium' && "bg-yellow-500/10 border-yellow-500/30",
+            conscienceSeverity === 'mild' && "bg-muted border-border"
+          )}>
+            <p className={cn(
+              "text-sm font-medium leading-relaxed",
+              conscienceSeverity === 'aggressive' && "text-destructive",
+              conscienceSeverity === 'medium' && "text-yellow-600 dark:text-yellow-400",
+              conscienceSeverity === 'mild' && "text-muted-foreground"
+            )}>
+              {conscienceMsg}
+            </p>
+          </div>
+        )}
+
         {/* Quest Card */}
         <div className={cn(
           "w-full rounded-3xl p-8 text-center transition-all duration-700 relative overflow-hidden",
