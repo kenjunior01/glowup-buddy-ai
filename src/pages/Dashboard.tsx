@@ -172,12 +172,35 @@ export default function Dashboard() {
         }
 
         setTransformationScore(newScore);
+
+        // Award GlowCoins + League points
+        const coinsEarned = 10;
+        await supabase.from('profiles').update({
+          glow_coins: (glowCoins || 0) + coinsEarned,
+        }).eq('id', session.user.id);
+        setGlowCoins(prev => prev + coinsEarned);
+
+        // Update league weekly points
+        const weekStart = getWeekStart();
+        const { data: league } = await supabase
+          .from('leagues')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .eq('week_start', weekStart)
+          .maybeSingle();
+
+        if (league) {
+          await supabase.from('leagues').update({
+            weekly_points: (league.weekly_points || 0) + 10,
+          }).eq('id', league.id);
+        }
       }
 
       // Show celebration
       setQuestCompleted(true);
       setShowConfetti(true);
       setStreak(prev => ({ ...prev, current: prev.current + 1 }));
+      setConscienceMsg('');
 
       setTimeout(() => setShowConfetti(false), 4000);
     } catch (e) {
