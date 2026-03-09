@@ -21,6 +21,9 @@ export default function Dashboard() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [questCompleted, setQuestCompleted] = useState(false);
+  const [conscienceMsg, setConscienceMsg] = useState('');
+  const [conscienceSeverity, setConscienceSeverity] = useState<string>('mild');
+  const [glowCoins, setGlowCoins] = useState(0);
 
   useEffect(() => {
     fetchAll();
