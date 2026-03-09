@@ -360,6 +360,17 @@ export default function Dashboard() {
         {/* Quick Links */}
         <div className="w-full mt-8 space-y-3">
           <button
+            onClick={() => navigate('/arena')}
+            className="w-full flex items-center justify-between p-4 rounded-2xl bg-destructive/5 border border-destructive/20 hover:bg-destructive/10 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xl">⚔️</span>
+              <span className="text-sm font-medium text-foreground">Arena — Ligas, Duelos & Clãs</span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </button>
+
+          <button
             onClick={() => navigate('/progress')}
             className="w-full flex items-center justify-between p-4 rounded-2xl bg-card border border-border/50 hover:bg-muted/50 transition-colors"
           >
