@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, BarChart3, User } from 'lucide-react';
+import { Home, BarChart3, User, Swords } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function MobileBottomNav() {
@@ -9,6 +9,7 @@ export default function MobileBottomNav() {
 
   const navItems = [
     { icon: Home, label: 'Hoje', path: '/dashboard', emoji: '🎯' },
+    { icon: Swords, label: 'Arena', path: '/arena', emoji: '⚔️' },
     { icon: BarChart3, label: 'Progresso', path: '/progress', emoji: '📊' },
     { icon: User, label: 'Perfil', path: '/profile', emoji: '👤' },
   ];
