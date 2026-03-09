@@ -4,7 +4,7 @@ import MobileBottomNav from '@/components/MobileBottomNav';
 import ConversationalOnboarding from '@/components/ConversationalOnboarding';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
-import { Check, Flame, ChevronRight, Sparkles, Trophy } from 'lucide-react';
+import { Check, Flame, ChevronRight, Sparkles, Trophy, Swords, Coins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Confetti } from '@/components/Confetti';
