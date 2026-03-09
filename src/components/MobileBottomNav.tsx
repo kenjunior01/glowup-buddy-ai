@@ -24,7 +24,7 @@ export default function MobileBottomNav() {
     <div className="fixed bottom-0 left-0 right-0 z-50 safe-area-pb">
       <div className="absolute inset-0 bg-card/95 backdrop-blur-xl border-t border-border/30" />
 
-      <div className="relative grid grid-cols-3 h-16 items-center px-4">
+      <div className="relative grid grid-cols-4 h-16 items-center px-4">
         {navItems.map(({ icon: Icon, label, path, emoji }) => {
           const isActive = location.pathname === path;
           const isTapped = tappedItem === path;
