@@ -258,7 +258,10 @@ export default function Dashboard() {
         )}>
           <Flame className={cn("w-5 h-5", streak.current > 0 && "animate-pulse")} />
           <span className="text-lg font-bold font-mono tracking-wider">{streak.current}</span>
-          <span className="text-sm font-medium">dias de streak</span>
+          <span className="text-sm font-medium">dias</span>
+          <div className="w-px h-4 bg-current opacity-30 mx-1" />
+          <Coins className="w-4 h-4 text-yellow-500" />
+          <span className="text-sm font-bold font-mono text-yellow-500">{glowCoins}</span>
         </div>
 
         {/* Quest Card */}
