@@ -181,8 +181,10 @@ export default function Dashboard() {
         setGlowCoins(prev => prev + coinsEarned);
 
         // Update league weekly points
-        const weekStart = getWeekStart();
-        const { data: league } = await supabase
+        const now = new Date();
+        const day = now.getDay();
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+        const weekStart = new Date(new Date().setDate(diff)).toISOString().split('T')[0];
           .from('leagues')
           .select('*')
           .eq('user_id', session.user.id)
