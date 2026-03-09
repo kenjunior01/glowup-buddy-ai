@@ -4,7 +4,7 @@ import MobileBottomNav from '@/components/MobileBottomNav';
 import ConversationalOnboarding from '@/components/ConversationalOnboarding';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
-import { Check, Flame, ChevronRight, Sparkles, Trophy } from 'lucide-react';
+import { Check, Flame, ChevronRight, Sparkles, Trophy, Swords, Coins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Confetti } from '@/components/Confetti';
@@ -21,6 +21,9 @@ export default function Dashboard() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [questCompleted, setQuestCompleted] = useState(false);
+  const [conscienceMsg, setConscienceMsg] = useState('');
+  const [conscienceSeverity, setConscienceSeverity] = useState<string>('mild');
+  const [glowCoins, setGlowCoins] = useState(0);
 
   useEffect(() => {
     fetchAll();
@@ -60,6 +63,16 @@ export default function Dashboard() {
       }
 
       setTransformationScore(scoreRes.data?.score || 0);
+      setGlowCoins((profile as any)?.glow_coins || 0);
+
+      // Fetch conscience voice
+      try {
+        const { data: voiceData } = await supabase.functions.invoke('conscience-voice');
+        if (voiceData?.message) {
+          setConscienceMsg(voiceData.message);
+          setConscienceSeverity(voiceData.severity || 'mild');
+        }
+      } catch (e) { console.warn('Conscience voice failed:', e); }
     } catch (e) {
       console.error('Dashboard fetch error:', e);
     } finally {
@@ -159,12 +172,38 @@ export default function Dashboard() {
         }
 
         setTransformationScore(newScore);
+
+        // Award GlowCoins + League points
+        const coinsEarned = 10;
+        await supabase.from('profiles').update({
+          glow_coins: (glowCoins || 0) + coinsEarned,
+        }).eq('id', session.user.id);
+        setGlowCoins(prev => prev + coinsEarned);
+
+        // Update league weekly points
+        const now = new Date();
+        const day = now.getDay();
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+        const weekStart = new Date(new Date().setDate(diff)).toISOString().split('T')[0];
+        const { data: league } = await supabase
+          .from('leagues')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .eq('week_start', weekStart)
+          .maybeSingle();
+
+        if (league) {
+          await supabase.from('leagues').update({
+            weekly_points: (league.weekly_points || 0) + 10,
+          }).eq('id', league.id);
+        }
       }
 
       // Show celebration
       setQuestCompleted(true);
       setShowConfetti(true);
       setStreak(prev => ({ ...prev, current: prev.current + 1 }));
+      setConscienceMsg('');
 
       setTimeout(() => setShowConfetti(false), 4000);
     } catch (e) {
@@ -219,8 +258,30 @@ export default function Dashboard() {
         )}>
           <Flame className={cn("w-5 h-5", streak.current > 0 && "animate-pulse")} />
           <span className="text-lg font-bold font-mono tracking-wider">{streak.current}</span>
-          <span className="text-sm font-medium">dias de streak</span>
+          <span className="text-sm font-medium">dias</span>
+          <div className="w-px h-4 bg-current opacity-30 mx-1" />
+          <Coins className="w-4 h-4 text-yellow-500" />
+          <span className="text-sm font-bold font-mono text-yellow-500">{glowCoins}</span>
         </div>
+
+        {/* Conscience Voice */}
+        {conscienceMsg && (
+          <div className={cn(
+            "w-full rounded-2xl p-4 mb-4 border transition-all",
+            conscienceSeverity === 'aggressive' && "bg-destructive/10 border-destructive/30",
+            conscienceSeverity === 'medium' && "bg-yellow-500/10 border-yellow-500/30",
+            conscienceSeverity === 'mild' && "bg-muted border-border"
+          )}>
+            <p className={cn(
+              "text-sm font-medium leading-relaxed",
+              conscienceSeverity === 'aggressive' && "text-destructive",
+              conscienceSeverity === 'medium' && "text-yellow-600 dark:text-yellow-400",
+              conscienceSeverity === 'mild' && "text-muted-foreground"
+            )}>
+              {conscienceMsg}
+            </p>
+          </div>
+        )}
 
         {/* Quest Card */}
         <div className={cn(
@@ -298,6 +359,17 @@ export default function Dashboard() {
 
         {/* Quick Links */}
         <div className="w-full mt-8 space-y-3">
+          <button
+            onClick={() => navigate('/arena')}
+            className="w-full flex items-center justify-between p-4 rounded-2xl bg-destructive/5 border border-destructive/20 hover:bg-destructive/10 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xl">⚔️</span>
+              <span className="text-sm font-medium text-foreground">Arena — Ligas, Duelos & Clãs</span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </button>
+
           <button
             onClick={() => navigate('/progress')}
             className="w-full flex items-center justify-between p-4 rounded-2xl bg-card border border-border/50 hover:bg-muted/50 transition-colors"
