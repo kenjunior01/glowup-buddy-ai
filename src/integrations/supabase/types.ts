@@ -182,6 +182,86 @@ export type Database = {
         }
         Relationships: []
       }
+      clan_members: {
+        Row: {
+          clan_id: string
+          daily_quest_completed: boolean | null
+          id: string
+          joined_at: string
+          last_quest_date: string | null
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          clan_id: string
+          daily_quest_completed?: boolean | null
+          id?: string
+          joined_at?: string
+          last_quest_date?: string | null
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          clan_id?: string
+          daily_quest_completed?: boolean | null
+          id?: string
+          joined_at?: string
+          last_quest_date?: string | null
+          role?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clan_members_clan_id_fkey"
+            columns: ["clan_id"]
+            isOneToOne: false
+            referencedRelation: "clans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clans: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon_emoji: string | null
+          id: string
+          leader_id: string
+          max_members: number | null
+          member_count: number | null
+          name: string
+          streak_bonus_active: boolean | null
+          total_xp: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon_emoji?: string | null
+          id?: string
+          leader_id: string
+          max_members?: number | null
+          member_count?: number | null
+          name: string
+          streak_bonus_active?: boolean | null
+          total_xp?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon_emoji?: string | null
+          id?: string
+          leader_id?: string
+          max_members?: number | null
+          member_count?: number | null
+          name?: string
+          streak_bonus_active?: boolean | null
+          total_xp?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       coupon_redemptions: {
         Row: {
           coupon_id: string
@@ -371,6 +451,60 @@ export type Database = {
         }
         Relationships: []
       }
+      duels: {
+        Row: {
+          challenger_completed: boolean | null
+          challenger_id: string
+          challenger_proof_url: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          opponent_completed: boolean | null
+          opponent_id: string
+          opponent_proof_url: string | null
+          quest_text: string
+          stake_coins: number
+          stake_streak_days: number | null
+          status: string
+          updated_at: string
+          winner_id: string | null
+        }
+        Insert: {
+          challenger_completed?: boolean | null
+          challenger_id: string
+          challenger_proof_url?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          opponent_completed?: boolean | null
+          opponent_id: string
+          opponent_proof_url?: string | null
+          quest_text: string
+          stake_coins?: number
+          stake_streak_days?: number | null
+          status?: string
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Update: {
+          challenger_completed?: boolean | null
+          challenger_id?: string
+          challenger_proof_url?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          opponent_completed?: boolean | null
+          opponent_id?: string
+          opponent_proof_url?: string | null
+          quest_text?: string
+          stake_coins?: number
+          stake_streak_days?: number | null
+          status?: string
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Relationships: []
+      }
       friendships: {
         Row: {
           created_at: string | null
@@ -464,6 +598,48 @@ export type Database = {
           tags?: string[] | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      leagues: {
+        Row: {
+          created_at: string
+          demoted: boolean | null
+          id: string
+          league_group: number
+          league_tier: string
+          position_in_group: number | null
+          promoted: boolean | null
+          updated_at: string
+          user_id: string
+          week_start: string
+          weekly_points: number
+        }
+        Insert: {
+          created_at?: string
+          demoted?: boolean | null
+          id?: string
+          league_group?: number
+          league_tier?: string
+          position_in_group?: number | null
+          promoted?: boolean | null
+          updated_at?: string
+          user_id: string
+          week_start?: string
+          weekly_points?: number
+        }
+        Update: {
+          created_at?: string
+          demoted?: boolean | null
+          id?: string
+          league_group?: number
+          league_tier?: string
+          position_in_group?: number | null
+          promoted?: boolean | null
+          updated_at?: string
+          user_id?: string
+          week_start?: string
+          weekly_points?: number
         }
         Relationships: []
       }
@@ -836,6 +1012,7 @@ export type Database = {
           created_at: string | null
           display_name: string | null
           experience_points: number | null
+          glow_coins: number | null
           id: string
           informacoes_extras: string | null
           level: number | null
@@ -860,6 +1037,7 @@ export type Database = {
           created_at?: string | null
           display_name?: string | null
           experience_points?: number | null
+          glow_coins?: number | null
           id: string
           informacoes_extras?: string | null
           level?: number | null
@@ -884,6 +1062,7 @@ export type Database = {
           created_at?: string | null
           display_name?: string | null
           experience_points?: number | null
+          glow_coins?: number | null
           id?: string
           informacoes_extras?: string | null
           level?: number | null
