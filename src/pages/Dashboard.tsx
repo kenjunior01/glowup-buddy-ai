@@ -185,6 +185,7 @@ export default function Dashboard() {
         const day = now.getDay();
         const diff = now.getDate() - day + (day === 0 ? -6 : 1);
         const weekStart = new Date(new Date().setDate(diff)).toISOString().split('T')[0];
+        const { data: league } = await supabase
           .from('leagues')
           .select('*')
           .eq('user_id', session.user.id)
