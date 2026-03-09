@@ -63,6 +63,16 @@ export default function Dashboard() {
       }
 
       setTransformationScore(scoreRes.data?.score || 0);
+      setGlowCoins((profile as any)?.glow_coins || 0);
+
+      // Fetch conscience voice
+      try {
+        const { data: voiceData } = await supabase.functions.invoke('conscience-voice');
+        if (voiceData?.message) {
+          setConscienceMsg(voiceData.message);
+          setConscienceSeverity(voiceData.severity || 'mild');
+        }
+      } catch (e) { console.warn('Conscience voice failed:', e); }
     } catch (e) {
       console.error('Dashboard fetch error:', e);
     } finally {
