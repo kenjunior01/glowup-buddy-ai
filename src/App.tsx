@@ -16,6 +16,7 @@ const Auth = lazy(() => import("./pages/Auth"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Progress = lazy(() => import("./pages/Progress"));
 const Profile = lazy(() => import("./pages/Profile"));
+const Arena = lazy(() => import("./pages/Arena"));
 const Premium = lazy(() => import("./pages/Premium"));
 const Install = lazy(() => import("./pages/Install"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
